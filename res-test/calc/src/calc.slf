@@ -1,0 +1,22 @@
+
+@include common
+
+add_op=[+\-]
+mult_op=[*/]
+
+@start General
+
+#| General
+//[^\n]*\n                                      ;
+/*                                              ; -> MultiLineComment
+[ \t]                                           ;
+[=@()]                                          ; $
+[:add_op:]                                      ; $add_op
+[:mult_op:]                                     ; $mult_op
+-?\d+                                           ; $int
+-?\d+\.\d+                                      ; $float
+[:letters_l:][_[:letters:]]*                    ; $var
+
+#| MultiLineComment
+*/                                              ; -> General
+.                                               ;

@@ -1,0 +1,4 @@
+
+letters_l=[a-z]
+letters_u=[A-Z]
+letters=[[:letters_l:][:letters_u:]]
