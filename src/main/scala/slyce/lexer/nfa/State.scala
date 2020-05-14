@@ -1,39 +1,45 @@
 package slyce.lexer.nfa
 
-import slyce.lexer.Action
+import slyce.lexer.{Action, TokenSpec}
 
 import scala.collection.mutable.{ListBuffer => MList}
 import slyce.tree.GeneralToken
-import slyce.tree.GeneralToken.Stats
+import slyce.lexer.Action._
+import slyce.lexer.nfa.helpers.{ActionHelper, PartialTransition}
 
-class State[T <: GeneralToken](val id: Int) {
+class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
   
   val transitions: TransitionMap[T] = new TransitionMap()
-  val actions: MList[Action[T]] = MList()
+  val actions: MList[Action] = MList()
   
+  // =====| Epsilon Transition |=====
   
-  def @@(lineNo: Int): PartialAction =
-    new PartialAction(lineNo)
+  def ~=(other: State[T]): Unit =
+    transitions ~= other
   
-  def +(chars: List[Char]): PartialTransition =
-    new PartialTransition(chars)
+  // =====| Transitions |=====
   
-  def <+>(other: State[T]): Unit =
-    transitions <+> other
+  def +(chars: Set[Char]): PartialTransition[T] =
+    new PartialTransition[T](this, chars)
   
+  def <<(chars: Set[Char]): State[T] =
+    this <<< CharClass.Only(chars)
   
-  class PartialTransition(val chars: List[Char]) {
-    
-    def >>(toState: State[T]): Unit =
-      transitions << (CharClass.Only(chars), toState)
-    
+  def <<(str: String): State[T] =
+    str.foldLeft(this)((s, c) => s << Set(c))
+  
+  def <<!(chars: Set[Char]): State[T] =
+    this <<< CharClass.Except(chars)
+  
+  def <<<(charClass: CharClass): State[T] = {
+    val ns: State[T] = mode.newState
+    transitions << (charClass, ns)
+    ns
   }
   
-  class PartialAction(val lineNo: Int) {
-    
-    def >>(action: Stats => List[T]): Unit =
-      actions.append(Action(lineNo, action))
-    
-  }
+  // =====| Actions |=====
+  
+  def >>(actionHelper: ActionHelper): Unit =
+    this.actions.append(actionHelper.action)
   
 }

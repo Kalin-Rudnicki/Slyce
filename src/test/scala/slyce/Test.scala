@@ -2,7 +2,7 @@ import slyce.tree.GeneralToken
 import slyce.tree.GeneralToken.Stats
 import slyce.lexer.nfa.NFA
 
-import scala.io.Source
+import slyce.lexer.nfa.helpers.ImplicitHelpers._
 
 object Test {
   
@@ -26,6 +26,8 @@ object Test {
     
     val m0 = nfa.initialMode;
     {
+      /*
+      
       val s0 = m0.initialState
       val s1 = m0.newState
       val s2 = m0.newState
@@ -65,22 +67,38 @@ object Test {
       s14 + List(' ', '\n') >> s14
       s14 @@ 4 >> { _ => Nil }
       
-      test
+       */
+      
+      m0 << 'H' << 'E' << 'L' << 'L' << 'O' >> 5 + "ToTest"
+      
+      m0 << "Hola"
       
     }
     
   }
   
-  def test: Unit = {
-    
-    val src = Source.fromFile("res/test.txt")
-    
-    src.getLines().foreach {
-      l => println(s"|$l|")
-    }
-    
-    src.close
-    
+  sealed trait A {
+    def >> (r: R): Nothing = ???
   }
+  sealed trait B {
+    def + (b: B): C = ???
+  }
+  sealed trait C {
+    def + (c: C): D = ???
+  }
+  sealed trait D {
+    def + (d: D): R = ???
+  }
+  sealed trait R
+  
+  case object _A extends A
+  case object _B extends B
+  case object _C extends C
+  case object _D extends D
+  case object _R extends R
+  
+  _A >> _B + _B + _C + _D
+  
+  Set()
   
 }

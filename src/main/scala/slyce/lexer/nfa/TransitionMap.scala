@@ -34,7 +34,7 @@ class TransitionMap[T <: GeneralToken] {
       unspecified.append(transitionType)
   }
   
-  def <+> (other: State[T]): Unit =
+  def ~= (other: State[T]): Unit =
     epsilonTransitions.append(other)
   
 }
