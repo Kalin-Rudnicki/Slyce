@@ -4,8 +4,8 @@ import slyce.lexer.{Action, TokenSpec}
 
 import scala.collection.mutable.{ListBuffer => MList}
 import slyce.tree.GeneralToken
-import slyce.lexer.Action._
 import slyce.lexer.nfa.helpers.{ActionHelper, PartialTransition}
+import slyce.lexer.regex.CharClass
 
 class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
   

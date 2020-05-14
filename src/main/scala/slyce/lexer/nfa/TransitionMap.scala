@@ -1,5 +1,6 @@
 package slyce.lexer.nfa
 
+import slyce.lexer.regex.{CharClass => CC}
 import slyce.tree.GeneralToken
 
 import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
@@ -13,19 +14,16 @@ class TransitionMap[T <: GeneralToken] {
   
   val epsilonTransitions: MList[State[T]] = MList()
   val unspecified: MList[State[T]] = MList()
-  val unmatched: MList[State[T]] = MList()
   
-  def <<(charClass: CharClass, transitionType: State[T]): Unit = charClass match {
-    case CharClass.Unmatched() =>
-      unmatched.append(transitionType)
-    case CharClass.Only(chars) =>
+  def <<(charClass: CC, transitionType: State[T]): Unit = charClass match {
+    case CC.Only(chars) =>
       chars.foreach {
         c =>
           transitions
             .getOrElseUpdate(c, unspecified.clone)
             .append(transitionType)
       }
-    case CharClass.Except(chars) =>
+    case CC.Except(chars) =>
       transitions.foreach {
         case (k, v) =>
           if (!chars.contains(k))
