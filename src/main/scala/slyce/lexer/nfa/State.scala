@@ -1,11 +1,11 @@
 package slyce.lexer.nfa
 
-import slyce.lexer.{Action, TokenSpec}
+import slyce.lexer.Action
 
 import scala.collection.mutable.{ListBuffer => MList}
 import slyce.tree.GeneralToken
 import slyce.lexer.nfa.helpers.{ActionHelper, PartialTransition}
-import slyce.lexer.regex.CharClass
+import slyce.lexer.nfa.Regex.{CharClass => CC}
 
 class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
   
@@ -23,15 +23,15 @@ class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
     new PartialTransition[T](this, chars)
   
   def <<(chars: Set[Char]): State[T] =
-    this <<< CharClass.Only(chars)
+    this <<< CC.Only(chars)
   
   def <<(str: String): State[T] =
     str.foldLeft(this)((s, c) => s << Set(c))
   
   def <<!(chars: Set[Char]): State[T] =
-    this <<< CharClass.Except(chars)
+    this <<< CC.Except(chars)
   
-  def <<<(charClass: CharClass): State[T] = {
+  def <<<(charClass: CC): State[T] = {
     val ns: State[T] = mode.newState
     transitions << (charClass, ns)
     ns

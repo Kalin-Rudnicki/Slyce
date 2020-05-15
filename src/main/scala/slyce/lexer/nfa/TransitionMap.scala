@@ -1,6 +1,6 @@
 package slyce.lexer.nfa
 
-import slyce.lexer.regex.{CharClass => CC}
+import slyce.lexer.nfa.Regex.{CharClass => CC}
 import slyce.tree.GeneralToken
 
 import scala.collection.mutable.{ListBuffer => MList, Map => MMap}

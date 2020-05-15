@@ -1,7 +1,7 @@
 package slyce.lexer.nfa.helpers
 
 import slyce.lexer.nfa.State
-import slyce.lexer.regex.{CharClass => CC}
+import slyce.lexer.nfa.Regex.{CharClass => CC}
 import slyce.tree.GeneralToken
 
 class PartialTransition[T <: GeneralToken](val state: State[T], val chars: Set[Char]) {

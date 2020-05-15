@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => MMap}
 import org.scalatest.funspec.PathAnyFunSpec
 import org.scalatest.Matchers._
 
-import slyce.lexer.regex.{CharClass => CC}
+import slyce.lexer.nfa.Regex.{CharClass => CC}
 
 class CharClassTests extends PathAnyFunSpec {
   
