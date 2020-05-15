@@ -1,7 +1,6 @@
 package slyce.errors
 
-import scalaz.std.option.optionSyntax._
-import slyce.errors.MessageAccumulator.MessageType.Ignore
+import scalaz.Scalaz._
 
 sealed trait MessageAccumulator[+E, +T] {
   
@@ -30,11 +29,16 @@ sealed trait MessageAccumulator[+E, +T] {
         None
     }
   
-  def sort[E2 >: E](implicit sorter: MessageSorter[E2]): (SortedMessages[E2], Option[T]) =
+  def sort[E2 >: E](implicit sorter: MessageSorter[E2]): (SortedMessages[E2], Option[T]) = {
+    val sorted: SortedMessages[E2] = MessageType.sort(messages)
     (
-      MessageType.sort(messages),
-      toOption
+      sorted,
+      toOption.flatMap(
+        v =>
+        sorted.error.isEmpty.option(v)
+      )
     )
+  }
   
   def <@>[T2](f: T => T2): MessageAccumulator[E, T2] =
     this.map(f)
@@ -162,7 +166,7 @@ object MessageAccumulator {
                                       debug: List[E],
                                       info: List[E],
                                       warning: List[E],
-                                      Error: List[E]
+                                      error: List[E]
                                     )
   
 }

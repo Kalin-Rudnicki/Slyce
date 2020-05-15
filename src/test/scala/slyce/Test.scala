@@ -12,6 +12,7 @@ object Test {
     
     val v1: MA[String, Int] = 5.value <#> (i => Alive(i + 1, "1", "2")) <#> (i => Alive(i + 1, "3", "4")) << ("5", "Oops") <#> (_ => Dead("0", "Oof"))
     val v2: MA[String, Int] = 5.value <#> ((i: Int) => i + 1)("1", "2") <#> ((i: Int) => i + 1)("3", "4") << ("5", "Oops") <#> (_ => Dead("0", "Oof"))
+    val v3: MA[String, Int] = 5.value <#> ((i: Int) => i + 1)("Err")
     
     println(v1)
     println(v2)
@@ -33,6 +34,8 @@ object Test {
     
     println(v1.sort)
     println(v2.sort)
+    println(v3)
+    println(v3.sort)
    
   }
   
