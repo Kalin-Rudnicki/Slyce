@@ -3,75 +3,11 @@ package slyce.lexer.nfa
 import scalaz.NonEmptyList
 
 import slyce.lexer.nfa.Regex.{CharClass => CC}
+import slyce.lexer.nfa.RegexImplicits._
 
 sealed trait Regex {
 
   import Regex._
-
-  def *(repeat: (Int, Option[Int])): Regex =
-    repeat match {
-      case (min, None) =>
-        Repeat.Infinite(min, this)
-      case (min, Some(max)) =>
-        Repeat.Between(min, max, this)
-    }
-
-  def >>(next: Regex): Regex =
-    this match {
-      case g: Group =>
-        Sequence(NonEmptyList(next, g))
-      case Sequence(list) =>
-        Sequence(NonEmptyList.nel(next, list.list))
-      case cc: CC =>
-        Sequence(NonEmptyList(next, cc))
-      case repeat: Repeat =>
-        Sequence(NonEmptyList(next, repeat))
-    }
-
-  def @|(or: Regex): Regex = {
-    val orSeq: Sequence =
-      or match {
-        case g: Group =>
-          Sequence(NonEmptyList(g))
-        case s: Sequence =>
-          s
-        case cc: CC =>
-          Sequence(NonEmptyList(cc))
-        case repeat: Repeat =>
-          Sequence(NonEmptyList(repeat))
-      }
-
-    this match {
-      case Group(options) =>
-        Group(
-          NonEmptyList.nel[Sequence](
-            orSeq,
-            options.list
-          )
-        )
-      case s: Sequence =>
-        Group(
-          NonEmptyList(
-            orSeq,
-            s
-          )
-        )
-      case cc: CC =>
-        Group(
-          NonEmptyList(
-            orSeq,
-            Sequence(NonEmptyList(cc))
-          )
-        )
-      case repeat: Repeat =>
-        Group(
-          NonEmptyList(
-            orSeq,
-            Sequence(NonEmptyList(repeat))
-          )
-        )
-    }
-  }
 
   // =====| prettyStr |=====
 
@@ -163,73 +99,7 @@ object Regex {
 
   }
 
-  sealed trait CharClass extends Regex {
-
-    import CC._
-
-    def unary_! : CC =
-      this match {
-        case Only(chars) =>
-          Except(chars)
-        case Except(chars) =>
-          Only(chars)
-      }
-
-    def |(other: CC): CC =
-      this match {
-        case Only(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Only(mChars | oChars)
-            case Except(oChars) =>
-              Except(oChars &~ mChars)
-          }
-        case Except(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Except(mChars &~ oChars)
-            case Except(oChars) =>
-              Except(mChars & oChars)
-          }
-      }
-
-    def &(other: CC): CC =
-      this match {
-        case Only(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Only(mChars & oChars)
-            case Except(oChars) =>
-              Only(mChars &~ oChars)
-          }
-        case Except(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Only(oChars &~ mChars)
-            case Except(oChars) =>
-              Except(oChars | mChars)
-          }
-      }
-
-    def -(other: CC): CC =
-      this match {
-        case Only(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Only(mChars &~ oChars)
-            case Except(oChars) =>
-              Only(mChars & oChars)
-          }
-        case Except(mChars) =>
-          other match {
-            case Only(oChars) =>
-              Except(mChars | oChars)
-            case Except(oChars) =>
-              Only(oChars &~ mChars)
-          }
-      }
-
-  }
+  sealed trait CharClass extends Regex
 
   object CharClass {
 
