@@ -1,13 +1,13 @@
 package slyce.lexer.nfa.helpers
 
 import slyce.lexer.Action._
-import slyce.lexer.{Action => Act, TokenSpec}
+import slyce.lexer.{TokenSpec, Action => Act}
 
 /*
       TODO : Could maybe use some work, but its just nicities to use by hand
-   */
+ */
 class ActionHelper(val action: Act) {
-  
+
   def +(tokenSpecs: List[TokenSpec]): ActionHelper =
     new ActionHelper(
       action match {
@@ -21,10 +21,10 @@ class ActionHelper(val action: Act) {
           ActionTokensMode(ln, ts ::: tokenSpecs, m)
       }
     )
-  
+
   def +(mode: String): ActionHelper =
     this + Some(mode)
-  
+
   def +(mode: Option[String]): ActionHelper =
     new ActionHelper(
       action match {
@@ -38,5 +38,5 @@ class ActionHelper(val action: Act) {
           ActionTokensMode(ln, ts, mode)
       }
     )
-  
+
 }
