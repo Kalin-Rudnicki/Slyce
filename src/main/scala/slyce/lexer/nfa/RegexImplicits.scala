@@ -2,6 +2,8 @@ package slyce.lexer.nfa
 
 import scalaz.NonEmptyList
 
+import klib.handling.MessageAccumulator
+import slyce.lexer.dfa.GenerationMessage
 import slyce.lexer.nfa.Regex.CharClass._
 import slyce.lexer.nfa.Regex._
 import slyce.lexer.nfa.Regex.{CharClass => CC}
@@ -10,13 +12,13 @@ object RegexImplicits {
 
   implicit def charToCharClass(c: Char): CC =
     CC.only(c)
-  
+
   implicit def charToCharClassOps(c: Char): CharClassOps =
     charClassToCharClassOps(charToCharClass(c))
-  
+
   implicit def charClassToCharClassOps(cc: CC): CharClassOps =
     new CharClassOps(cc)
-  
+
   implicit def regexToRegexOps(reg: Regex): RegexOps =
     new RegexOps(reg)
 
@@ -106,7 +108,7 @@ object RegexImplicits {
 
     // =====|  |=====
 
-    def *(r: (Int, Option[Int])): Regex =
+    def *(r: (Int, Option[Int])): MessageAccumulator[GenerationMessage, Regex] =
       repeat(r)
 
     def =>>(next: Regex): Regex =
@@ -117,7 +119,7 @@ object RegexImplicits {
 
     // =====|  |=====
 
-    def repeat(repeat: (Int, Option[Int])): Regex =
+    def repeat(repeat: (Int, Option[Int])): MessageAccumulator[GenerationMessage, Regex] =
       repeat match {
         case (min, None) =>
           Repeat.Infinite(min, reg)

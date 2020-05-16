@@ -1,9 +1,10 @@
 package slyce
 
+import slyce.lexer.Action._
+import slyce.lexer.dfa.GenerationMessage
+import slyce.lexer.nfa.RegexImplicits._
 import slyce.lexer.nfa._
 import slyce.tree.GeneralToken
-import slyce.lexer.Action._
-import slyce.lexer.nfa.RegexImplicits._
 
 object Test {
 
@@ -15,7 +16,10 @@ object Test {
 
     val m1: Mode[Tok] = nfa.initialMode
 
-    m1 |~> 'c' :| 'C' <|> '_' |+ 4 >> "S"
+    (('c' :| 'C' <|> '_') * (3, None)).forEach(r => m1 |~> r |+ 4 >> "S")
+
+    val msg = GenerationMessage.RepeatMinNegative(-3)
+    println(msg)
 
   }
 

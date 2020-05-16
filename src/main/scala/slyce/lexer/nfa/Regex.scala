@@ -1,7 +1,13 @@
 package slyce.lexer.nfa
 
 import scalaz.NonEmptyList
+import scalaz.std.option.optionSyntax._
 
+import klib.handling.MessageAccumulator
+import klib.handling.implicits._
+import org.scalactic.source.Position
+import slyce.lexer.dfa.GenerationMessage
+import slyce.lexer.dfa.GenerationMessage._
 import slyce.lexer.nfa.Regex.{CharClass => CC}
 import slyce.lexer.nfa.RegexImplicits._
 
@@ -57,17 +63,42 @@ object Regex {
 
   object Repeat {
 
-    case class Between(min: Int, max: Int, regex: Regex) extends Repeat {
+    class Between private (val min: Int, val max: Int, val regex: Regex) extends Repeat {
 
       override def toString: String =
         s"Repeat.Between($min, $max, $regex)"
 
     }
 
-    case class Infinite(min: Int, regex: Regex) extends Repeat {
+    object Between {
+
+      def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): MessageAccumulator[GenerationMessage, Between] =
+        if (min < 0)
+          RepeatMinNegative(min)
+        else if (max < min)
+          RepeatMaxMin(min, max)
+        else
+          new Between(min, max, regex)
+
+      def unapply(arg: Between): Option[(Int, Int, Regex)] =
+        (arg.min, arg.max, arg.regex).some
+
+    }
+
+    class Infinite private (val min: Int, val regex: Regex) extends Repeat {
 
       override def toString: String =
         s"Repeat.Infinite($min, $regex)"
+
+    }
+
+    object Infinite {
+
+      def apply(min: Int, regex: Regex): MessageAccumulator[GenerationMessage, Infinite] =
+        if (min < 0)
+          RepeatMinNegative(min)
+        else
+          new Infinite(min, regex)
 
     }
 
