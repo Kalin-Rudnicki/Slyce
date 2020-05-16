@@ -140,10 +140,10 @@ object Regex {
       Except(chars.toCharArray.toSet)
 
     def exceptAscii(chars: Char*): CC =
-      Only(0.toChar.to(127.toChar).toSet) - Only(chars.toSet)
+      Only(0.toChar.to(127.toChar).toSet) :- Only(chars.toSet)
 
     def exceptAscii(chars: String): CC =
-      Only(0.toChar.to(127.toChar).toSet) - Only(chars.toCharArray.toSet)
+      Only(0.toChar.to(127.toChar).toSet) :- Only(chars.toCharArray.toSet)
 
     // =====| Common |=====
 
@@ -154,7 +154,7 @@ object Regex {
 
       val lowerLetters: CC = onlyR('a', 'z')
       val upperLetters: CC = onlyR('A', 'Z')
-      val letters: CC = lowerLetters | upperLetters
+      val letters: CC = lowerLetters :| upperLetters
 
       val __ : CC = only('_')
 
@@ -162,9 +162,9 @@ object Regex {
 
       val st: CC = only(' ', '\t')
       val n: CC = only('\n')
-      val stn: CC = st | n
+      val stn: CC = st :| n
 
-      val letterUnderscoreNumber: CC = letters | __ | d
+      val letterUnderscoreNumber: CC = letters :| __ :| d
 
     }
 

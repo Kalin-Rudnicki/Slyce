@@ -8,9 +8,37 @@ import slyce.lexer.nfa.Regex.{CharClass => CC}
 
 object RegexImplicits {
 
-  implicit class CharClassOps(cc: Regex.CharClass) {
+  implicit def charToCharClass(c: Char): CC =
+    CC.only(c)
+  
+  implicit def charToCharClassOps(c: Char): CharClassOps =
+    charClassToCharClassOps(charToCharClass(c))
+  
+  implicit def charClassToCharClassOps(cc: CC): CharClassOps =
+    new CharClassOps(cc)
+  
+  implicit def regexToRegexOps(reg: Regex): RegexOps =
+    new RegexOps(reg)
+
+  class CharClassOps(cc: Regex.CharClass) {
+
+    // =====|  |=====
 
     def unary_! : CC =
+      flip
+
+    def :|(other: CC): CC =
+      union(other)
+
+    def :&(other: CC): CC =
+      intersection(other)
+
+    def :-(other: CC): CC =
+      difference(other)
+
+    // =====|  |=====
+
+    def flip: CC =
       cc match {
         case Only(chars) =>
           Except(chars)
@@ -18,7 +46,7 @@ object RegexImplicits {
           Only(chars)
       }
 
-    def |(other: CC): CC =
+    def union(other: CC): CC =
       cc match {
         case Only(mChars) =>
           other match {
@@ -36,7 +64,7 @@ object RegexImplicits {
           }
       }
 
-    def &(other: CC): CC =
+    def intersection(other: CC): CC =
       cc match {
         case Only(mChars) =>
           other match {
@@ -54,7 +82,7 @@ object RegexImplicits {
           }
       }
 
-    def -(other: CC): CC =
+    def difference(other: CC): CC =
       cc match {
         case Only(mChars) =>
           other match {
@@ -74,9 +102,22 @@ object RegexImplicits {
 
   }
 
-  implicit class RegexOps(reg: Regex) {
+  class RegexOps(reg: Regex) {
 
-    def *(repeat: (Int, Option[Int])): Regex =
+    // =====|  |=====
+
+    def *(r: (Int, Option[Int])): Regex =
+      repeat(r)
+
+    def =>>(next: Regex): Regex =
+      followedBy(next)
+
+    def <|>(other: Regex): Regex =
+      or(other)
+
+    // =====|  |=====
+
+    def repeat(repeat: (Int, Option[Int])): Regex =
       repeat match {
         case (min, None) =>
           Repeat.Infinite(min, reg)
@@ -84,7 +125,7 @@ object RegexImplicits {
           Repeat.Between(min, max, reg)
       }
 
-    def >>(next: Regex): Regex =
+    def followedBy(next: Regex): Regex =
       reg match {
         case g: Group =>
           Sequence(NonEmptyList(next, g))
@@ -96,9 +137,9 @@ object RegexImplicits {
           Sequence(NonEmptyList(next, repeat))
       }
 
-    def @|(or: Regex): Regex = {
+    def or(other: Regex): Regex = {
       val orSeq: Sequence =
-        or match {
+        other match {
           case g: Group =>
             Sequence(NonEmptyList(g))
           case s: Sequence =>

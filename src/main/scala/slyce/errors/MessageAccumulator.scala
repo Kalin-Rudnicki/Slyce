@@ -61,6 +61,8 @@ object MessageAccumulator {
 
     implicit class MessageAccumulatorOps[T](v: T) {
 
+      // TODO (KR) : Rename
+
       def value: MessageAccumulator[Nothing, T] =
         valueM()
 

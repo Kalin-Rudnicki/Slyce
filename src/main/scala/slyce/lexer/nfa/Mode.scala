@@ -14,17 +14,15 @@ class Mode[T <: GeneralToken](val name: String) {
 
   def start: State[T] = {
     val ns: State[T] = newState
-    initialState ~= ns
+    initialState |== ns
     ns
   }
 
-  def <<(chars: Set[Char]): State[T] =
-    start << chars
+}
 
-  def <<(str: String): State[T] =
-    start << str
+object Mode {
 
-  def <<!(chars: Set[Char]): State[T] =
-    start <<! chars
+  implicit def modeToNewState[T <: GeneralToken](mode: Mode[T]): State[T] =
+    mode.start
 
 }
