@@ -15,6 +15,8 @@ sealed trait Regex {
 
   import Regex._
 
+  def canBeEmpty_? : Boolean
+
   // =====| prettyStr |=====
 
   private val INDENT = "|   "
@@ -56,6 +58,11 @@ object Regex {
         case Repeat.Infinite(min, _) =>
           s"$min-Infinity"
       }
+
+    override def canBeEmpty_? : Boolean =
+      min == 0 || regex.canBeEmpty_?
+
+    def min: Int
 
     def regex: Regex
 
@@ -100,6 +107,9 @@ object Regex {
         else
           new Infinite(min, regex)
 
+      def unapply(arg: Infinite): Option[(Int, Regex)] =
+        (arg.min, arg.regex).some
+
     }
 
   }
@@ -108,6 +118,9 @@ object Regex {
     * NOTE (KR) : Additions to a group are in reverse order (not as important as Sequence)
     */
   case class Group(options: NonEmptyList[Sequence]) extends Regex {
+
+    override def canBeEmpty_? : Boolean =
+      options.list.toList.indexWhere(!_.canBeEmpty_?) == -1
 
     override def toString: String =
       s"Group(${options.list.toList.reverse.mkString(", ")})"
@@ -120,17 +133,25 @@ object Regex {
   /**
     * NOTE (KR) : Additions to a sequence are in reverse order
     */
-  case class Sequence(list: NonEmptyList[Regex]) extends Regex {
+  case class Sequence(list: List[Regex]) extends Regex {
+
+    override def canBeEmpty_? : Boolean =
+      list.isEmpty
 
     override def toString: String =
-      s"Sequence(${list.list.toList.reverse.mkString(", ")})"
+      s"Sequence(${list.reverse.mkString(", ")})"
 
     def foreach(f: Regex => Unit): Unit =
       list.reverse.foreach(f)
 
   }
 
-  sealed trait CharClass extends Regex
+  sealed trait CharClass extends Regex {
+
+    override def canBeEmpty_? : Boolean =
+      false
+
+  }
 
   object CharClass {
 

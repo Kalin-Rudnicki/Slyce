@@ -130,26 +130,26 @@ object RegexImplicits {
     def followedBy(next: Regex): Regex =
       reg match {
         case g: Group =>
-          Sequence(NonEmptyList(next, g))
+          Sequence(next :: g :: Nil)
         case Sequence(list) =>
-          Sequence(NonEmptyList.nel(next, list.list))
+          Sequence(next :: list)
         case cc: CC =>
-          Sequence(NonEmptyList(next, cc))
+          Sequence(next :: cc :: Nil)
         case repeat: Repeat =>
-          Sequence(NonEmptyList(next, repeat))
+          Sequence(next :: repeat :: Nil)
       }
 
     def or(other: Regex): Regex = {
       val orSeq: Sequence =
         other match {
           case g: Group =>
-            Sequence(NonEmptyList(g))
+            Sequence(g :: Nil)
           case s: Sequence =>
             s
           case cc: CC =>
-            Sequence(NonEmptyList(cc))
+            Sequence(cc :: Nil)
           case repeat: Repeat =>
-            Sequence(NonEmptyList(repeat))
+            Sequence(repeat :: Nil)
         }
 
       reg match {
@@ -171,14 +171,14 @@ object RegexImplicits {
           Group(
             NonEmptyList(
               orSeq,
-              Sequence(NonEmptyList(cc))
+              Sequence(cc :: Nil)
             )
           )
         case repeat: Repeat =>
           Group(
             NonEmptyList(
               orSeq,
-              Sequence(NonEmptyList(repeat))
+              Sequence(repeat :: Nil)
             )
           )
       }
