@@ -84,6 +84,10 @@ object Regex {
           RepeatMinNegative(min)
         else if (max < min)
           RepeatMaxMin(min, max)
+        else if (max <= 0)
+          // Only happens if min == 0 and max == 0
+          // I would rather get a min < max in most cases, than non-positive max
+          RepeatMaxNonPositive(max)
         else
           new Between(min, max, regex)
 

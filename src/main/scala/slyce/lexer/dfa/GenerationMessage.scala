@@ -23,6 +23,11 @@ object GenerationMessage {
       s"Tried to repeat a regex a negative ($min) amount of times"
   }
 
+  case class RepeatMaxNonPositive(max: Int)(implicit val pos: Position) extends GenerationMessage {
+    override def message: String =
+      s"Tried to repeat a regex a non-positive ($max) amount of times"
+  }
+
   case class RepeatMaxMin(min: Int, max: Int)(implicit val pos: Position) extends GenerationMessage {
     override def message: String =
       s"Tried to repeat a regex where max times ($max) was less than min times ($min)"
