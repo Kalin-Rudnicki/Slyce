@@ -3,7 +3,6 @@ package slyce.lexer.nfa
 import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 
-import slyce.lexer.Action
 import slyce.lexer.nfa.Regex._
 import slyce.lexer.nfa.Regex.{CharClass => CC}
 import slyce.tree.GeneralToken

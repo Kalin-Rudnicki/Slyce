@@ -6,8 +6,7 @@ import scalaz.std.option.optionSyntax._
 import klib.handling.MessageAccumulator
 import klib.handling.implicits._
 import org.scalactic.source.Position
-import slyce.lexer.dfa.GenerationMessage
-import slyce.lexer.dfa.GenerationMessage._
+import slyce.lexer.nfa.GenerationMessage._
 import slyce.lexer.nfa.Regex.{CharClass => CC}
 import slyce.lexer.nfa.RegexImplicits._
 

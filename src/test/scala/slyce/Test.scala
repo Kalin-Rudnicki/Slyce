@@ -1,7 +1,7 @@
 package slyce
 
 import slyce.lexer.Action._
-import slyce.lexer.dfa.GenerationMessage
+import slyce.lexer.nfa.GenerationMessage
 import slyce.lexer.nfa.RegexImplicits._
 import slyce.lexer.nfa._
 import slyce.tree.GeneralToken

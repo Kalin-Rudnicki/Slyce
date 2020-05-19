@@ -1,4 +1,4 @@
-package slyce.lexer.dfa
+package slyce.lexer.nfa
 
 import klib.handling.Message
 import org.scalactic.source.Position

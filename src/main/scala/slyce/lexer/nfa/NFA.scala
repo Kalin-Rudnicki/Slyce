@@ -2,7 +2,7 @@ package slyce.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
 
-import slyce.lexer.dfa.{DFA, GenerationMessage}
+import slyce.lexer.dfa.runtime.DFA
 import slyce.tree.GeneralToken
 
 class NFA[T <: GeneralToken](initialModeName: String = "General") {

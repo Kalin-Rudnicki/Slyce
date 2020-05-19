@@ -3,7 +3,6 @@ package slyce.lexer.nfa
 import scalaz.NonEmptyList
 
 import klib.handling.MessageAccumulator
-import slyce.lexer.dfa.GenerationMessage
 import slyce.lexer.nfa.Regex.CharClass._
 import slyce.lexer.nfa.Regex._
 import slyce.lexer.nfa.Regex.{CharClass => CC}

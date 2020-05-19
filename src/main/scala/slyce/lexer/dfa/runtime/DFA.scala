@@ -1,4 +1,4 @@
-package slyce.lexer.dfa
+package slyce.lexer.dfa.runtime
 
 import slyce.tree.GeneralToken
 
