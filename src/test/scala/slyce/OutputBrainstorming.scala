@@ -41,6 +41,7 @@ object OutputBrainstorming {
 
   }
 
+  /*
   type TopLevelRaw =
     RawGroups.Opt1
 
@@ -71,5 +72,6 @@ object OutputBrainstorming {
   // TODO (KR) :
   private def rawToRefactored(raw: TopLevelRaw): MessageAccumulator[RuntimeMessage, TopLevelRefactored] =
     ???
+   */
 
 }

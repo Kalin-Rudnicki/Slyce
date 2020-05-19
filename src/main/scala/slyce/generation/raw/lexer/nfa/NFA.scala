@@ -2,18 +2,17 @@ package slyce.generation.raw.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
 
-import todo_move_tree.GeneralToken
-
 import klib.handling.MessageAccumulator
 import slyce.generation.GenerationMessage
+import slyce.generation.generated.lexer.dfa.DFA
 
-class NFA[T <: GeneralToken](initialModeName: String = "General") {
+class NFA(initialModeName: String = "General") {
 
-  val initialMode: Mode[T] = new Mode[T](initialModeName)
-  val modes: MList[Mode[T]] = MList(initialMode)
+  val initialMode: Mode = new Mode(initialModeName)
+  val modes: MList[Mode] = MList(initialMode)
 
-  def newMode(name: String): Mode[T] = {
-    val mode: Mode[T] = new Mode[T](name)
+  def newMode(name: String): Mode = {
+    val mode: Mode = new Mode(name)
     modes.append(mode)
     mode
   }
@@ -21,7 +20,7 @@ class NFA[T <: GeneralToken](initialModeName: String = "General") {
   /**
     * @return (Compiled DFA, List of (Unused line, Lines that override it))
     */
-  def compile: MessageAccumulator[GenerationMessage, DFA[T]] = { // TODO (KR) : Reference correct DFA
+  def compile: MessageAccumulator[GenerationMessage, DFA] = { // TODO (KR) : Reference correct DFA
     // TODO (KR) : Implement
     ???
   }

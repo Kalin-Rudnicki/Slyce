@@ -4,10 +4,17 @@ import scalaz.NonEmptyList
 
 import klib.handling.MessageAccumulator
 import slyce.generation.GenerationMessage
+import slyce.generation.raw.lexer.nfa.Regex.CharClass._
+import slyce.generation.raw.lexer.nfa.Regex._
+import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
 
 object RegexImplicits {
 
   // =====| Converters |=====
+
+  // TODO (KR) : Reversed properly?
+  implicit def stringToSequence(str: String): Sequence =
+    Sequence(str.toList.reverse.map[CC](cc => cc))
 
   implicit def charToCharClass(c: Char): CC =
     CC.only(c)

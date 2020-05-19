@@ -1,4 +1,4 @@
-package slyce.generation.raw.lexer.nfa
+package slyce.generation
 
 sealed trait TokenSpec {
 

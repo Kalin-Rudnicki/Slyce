@@ -1,29 +1,29 @@
 package slyce
 
-import slyce.generation.GenerationMessage
-import todo_remove_lexer.Action._
-
-import slyce.generation.raw.lexer.nfa.RegexImplicits._
-import todo_remove_lexer.nfa._
-import todo_move_tree.GeneralToken
-
-import slyce.generation.raw.lexer.nfa.Mode
-import slyce.generation.raw.lexer.nfa.NFA
-
 object Test {
 
-  trait Tok extends GeneralToken
+  class State(val id: Int) {
+
+    var transitions: Map[Char, State] = _
+
+    override def toString: String =
+      s"State(${transitions.map(pair => s"${pair._1} -> State #${pair._2.id}").mkString(", ")})"
+
+  }
 
   def main(args: Array[String]): Unit = {
 
-    val nfa: NFA[Tok] = new NFA
+    val s1: State = new State(0)
+    val s2: State = new State(1)
+    val s3: State = new State(2)
 
-    val m1: Mode[Tok] = nfa.initialMode
+    s1.transitions = Map('a' -> s1, 'b' -> s2)
+    s2.transitions = Map('b' -> s2, 'c' -> s3)
+    s3.transitions = Map('a' -> s1, 'c' -> s3)
 
-    (('c' :| 'C' <|> '_') * (3, None)).forEach(r => m1 |~> r |+ 4 >> "S")
-
-    val msg = GenerationMessage.RepeatMinNegative(-3)
-    println(msg)
+    println(s1)
+    println(s2)
+    println(s3)
 
   }
 

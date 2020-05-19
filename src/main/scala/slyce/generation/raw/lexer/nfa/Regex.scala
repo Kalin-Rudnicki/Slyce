@@ -8,10 +8,11 @@ import klib.handling.MessageAccumulator
 import klib.handling.implicits._
 import slyce.generation.GenerationMessage
 import slyce.generation.GenerationMessage._
+import slyce.generation.raw.lexer.nfa.Regex._
+import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
+import slyce.generation.raw.lexer.nfa.RegexImplicits._
 
 sealed trait Regex {
-
-  import Regex._
 
   def canBeEmpty_? : Boolean
 

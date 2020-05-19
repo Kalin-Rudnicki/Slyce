@@ -1,5 +1,7 @@
 package slyce.generation.raw.lexer.nfa
 
+import slyce.generation.TokenSpec
+
 case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]) {
 
   def <<(t: List[TokenSpec]): Action =

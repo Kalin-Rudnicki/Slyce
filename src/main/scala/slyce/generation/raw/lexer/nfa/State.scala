@@ -3,34 +3,35 @@ package slyce.generation.raw.lexer.nfa
 import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 
-import todo_move_tree.GeneralToken
+import slyce.generation.raw.lexer.nfa.Regex._
+import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
 
-class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
+class State(val mode: Mode, val id: Int) {
 
-  val transitions: TransitionMap[T] = new TransitionMap()
+  val transitions: TransitionMap = new TransitionMap()
   val actions: MList[Action] = MList()
 
-  def free: State[T] = {
+  def free: State = {
     val newState = mode.newState
     this |== newState
     newState
   }
 
   // Epsilon transition
-  def |==(other: State[T]): Unit =
+  def |==(other: State): Unit =
     transitions ~= other
 
-  def <<<(charClass: CC): State[T] = {
-    val ns: State[T] = mode.newState
+  def <<<(charClass: CC): State = {
+    val ns: State = mode.newState
     transitions << (charClass, ns)
     ns
   }
 
   // Transition on regex
-  def |~>(regex: Regex): State[T] =
+  def |~>(regex: Regex): State =
     regex match {
       case Group(options) =>
-        val newState: State[T] = mode.newState
+        val newState: State = mode.newState
         options.map(this |~> _).foreach(_ |== newState)
         newState
       case Sequence(list) =>
@@ -40,7 +41,7 @@ class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
         this <<< cc
       case repeat: Repeat =>
         @tailrec
-        def rec(input: State[T], times: Int, reg: Regex): State[T] =
+        def rec(input: State, times: Int, reg: Regex): State =
           if (times > 0)
             rec(
               input |~> regex,
@@ -51,7 +52,7 @@ class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
             input
 
         @tailrec
-        def loop(input: State[T], times: Int, reg: Regex, skip: State[T] = mode.newState): State[T] = {
+        def loop(input: State, times: Int, reg: Regex, skip: State = mode.newState): State = {
           input |== skip
           if (times > 0)
             loop(
@@ -72,8 +73,8 @@ class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
               reg
             )
           case Repeat.Infinite(min, reg) =>
-            val afterMin: State[T] = rec(this, min, reg)
-            val take: State[T] = afterMin |~> reg
+            val afterMin: State = rec(this, min, reg)
+            val take: State = afterMin |~> reg
             take |== afterMin
             afterMin.free
         }

@@ -4,21 +4,21 @@ import scala.collection.mutable.{ListBuffer => MList}
 
 import todo_move_tree.GeneralToken
 
-class Mode[T <: GeneralToken](val name: String) {
+class Mode(val name: String) {
 
   private var counter: Int = -1
-  private val states: MList[State[T]] = MList()
-  val initialState: State[T] = newState
+  private val states: MList[State] = MList()
+  val initialState: State = newState
 
-  def newState: State[T] = {
+  def newState: State = {
     counter += 1
-    val ns: State[T] = new State(this, counter)
+    val ns: State = new State(this, counter)
     states.append(ns)
     ns
   }
 
-  def start: State[T] = {
-    val ns: State[T] = newState
+  def start: State = {
+    val ns: State = newState
     initialState |== ns
     ns
   }
@@ -27,7 +27,7 @@ class Mode[T <: GeneralToken](val name: String) {
 
 object Mode {
 
-  implicit def modeToNewState[T <: GeneralToken](mode: Mode[T]): State[T] =
+  implicit def modeToNewState[T <: GeneralToken](mode: Mode): State =
     mode.start
 
 }
