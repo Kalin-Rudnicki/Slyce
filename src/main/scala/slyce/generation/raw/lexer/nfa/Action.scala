@@ -1,6 +1,4 @@
-package slyce.lexer.nfa
-
-import slyce.lexer.TokenSpec
+package slyce.generation.raw.lexer.nfa
 
 case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]) {
 

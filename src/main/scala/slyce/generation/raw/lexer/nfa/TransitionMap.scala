@@ -1,9 +1,9 @@
-package slyce.lexer.nfa
+package slyce.generation.raw.lexer.nfa
 
-import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
+import scala.collection.mutable.{ListBuffer => MList}
+import scala.collection.mutable.{Map => MMap}
 
-import slyce.lexer.nfa.Regex.{CharClass => CC}
-import slyce.tree.GeneralToken
+import todo_move_tree.GeneralToken
 
 class TransitionMap[T <: GeneralToken] {
 
@@ -13,6 +13,7 @@ class TransitionMap[T <: GeneralToken] {
   ] = MMap()
 
   val epsilonTransitions: MList[State[T]] = MList()
+  // Unspecified has to do with not having to list out every UTF-8 char for [^a-z]
   val unspecified: MList[State[T]] = MList()
 
   def <<(charClass: CC, transitionType: State[T]): Unit =

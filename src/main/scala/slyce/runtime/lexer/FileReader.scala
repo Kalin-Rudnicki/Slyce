@@ -1,8 +1,8 @@
-package slyce.lexer.dfa.runtime
+package slyce.runtime.lexer
 
 import scalaz.std.option.optionSyntax._
 
-import slyce.tree.GeneralToken.Stats.RelativePos
+import todo_move_tree.GeneralToken.Stats.RelativePos
 
 final class FileReader(val source: Iterator[Char]) {
 

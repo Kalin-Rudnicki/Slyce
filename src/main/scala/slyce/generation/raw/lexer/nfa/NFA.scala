@@ -1,9 +1,11 @@
-package slyce.lexer.nfa
+package slyce.generation.raw.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
 
-import slyce.lexer.dfa.runtime.DFA
-import slyce.tree.GeneralToken
+import todo_move_tree.GeneralToken
+
+import klib.handling.MessageAccumulator
+import slyce.generation.GenerationMessage
 
 class NFA[T <: GeneralToken](initialModeName: String = "General") {
 
@@ -19,7 +21,7 @@ class NFA[T <: GeneralToken](initialModeName: String = "General") {
   /**
     * @return (Compiled DFA, List of (Unused line, Lines that override it))
     */
-  def compile: (Option[DFA[T]], List[GenerationMessage]) = {
+  def compile: MessageAccumulator[GenerationMessage, DFA[T]] = { // TODO (KR) : Reference correct DFA
     // TODO (KR) : Implement
     ???
   }

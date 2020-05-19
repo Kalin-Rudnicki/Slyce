@@ -1,14 +1,13 @@
-package slyce.lexer.nfa
+package slyce.generation.raw.lexer.nfa
 
+import org.scalactic.source.Position
 import scalaz.NonEmptyList
 import scalaz.std.option.optionSyntax._
 
 import klib.handling.MessageAccumulator
 import klib.handling.implicits._
-import org.scalactic.source.Position
-import slyce.lexer.nfa.GenerationMessage._
-import slyce.lexer.nfa.Regex.{CharClass => CC}
-import slyce.lexer.nfa.RegexImplicits._
+import slyce.generation.GenerationMessage
+import slyce.generation.GenerationMessage._
 
 sealed trait Regex {
 
@@ -20,6 +19,8 @@ sealed trait Regex {
 
   private val INDENT = "|   "
   private val MARKER = "|-> "
+
+  // TODO (KR) : Remove in favor of KLib
 
   def prettyStr: String = {
     val buffer: StringBuilder = new StringBuilder

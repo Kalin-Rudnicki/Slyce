@@ -1,10 +1,14 @@
 package slyce
 
-import slyce.lexer.Action._
-import slyce.lexer.nfa.GenerationMessage
-import slyce.lexer.nfa.RegexImplicits._
-import slyce.lexer.nfa._
-import slyce.tree.GeneralToken
+import slyce.generation.GenerationMessage
+import todo_remove_lexer.Action._
+
+import slyce.generation.raw.lexer.nfa.RegexImplicits._
+import todo_remove_lexer.nfa._
+import todo_move_tree.GeneralToken
+
+import slyce.generation.raw.lexer.nfa.Mode
+import slyce.generation.raw.lexer.nfa.NFA
 
 object Test {
 

@@ -4,8 +4,8 @@ import scala.collection.mutable.{Map => MMap}
 
 import org.scalatest.Matchers._
 import org.scalatest.funspec.PathAnyFunSpec
-import slyce.lexer.nfa.Regex.{CharClass => CC}
-import slyce.lexer.nfa.RegexImplicits._
+import todo_remove_lexer.nfa.Regex.{CharClass => CC}
+import slyce.generation.raw.lexer.nfa.RegexImplicits._
 
 class CharClassTests extends PathAnyFunSpec {
 

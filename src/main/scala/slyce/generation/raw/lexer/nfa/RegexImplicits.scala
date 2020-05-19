@@ -1,13 +1,13 @@
-package slyce.lexer.nfa
+package slyce.generation.raw.lexer.nfa
 
 import scalaz.NonEmptyList
 
 import klib.handling.MessageAccumulator
-import slyce.lexer.nfa.Regex.CharClass._
-import slyce.lexer.nfa.Regex._
-import slyce.lexer.nfa.Regex.{CharClass => CC}
+import slyce.generation.GenerationMessage
 
 object RegexImplicits {
+
+  // =====| Converters |=====
 
   implicit def charToCharClass(c: Char): CC =
     CC.only(c)
@@ -20,6 +20,8 @@ object RegexImplicits {
 
   implicit def regexToRegexOps(reg: Regex): RegexOps =
     new RegexOps(reg)
+
+  // =====| Helpers |=====
 
   class CharClassOps(cc: Regex.CharClass) {
 

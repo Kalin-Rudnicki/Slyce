@@ -1,11 +1,9 @@
-package slyce.lexer.nfa
+package slyce.generation.raw.lexer.nfa
 
 import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 
-import slyce.lexer.nfa.Regex._
-import slyce.lexer.nfa.Regex.{CharClass => CC}
-import slyce.tree.GeneralToken
+import todo_move_tree.GeneralToken
 
 class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
 
@@ -36,8 +34,8 @@ class State[T <: GeneralToken](val mode: Mode[T], val id: Int) {
         options.map(this |~> _).foreach(_ |== newState)
         newState
       case Sequence(list) =>
-        // TODO (KR) : I think this is right, as it is in reverse order?
-        list.list.foldRight(this)((reg, s) => s |~> reg)
+        // NOTE (KR) : I think this is right, as it is in reverse order?
+        list.foldRight(this)((reg, s) => s |~> reg)
       case cc: CC =>
         this <<< cc
       case repeat: Repeat =>
