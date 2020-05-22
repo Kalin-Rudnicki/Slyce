@@ -1,11 +1,28 @@
 package slyce.generation
 
-import klib.handling.Message
 import org.scalactic.source.Position
+
+import klib.handling.Message
+import klib.handling.MessageAccumulator
 
 sealed trait GenerationMessage extends Message
 
 object GenerationMessage {
+
+  type ??[T] =
+    MessageAccumulator[GenerationMessage, T]
+
+  // =====| ... |=====
+
+  case class NoSuchModeToTransitionTo(lineNo: Int, modeName: String)(implicit val pos: Position) extends GenerationMessage {
+    override def message: String =
+      s"Unable to transition to non-existent mode '$modeName' from regex on line #$lineNo"
+  }
+
+  case class DuplicateModeIgnored(modeName: String)(implicit val pos: Position) extends GenerationMessage {
+    override def message: String =
+      s"Mode $modeName was duplicated, and will be ignored"
+  }
 
   case class EmptyStringCompletesRegex(lineNo: Int)(implicit val pos: Position) extends GenerationMessage {
     override def message: String =

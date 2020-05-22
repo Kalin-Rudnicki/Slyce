@@ -2,8 +2,12 @@ package slyce.generation.raw.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
 
-import klib.handling.MessageAccumulator
-import slyce.generation.GenerationMessage
+import scalaz.Scalaz._
+
+import klib.handling.Implicits._
+import klib.handling.MessageAccumulator._
+import slyce.generation.GenerationMessage._
+import slyce.generation.generated.lexer.dfa
 import slyce.generation.generated.lexer.dfa.DFA
 
 class NFA(initialModeName: String = "General") {
@@ -17,11 +21,33 @@ class NFA(initialModeName: String = "General") {
     mode
   }
 
-  /**
-    * @return (Compiled DFA, List of (Unused line, Lines that override it))
-    */
-  def compile: MessageAccumulator[GenerationMessage, DFA] = { // TODO (KR) : Reference correct DFA
-    // TODO (KR) : Implement
+  def compile: ??[DFA] = {
+    val modeMap: ??[Map[String, Mode]] =
+      modes.toList.foldLeft[??[Map[String, Mode]]](
+        Alive(Map())
+      ) { (map_?, mode) =>
+        map_?.flatMap { map =>
+          map
+            .contains(mode.name)
+            .fold(
+              map + ((mode.name, mode)),
+              map << DuplicateModeIgnored(mode.name)
+            )
+        }
+      }
+
+    val genModeMap: ??[Map[String, (Mode, dfa.State)]] =
+      modeMap.map { map =>
+        map.map {
+          case (k, v) =>
+            (
+              k,
+              (v, new dfa.State(v.name, 0))
+            )
+        }
+      }
+
+    // TODO (KR) : genModeMap.flatMap {}
     ???
   }
 

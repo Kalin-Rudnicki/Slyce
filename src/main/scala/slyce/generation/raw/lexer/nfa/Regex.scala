@@ -4,9 +4,8 @@ import org.scalactic.source.Position
 import scalaz.NonEmptyList
 import scalaz.std.option.optionSyntax._
 
-import klib.handling.MessageAccumulator
-import klib.handling.implicits._
-import slyce.generation.GenerationMessage
+import klib.handling.Implicits._
+import slyce.generation.GenerationMessage.??
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
@@ -80,7 +79,7 @@ object Regex {
 
     object Between {
 
-      def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): MessageAccumulator[GenerationMessage, Between] =
+      def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): ??[Between] =
         if (min < 0)
           RepeatMinNegative(min)
         else if (max < min)
@@ -106,7 +105,7 @@ object Regex {
 
     object Infinite {
 
-      def apply(min: Int, regex: Regex): MessageAccumulator[GenerationMessage, Infinite] =
+      def apply(min: Int, regex: Regex): ??[Infinite] =
         if (min < 0)
           RepeatMinNegative(min)
         else

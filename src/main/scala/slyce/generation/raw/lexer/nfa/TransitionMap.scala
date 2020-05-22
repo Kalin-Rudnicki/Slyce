@@ -1,9 +1,11 @@
 package slyce.generation.raw.lexer.nfa
 
+import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 import scala.collection.mutable.{Map => MMap}
 
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
+import slyce.generation.generated.lexer.dfa
 
 class TransitionMap {
 

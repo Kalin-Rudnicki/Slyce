@@ -17,6 +17,9 @@ class State(val mode: Mode, val id: Int) {
     newState
   }
 
+  def trivial_? : Boolean =
+    actions.toList.isEmpty && transitions.transitions.isEmpty && transitions.unspecified.isEmpty
+
   // Epsilon transition
   def |==(other: State): Unit =
     transitions ~= other
