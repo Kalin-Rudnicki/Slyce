@@ -14,6 +14,11 @@ object GenerationMessage {
 
   // =====| ... |=====
 
+  case class CanNotJoinEmptyMaps()(implicit val pos: Position) extends GenerationMessage {
+    override def message: String =
+      "Can not join empty set of transition maps"
+  }
+
   case class NoSuchModeToTransitionTo(lineNo: Int, modeName: String)(implicit val pos: Position) extends GenerationMessage {
     override def message: String =
       s"Unable to transition to non-existent mode '$modeName' from regex on line #$lineNo"
@@ -33,6 +38,11 @@ object GenerationMessage {
       extends GenerationMessage {
     override def message: String =
       s"Regex on line #$lineNo is completely shadowed by regexes on lines: ${shadowingLines.mkString(", ")}"
+  }
+
+  case class InaccessibleNbaState(mode: String, stateNo: Int)(implicit val pos: Position) extends GenerationMessage {
+    override def message: String =
+      s"State #$stateNo in mode $mode is inaccessible"
   }
 
   case class RepeatMinNegative(min: Int)(implicit val pos: Position) extends GenerationMessage {

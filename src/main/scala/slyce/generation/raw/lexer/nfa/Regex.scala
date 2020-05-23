@@ -4,7 +4,8 @@ import org.scalactic.source.Position
 import scalaz.NonEmptyList
 import scalaz.std.option.optionSyntax._
 
-import klib.handling.Implicits._
+import klib.fp.instances._
+import klib.fp.ops._
 import slyce.generation.GenerationMessage.??
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
@@ -81,15 +82,15 @@ object Regex {
 
       def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): ??[Between] =
         if (min < 0)
-          RepeatMinNegative(min)
+          RepeatMinNegative(min).dead
         else if (max < min)
-          RepeatMaxMin(min, max)
+          RepeatMaxMin(min, max).dead
         else if (max <= 0)
           // Only happens if min == 0 and max == 0
           // I would rather get a min < max in most cases, than non-positive max
-          RepeatMaxNonPositive(max)
+          RepeatMaxNonPositive(max).dead
         else
-          new Between(min, max, regex)
+          new Between(min, max, regex).lift[??]
 
       def unapply(arg: Between): Option[(Int, Int, Regex)] =
         (arg.min, arg.max, arg.regex).some
@@ -107,9 +108,9 @@ object Regex {
 
       def apply(min: Int, regex: Regex): ??[Infinite] =
         if (min < 0)
-          RepeatMinNegative(min)
+          RepeatMinNegative(min).dead
         else
-          new Infinite(min, regex)
+          new Infinite(min, regex).lift[??]
 
       def unapply(arg: Infinite): Option[(Int, Regex)] =
         (arg.min, arg.regex).some

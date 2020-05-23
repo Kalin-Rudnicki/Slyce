@@ -4,10 +4,11 @@ import scala.collection.mutable.{ListBuffer => MList}
 import scala.collection.mutable.{Map => MMap}
 import scala.collection.mutable.{Set => MSet}
 
-import scalaz.std.option.optionSyntax._
-import todo_move_tree.GeneralToken
+import scalaz.Scalaz._
 
-import klib.handling.Implicits._
+import klib.fp.instances._
+import klib.fp.ops._
+import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
 
@@ -33,70 +34,91 @@ class Mode(val name: String) {
   def compile(myStart: dfa.State, modes: Map[String, dfa.State]): ??[Unit] = {
     var counter: Int = 0
     val cache: MMap[Set[State], dfa.State] = MMap()
-    val shadowMap: MMap[Action, MSet[Action]] = MMap()
-    val joinedStart: Set[State] = epsilons(Set(initialState))
+    val shadowMap: MMap[Int, MSet[Int]] = MMap()
+    val joinedStart: Set[State] = State.epsilons(Set(initialState), _.transitions.epsilonTransitions.toSet)
 
-    def epsilons(states: Set[State]): Set[State] = {
-      def loop(state: State): Set[State] =
-        Set(state) ++ state.transitions.epsilonTransitions.toSet.flatMap(loop)
-
-      states.flatMap(loop).filter(!_.trivial_?)
-    }
-
-    // TODO (KR) : Implement
-    def join(dfaState: dfa.State, states: Set[State]): ??[dfa.State] = {
-      // TODO (KR) : Implement
-      val transitionMap: ??[dfa.TransitionMap] = ???
-      val action: ??[Option[Action]] =
-        states.flatMap(_.actions.toList).toList.sortBy(_.lineNo) match {
-          case Nil =>
+    def join(
+        states: Set[State],
+        dfaState: dfa.State
+    ): ??[dfa.State] = {
+      cache.put(states, dfaState)
+      for {
+        tmp <- TransitionMap.preJoin(states.map(_.transitions))
+        (charToStateSet, epsilonSet) = tmp
+        epsilon <- epsilonSet.isEmpty.fold(
+          Alive(None),
+          loop(epsilonSet).map(Some(_))
+        )
+        listCharState <-
+          charToStateSet
+            ._map(loop)
+            .toList
+            .map(t => t._2.map(s => (t._1, s)))
+            ._invert
+        mapCharState = listCharState.toMap
+        oActions = Action.join(states.toList.flatMap(_.actions))
+        dfaOActions <- oActions.map(oA => oA._1.toDfaAction(myStart, modes).map((_, oA._2))) match {
+          case None =>
+            Alive(None)
+          case Some(a) =>
+            a.map(Some(_))
+        }
+      } yield {
+        dfaState.transitions = new dfa.TransitionMap(mapCharState, epsilon)
+        dfaState.action = dfaOActions match {
+          case None =>
             None
-          case head :: Nil =>
-            head.some
-          case head :: tail =>
-            shadowMap.getOrElseUpdate(head, MSet()).addAll(tail)
-            head.some
+          case Some((action, Nil)) =>
+            Some(action)
+          case Some((action, shadowed)) =>
+            shadowMap.getOrElseUpdate(action.lineNo, MSet()).addAll(shadowed.map(_.lineNo))
+            Some(action)
         }
-
-      transitionMap
-        .flatMap { tm =>
-          dfaState.transitions = tm
-          action.flatMap { a =>
-            a.map(_.toDfaAction(myStart, modes))
-          }
-        }
-        .map { _ =>
-          dfaState
-        }
+        dfaState
+      }
     }
 
     def loop(preGrouped: Set[State]): ??[dfa.State] = {
-      val grouped: Set[State] = epsilons(preGrouped)
+      val grouped: Set[State] = State.epsilons(preGrouped, _.transitions.epsilonTransitions.toSet)
       cache.get(grouped) match {
         case Some(dfaState) =>
-          dfaState
+          Alive(dfaState)
         case None =>
           counter += 1
-          val dfaState = join(new dfa.State(name, counter), grouped)
+          val dfaState = join(grouped, new dfa.State(name, counter))
           dfaState.forEach(cache.put(grouped, _))
           dfaState
       }
-
     }
 
-    val res: ??[dfa.State] = join(myStart, joinedStart)
+    val shadowedBy: List[(Int, Set[Int])] =
+      shadowMap.toSet
+        .flatMap((t: (Int, MSet[Int])) => t._2.toSet.map((_t: Int) => (_t, t._1)))
+        .groupMap(_._1)(_._2)
+        .toList
 
-    validate(myStart)
+    // TODO (KR) : 'for'
+
+    for {
+      res0 <- join(joinedStart, myStart)
+      res1 <- Alive(res0, shadowedBy.map(t => CompletelyShadowedRegex(t._1, t._2.toList)): _*).asInstanceOf[??[dfa.State]]
+      accessibleStates = State.epsilons(
+        Set(initialState),
+        s =>
+          s.transitions.epsilonTransitions.toSet | s.transitions.transitions.toSet.flatMap((_s: (Char, MList[State])) =>
+            _s._2.toSet
+          )
+      )
+      unseenStates = states.toSet &~ accessibleStates
+      _ <- Alive(res1, unseenStates.map(s => InaccessibleNbaState(name, s.id)).toList: _*).asInstanceOf[??[dfa.State]]
+    } yield ()
   }
-
-  // TODO (KR) : Implement
-  def validate(dfaStateStart: dfa.State): ??[Unit] = ???
 
 }
 
 object Mode {
 
-  implicit def modeToNewState[T <: GeneralToken](mode: Mode): State =
+  implicit def modeToNewState(mode: Mode): State =
     mode.start
 
 }

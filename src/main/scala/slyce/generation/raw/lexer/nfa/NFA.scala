@@ -4,7 +4,8 @@ import scala.collection.mutable.{ListBuffer => MList}
 
 import scalaz.Scalaz._
 
-import klib.handling.Implicits._
+import klib.fp.instances._
+import klib.fp.ops._
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
@@ -26,12 +27,13 @@ class NFA(initialModeName: String = "General") {
       modes.toList.foldLeft[??[Map[String, Mode]]](
         Alive(Map())
       ) { (map_?, mode) =>
+        // TODO (KR) : Here
         map_?.flatMap { map =>
           map
             .contains(mode.name)
             .fold(
-              map + ((mode.name, mode)),
-              map << DuplicateModeIgnored(mode.name)
+              Alive(map + ((mode.name, mode))),
+              Alive(map) << DuplicateModeIgnored(mode.name)
             )
         }
       }

@@ -3,6 +3,8 @@ package slyce.generation.raw.lexer.nfa
 import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 
+import scalaz.Scalaz._
+
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
 
@@ -86,5 +88,21 @@ class State(val mode: Mode, val id: Int) {
   // Add action
   def |+(action: Action): Unit =
     actions.append(action)
+
+}
+
+object State {
+
+  def epsilons(states: Set[State], stateToStateSet: State => Set[State]): Set[State] = {
+    def loop(seen: Set[State], _new: Set[State]): Set[State] =
+      _new.isEmpty.fold(
+        seen,
+        _new.foldLeft(seen & _new) { (__seen, s) =>
+          loop(__seen, __seen &~ stateToStateSet(s))
+        }
+      )
+
+    loop(Set(), states)
+  }
 
 }

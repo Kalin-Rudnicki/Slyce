@@ -10,6 +10,8 @@ libraryDependencies ++= List(
   "jline" %% "jline" % "2.10.1" from "file:///home/kalin/dev/projects/current/Slyce/dependencies/jline2-2.10.1.jar"
 )
 
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
+
 name := "Slyce"
 version := "0.1"
 scalaVersion := "2.13.2"
