@@ -23,11 +23,10 @@ class NFA(initialModeName: String = "General") {
   }
 
   def compile: ??[DFA] = {
-    val modeMap: ??[Map[String, Mode]] =
-      modes.toList.foldLeft[??[Map[String, Mode]]](
+    for {
+      strModeMap <- modes.toList.foldLeft[??[Map[String, Mode]]](
         Alive(Map())
       ) { (map_?, mode) =>
-        // TODO (KR) : Here
         map_?.flatMap { map =>
           map
             .contains(mode.name)
@@ -37,20 +36,11 @@ class NFA(initialModeName: String = "General") {
             )
         }
       }
-
-    val genModeMap: ??[Map[String, (Mode, dfa.State)]] =
-      modeMap.map { map =>
-        map.map {
-          case (k, v) =>
-            (
-              k,
-              (v, new dfa.State(v.name, 0))
-            )
-        }
-      }
-
-    // TODO (KR) : genModeMap.flatMap {}
-    ???
+      // TODO (KR) : Possible place for optimizations
+      strModeStateMap = strModeMap._map(m => (m, new dfa.State(m.name, 0)))
+      _ <- strModeStateMap.values.toList.map(ms => ms._1.compile(ms._2, strModeStateMap)).invert
+      initialState = strModeStateMap(initialModeName)._2
+    } yield new DFA(initialState)
   }
 
 }

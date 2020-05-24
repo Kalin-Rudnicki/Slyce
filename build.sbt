@@ -10,6 +10,8 @@ libraryDependencies ++= List(
   "jline" %% "jline" % "2.10.1" from "file:///home/kalin/dev/projects/current/Slyce/dependencies/jline2-2.10.1.jar"
 )
 
+ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger
+
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
 
 name := "Slyce"

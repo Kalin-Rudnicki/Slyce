@@ -31,7 +31,7 @@ class Mode(val name: String) {
     ns
   }
 
-  def compile(myStart: dfa.State, modes: Map[String, dfa.State]): ??[Unit] = {
+  def compile(myStart: dfa.State, modes: Map[String, (Mode, dfa.State)]): ??[Unit] = {
     var counter: Int = 0
     val cache: MMap[Set[State], dfa.State] = MMap()
     val shadowMap: MMap[Int, MSet[Int]] = MMap()
@@ -97,8 +97,6 @@ class Mode(val name: String) {
         .groupMap(_._1)(_._2)
         .toList
 
-    // TODO (KR) : 'for'
-
     for {
       res0 <- join(joinedStart, myStart)
       res1 <- Alive(res0, shadowedBy.map(t => CompletelyShadowedRegex(t._1, t._2.toList)): _*).asInstanceOf[??[dfa.State]]
@@ -109,8 +107,6 @@ class Mode(val name: String) {
             _s._2.toSet
           )
       )
-      unseenStates = states.toSet &~ accessibleStates
-      _ <- Alive(res1, unseenStates.map(s => InaccessibleNbaState(name, s.id)).toList: _*).asInstanceOf[??[dfa.State]]
     } yield ()
   }
 

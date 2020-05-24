@@ -1,29 +1,45 @@
 package slyce
 
+import klib.fp.instances._
+import klib.fp.ops._
+import klib.handling.MessageAccumulator._
+import slyce.generation.GenerationMessage._
+
 object Test {
 
-  class State(val id: Int) {
-
-    var transitions: Map[Char, State] = _
-
-    override def toString: String =
-      s"State(${transitions.map(pair => s"${pair._1} -> State #${pair._2.id}").mkString(", ")})"
-
+  def test[T](items: ??[T]*): Unit = {
+    val list: List[??[T]] = items.toList
+    println(list)
+    println(list.invert)
+    println(list.invertR)
+    println
   }
 
   def main(args: Array[String]): Unit = {
 
-    val s1: State = new State(0)
-    val s2: State = new State(1)
-    val s3: State = new State(2)
+    test(
+      Alive(1, GenericMessage("~1.1"), GenericMessage("~1.2")),
+      Alive(2, GenericMessage("~2.1"), GenericMessage("~2.2")),
+      Alive(3, GenericMessage("~3.1"), GenericMessage("~3.2"))
+    )
 
-    s1.transitions = Map('a' -> s1, 'b' -> s2)
-    s2.transitions = Map('b' -> s2, 'c' -> s3)
-    s3.transitions = Map('a' -> s1, 'c' -> s3)
+    test(
+      Dead(GenericMessage("~1.1"), GenericMessage("~1.2")),
+      Dead(GenericMessage("~2.1"), GenericMessage("~2.2")),
+      Dead(GenericMessage("~3.1"), GenericMessage("~3.2"))
+    )
 
-    println(s1)
-    println(s2)
-    println(s3)
+    test(
+      Alive(1, GenericMessage("~1.1"), GenericMessage("~1.2")),
+      Dead(GenericMessage("~2.1"), GenericMessage("~2.2")),
+      Alive(2, GenericMessage("~3.1"), GenericMessage("~3.2"))
+    )
+
+    println(
+      Alive(1, GenericMessage("~1.1"), GenericMessage("~1.2"))
+        .asInstanceOf[??[Int]]
+        .flatMap(_ => Alive(2, GenericMessage("~2.1"), GenericMessage("~2.2")))
+    )
 
   }
 

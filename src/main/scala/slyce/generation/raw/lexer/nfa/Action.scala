@@ -16,7 +16,7 @@ case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]
   def >>(m: String): Action =
     new Action(lineNo, tokenSpecs, Some(m))
 
-  def toDfaAction(myHeadState: dfa.State, stateHeads: Map[String, dfa.State]): ??[dfa.Action] =
+  def toDfaAction(myHeadState: dfa.State, stateHeads: Map[String, (Mode, dfa.State)]): ??[dfa.Action] =
     mode match {
       case None =>
         dfa.Action(lineNo, tokenSpecs, myHeadState).lift[??]
@@ -24,7 +24,7 @@ case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]
         stateHeads
           .get(m)
           .cata(
-            dfa.Action(lineNo, tokenSpecs, _).lift[??],
+            r => dfa.Action(lineNo, tokenSpecs, r._2).lift[??],
             NoSuchModeToTransitionTo(lineNo, m).dead
           )
     }

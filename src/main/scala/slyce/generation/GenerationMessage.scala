@@ -5,7 +5,12 @@ import org.scalactic.source.Position
 import klib.handling.Message
 import klib.handling.MessageAccumulator
 
-sealed trait GenerationMessage extends Message
+sealed trait GenerationMessage extends Message {
+
+  override def toString(): String =
+    message
+
+}
 
 object GenerationMessage {
 
@@ -13,6 +18,8 @@ object GenerationMessage {
     MessageAccumulator[GenerationMessage, T]
 
   // =====| ... |=====
+
+  case class GenericMessage(message: String)(implicit val pos: Position) extends GenerationMessage
 
   case class CanNotJoinEmptyMaps()(implicit val pos: Position) extends GenerationMessage {
     override def message: String =

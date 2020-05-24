@@ -1,6 +1,6 @@
 package slyce.generation.generated.lexer.dfa
 
-class DFA {
+class DFA(initialState: State) {
 
   // TODO (KR) : ...
 
