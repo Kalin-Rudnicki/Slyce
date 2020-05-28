@@ -2,7 +2,7 @@ package slyce.runtime.lexer
 
 import scalaz.std.option.optionSyntax._
 
-import todo_move_tree.GeneralToken.Stats.RelativePos
+import slyce.runtime.lexer.GeneralToken.Stats.RelativePos
 
 final class FileReader(val source: Iterator[Char]) {
 

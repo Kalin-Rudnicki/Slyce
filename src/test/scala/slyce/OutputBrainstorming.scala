@@ -18,6 +18,7 @@ object OutputBrainstorming {
 
   }
 
+  /*
   trait MyToken extends GeneralToken
 
   object MyToken {
@@ -35,6 +36,7 @@ object OutputBrainstorming {
     }
 
   }
+   */
 
   /*
   type TopLevelRaw =

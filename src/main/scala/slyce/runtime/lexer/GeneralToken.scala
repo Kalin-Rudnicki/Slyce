@@ -1,4 +1,4 @@
-package slyce
+package slyce.runtime.lexer
 
 trait GeneralToken {
   import GeneralToken._
