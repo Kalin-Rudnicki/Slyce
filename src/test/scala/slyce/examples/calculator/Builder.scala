@@ -25,7 +25,7 @@ object Builder {
       raw = CC.only("=()\n")
       whitespace = CCC.st
       // =====| Create NFA |=====
-      nfa = new NFA("Main")
+      nfa <- NFA("Main")
       main = nfa.initialMode
     } yield {
       // =====| Attach to states |=====

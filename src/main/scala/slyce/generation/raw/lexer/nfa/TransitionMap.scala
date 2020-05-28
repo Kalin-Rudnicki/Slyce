@@ -49,7 +49,7 @@ object TransitionMap {
 
   def preJoin(maps: Set[TransitionMap]): ??[(Map[Char, Set[State]], Set[State])] =
     if (maps.isEmpty)
-      CanNotJoinEmptyMaps().dead
+      FatalError.canNotJoinEmptyMaps.dead
     else {
       (
         maps.flatMap(_.transitions.keySet).map(c => (c, maps.flatMap(_(c)))).toMap,

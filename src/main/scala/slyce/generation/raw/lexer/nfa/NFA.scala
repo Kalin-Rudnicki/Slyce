@@ -2,7 +2,7 @@ package slyce.generation.raw.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
 
-import scalaz.Scalaz._
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
 import klib.fp.instances._
 import klib.fp.ops._
@@ -45,4 +45,12 @@ class NFA private (initialModeName: String) {
 
 }
 
-object NFA
+object NFA {
+
+  def apply(initialModeName: String = "main"): ??[NFA] =
+    if (initialModeName.isEmpty || !initialModeName.matches("^[A-Za-z][A-Za-z0-9_]*$"))
+      FatalError.badModeName(initialModeName).dead
+    else
+      new NFA(initialModeName).lift[??]
+
+}
