@@ -11,7 +11,7 @@ import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
 import slyce.generation.generated.lexer.dfa.DFA
 
-class NFA(initialModeName: String = "General") {
+class NFA private (initialModeName: String) {
 
   val initialMode: Mode = new Mode(initialModeName)
   val modes: MList[Mode] = MList(initialMode)
@@ -44,3 +44,5 @@ class NFA(initialModeName: String = "General") {
   }
 
 }
+
+object NFA
