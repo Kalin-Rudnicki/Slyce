@@ -99,7 +99,8 @@ class Mode(val name: String) {
 
     for {
       res0 <- join(joinedStart, myStart)
-      res1 <- Alive(res0, shadowedBy.map(t => CompletelyShadowedRegex(t._1, t._2.toList)): _*).asInstanceOf[??[dfa.State]]
+      res1 <-
+        Alive(res0, shadowedBy.map(t => NonFatal.CompletelyShadowedRegex(t._1, t._2.toList)): _*).asInstanceOf[??[dfa.State]]
       accessibleStates = State.epsilons(
         Set(initialState),
         s =>

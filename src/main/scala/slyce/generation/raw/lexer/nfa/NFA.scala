@@ -32,7 +32,7 @@ class NFA private (initialModeName: String) {
             .contains(mode.name)
             .fold(
               Alive(map + ((mode.name, mode))),
-              Alive(map) << DuplicateModeIgnored(mode.name)
+              Alive(map) << NonFatal.DuplicateModeIgnored(mode.name)
             )
         }
       }
@@ -49,7 +49,7 @@ object NFA {
 
   def apply(initialModeName: String = "main"): ??[NFA] =
     if (initialModeName.isEmpty || !initialModeName.matches("^[A-Za-z][A-Za-z0-9_]*$"))
-      FatalError.badModeName(initialModeName).dead
+      Fatal.BadModeName(initialModeName).dead
     else
       new NFA(initialModeName).lift[??]
 

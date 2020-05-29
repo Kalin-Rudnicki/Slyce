@@ -6,8 +6,7 @@ import scalaz.std.option.optionSyntax._
 
 import klib.fp.instances._
 import klib.fp.ops._
-import slyce.generation.GenerationMessage.??
-import slyce.generation.GenerationMessage.FatalError
+import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
 import slyce.generation.raw.lexer.nfa.RegexImplicits._
@@ -82,13 +81,13 @@ object Regex {
 
       def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): ??[Between] =
         if (min < 0)
-          FatalError.repeatMinNegative(min).dead
+          Fatal.RepeatMinNegative(min).dead
         else if (max < min)
-          FatalError.repeatMaxMin(min, max).dead
+          Fatal.RepeatMaxMin(min, max).dead
         else if (max <= 0)
           // Only happens if min == 0 and max == 0
           // I would rather get a min < max in most cases, than non-positive max
-          FatalError.repeatMaxNonPositive(max).dead
+          Fatal.RepeatMaxNonPositive(max).dead
         else
           new Between(min, max, regex).lift[??]
 
@@ -108,7 +107,7 @@ object Regex {
 
       def apply(min: Int, regex: Regex): ??[Infinite] =
         if (min < 0)
-          FatalError.repeatMinNegative(min).dead
+          Fatal.RepeatMinNegative(min).dead
         else
           new Infinite(min, regex).lift[??]
 

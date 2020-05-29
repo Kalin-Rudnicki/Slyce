@@ -5,7 +5,6 @@ import scalaz.std.option.optionSyntax._
 import klib.fp.instances._
 import klib.fp.ops._
 import slyce.generation.GenerationMessage._
-import slyce.generation.GenerationMessage.FatalError
 import slyce.generation.TokenSpec
 import slyce.generation.generated.lexer.dfa
 
@@ -26,7 +25,7 @@ case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]
           .get(m)
           .cata(
             r => dfa.Action(lineNo, tokenSpecs, r._2).lift[??],
-            FatalError.noSuchModeToTransitionTo(lineNo, m).dead
+            Fatal.NoSuchModeToTransitionTo(lineNo, m).dead
           )
     }
 
