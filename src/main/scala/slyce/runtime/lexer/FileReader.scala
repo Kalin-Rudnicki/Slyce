@@ -1,6 +1,9 @@
 package slyce.runtime.lexer
 
-import scalaz.std.option.optionSyntax._
+import scala.language.implicitConversions
+
+import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 import slyce.runtime.lexer.GeneralToken.Stats.RelativePos
 

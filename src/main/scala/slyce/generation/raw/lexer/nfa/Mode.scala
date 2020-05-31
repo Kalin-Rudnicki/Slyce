@@ -1,12 +1,15 @@
 package slyce.generation.raw.lexer.nfa
 
+import scala.language.implicitConversions
+
 import scala.collection.mutable.{ListBuffer => MList}
 import scala.collection.mutable.{Map => MMap}
 import scala.collection.mutable.{Set => MSet}
 
-import scalaz.Scalaz._
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
-import klib.core._
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
@@ -100,7 +103,7 @@ class Mode(val name: String) {
       _ <-
         name
           .matches("^[A-Za-z][A-Za-z0-9_]*$")
-          .fold[??[Unit]](().alive, Fatal.BadModeName(name).dead)
+          .fold[??[Unit]](().lift[??], Fatal.BadModeName(name).dead)
       res0 <- join(joinedStart, myStart)
       _ <- Alive(res0, shadowedBy.map(t => NonFatal.CompletelyShadowedRegex(t._1, t._2.toList)): _*)
       _ = State.epsilons(

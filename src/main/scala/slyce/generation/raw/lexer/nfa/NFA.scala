@@ -1,10 +1,12 @@
 package slyce.generation.raw.lexer.nfa
 
 import scala.collection.mutable.{ListBuffer => MList}
+import scala.language.implicitConversions
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
-import klib.core._
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa

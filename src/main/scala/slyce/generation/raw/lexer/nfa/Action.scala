@@ -1,8 +1,12 @@
 package slyce.generation.raw.lexer.nfa
 
-import scalaz.std.option.optionSyntax._
+import scala.language.implicitConversions
 
-import klib.core._
+import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
+
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import slyce.generation.GenerationMessage._
 import slyce.generation.TokenSpec
 import slyce.generation.generated.lexer.dfa
@@ -18,12 +22,12 @@ case class Action(lineNo: Int, tokenSpecs: List[TokenSpec], mode: Option[String]
   def toDfaAction(myHeadState: dfa.State, stateHeads: Map[String, (Mode, dfa.State)]): ??[dfa.Action] =
     mode match {
       case None =>
-        dfa.Action(lineNo, tokenSpecs, myHeadState).alive
+        dfa.Action(lineNo, tokenSpecs, myHeadState).lift[??]
       case Some(m) =>
         stateHeads
           .get(m)
           .cata(
-            r => dfa.Action(lineNo, tokenSpecs, r._2).alive,
+            r => dfa.Action(lineNo, tokenSpecs, r._2).lift[??],
             Fatal.NoSuchModeToTransitionTo(lineNo, m).dead
           )
     }

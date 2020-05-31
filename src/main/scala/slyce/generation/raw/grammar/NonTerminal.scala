@@ -1,7 +1,9 @@
 package slyce.generation.raw.grammar
 
+import scala.language.implicitConversions
+
 import scalaz.NonEmptyList
-import scalaz.std.option.optionSyntax._
+import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.generation.raw.grammar.Production._
 

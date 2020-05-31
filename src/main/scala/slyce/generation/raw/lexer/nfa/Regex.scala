@@ -1,10 +1,12 @@
 package slyce.generation.raw.lexer.nfa
 
-import org.scalactic.source.Position
-import scalaz.NonEmptyList
-import scalaz.std.option.optionSyntax._
+import scala.language.implicitConversions
 
-import klib.core._
+import scalaz.NonEmptyList
+import scalaz.Scalaz.ToOptionIdOps
+
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}

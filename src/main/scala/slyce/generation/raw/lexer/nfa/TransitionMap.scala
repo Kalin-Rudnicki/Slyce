@@ -3,7 +3,8 @@ package slyce.generation.raw.lexer.nfa
 import scala.collection.mutable.{ListBuffer => MList}
 import scala.collection.mutable.{Map => MMap}
 
-import klib.core._
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
@@ -53,7 +54,7 @@ object TransitionMap {
       (
         maps.flatMap(_.transitions.keySet).map(c => (c, maps.flatMap(_(c)))).toMap,
         maps.flatMap(_.epsilonTransitions.toSet)
-      ).alive
+      ).lift[??]
     }
 
 }

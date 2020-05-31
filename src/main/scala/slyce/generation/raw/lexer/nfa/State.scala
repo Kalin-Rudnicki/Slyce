@@ -1,11 +1,14 @@
 package slyce.generation.raw.lexer.nfa
 
+import scala.language.implicitConversions
+
 import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer => MList}
 
-import scalaz.Scalaz._
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
-import klib.core._
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator.Alive
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
@@ -41,7 +44,7 @@ class State(val mode: Mode, val id: Int) {
       case Group(options) =>
         val newState: State = mode.newState
         for {
-          opts <- options.toList.map(this |~> _).invert
+          opts <- options.list.toList.map(this |~> _).invert
           _ = opts.foreach(_ |== newState)
         } yield newState
       case Sequence(list) =>
@@ -52,7 +55,7 @@ class State(val mode: Mode, val id: Int) {
           s.flatMap(_ |~> reg)
         }
       case cc: CC =>
-        (this <<< cc).alive
+        (this <<< cc)._lift[??]
       case repeat: Repeat =>
         @tailrec
         def rec(input: ??[State], times: Int, reg: Regex): ??[State] =
@@ -76,7 +79,7 @@ class State(val mode: Mode, val id: Int) {
               skip
             )
           else
-            skip.alive
+            skip.lift[??]
         }
 
         repeat match {
@@ -87,7 +90,7 @@ class State(val mode: Mode, val id: Int) {
               ???
             else
               loop(
-                rec(this.alive, min, reg),
+                rec(this.lift[??], min, reg),
                 max - min,
                 reg
               )
@@ -96,7 +99,7 @@ class State(val mode: Mode, val id: Int) {
               ???
             else
               for {
-                afterMin <- rec(this.alive, min, reg)
+                afterMin <- rec(this.lift[??], min, reg)
                 take <- afterMin |~> reg
                 _ = take |== afterMin
               } yield afterMin.free

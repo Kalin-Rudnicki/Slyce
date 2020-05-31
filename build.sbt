@@ -1,19 +1,19 @@
-libraryDependencies ++= List(
-  "org.scalaz" %% "scalaz-core" % "7.2.30",
-  "org.rogach" %% "scallop" % "3.4.0",
-  "org.scalactic" %% "scalactic" % "3.1.1",
-  "org.scalatest" %% "scalatest" % "3.1.1" % "test"
-)
+import sbt.Keys.version
 
-libraryDependencies ++= List(
-  "klib" %% "klib" % "0.1.0" from "file:///home/kalin/dev/projects/current/KLib/target/scala-2.13/klib_2.13-0.1.jar",
-  "jline" %% "jline" % "2.10.1" from "file:///home/kalin/dev/projects/current/Slyce/dependencies/jline2-2.10.1.jar"
-)
-
-ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger
-
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
-
-name := "Slyce"
-version := "0.1"
-scalaVersion := "2.13.2"
+lazy val root = project
+  .in(file("."))
+  .settings(
+    name := "Slyce",
+    version := "0.1",
+    scalaVersion := "0.24.0-RC1",
+    libraryDependencies ++=
+      List(
+        "org.scalaz" %% "scalaz-core" % "7.2.30",
+        "org.scalactic" %% "scalactic" % "3.1.1",
+        "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+        "org.scalameta" %% "scalameta" % "4.3.10"
+      ).map(_.withDottyCompat(scalaVersion.value)),
+    libraryDependencies ++= List(
+      "klib" %% "klib" % "0.1.0" from "file:///home/kalin/dev/projects/current/KLib/target/scala-0.24/klib_0.24-0.1.jar"
+    )
+  )

@@ -1,5 +1,7 @@
 package slyce.generation.raw.lexer.nfa
 
+import scala.language.implicitConversions
+
 import scalaz.NonEmptyList
 
 import slyce.generation.GenerationMessage.??
@@ -118,7 +120,7 @@ object RegexImplicits {
     def *(r: (Int, Option[Int])): Regex =
       repeat(r)
 
-    def =>>(next: Regex): Regex =
+    def ==>(next: Regex): Regex =
       followedBy(next)
 
     def <|>(other: Regex): Regex =

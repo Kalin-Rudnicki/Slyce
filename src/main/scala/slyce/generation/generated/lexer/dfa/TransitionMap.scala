@@ -1,6 +1,9 @@
 package slyce.generation.generated.lexer.dfa
 
-import scalaz.std.option.optionSyntax._
+import scala.language.implicitConversions
+
+import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 class TransitionMap(transitions: Map[Char, State], default: Option[State]) {
 

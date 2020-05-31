@@ -1,8 +1,11 @@
 package slyce.generation.generated.grammar
 
-import scalaz.std.option.optionSyntax._
+import scala.language.implicitConversions
 
-import klib.core._
+import scalaz.Scalaz.ToOptionIdOps
+
+import klib.fp.instances.{given _}
+import klib.fp.ops.{given _}
 import slyce.generation.GenerationMessage._
 
 sealed trait Element
@@ -49,5 +52,3 @@ object Element {
   }
 
 }
-
-object Tmp {}

@@ -1,5 +1,5 @@
 
 .idea/
-dependencies/
-target/
-project/target/
+/target/
+/project/target/
+/project/project/target/
