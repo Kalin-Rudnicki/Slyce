@@ -4,8 +4,7 @@ import org.scalactic.source.Position
 import scalaz.NonEmptyList
 import scalaz.std.option.optionSyntax._
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
@@ -70,49 +69,17 @@ object Regex {
 
   object Repeat {
 
-    class Between private (val min: Int, val max: Int, val regex: Regex) extends Repeat {
+    case class Between(min: Int, max: Int, regex: Regex) extends Repeat {
 
       override def toString: String =
         s"Repeat.Between($min, $max, $regex)"
 
     }
 
-    object Between {
-
-      def apply(min: Int, max: Int, regex: Regex)(implicit pos: Position): ??[Between] =
-        if (min < 0)
-          Fatal.RepeatMinNegative(min).dead
-        else if (max < min)
-          Fatal.RepeatMaxMin(min, max).dead
-        else if (max <= 0)
-          // Only happens if min == 0 and max == 0
-          // I would rather get a min < max in most cases, than non-positive max
-          Fatal.RepeatMaxNonPositive(max).dead
-        else
-          new Between(min, max, regex).lift[??]
-
-      def unapply(arg: Between): Option[(Int, Int, Regex)] =
-        (arg.min, arg.max, arg.regex).some
-
-    }
-
-    class Infinite private (val min: Int, val regex: Regex) extends Repeat {
+    case class Infinite(min: Int, regex: Regex) extends Repeat {
 
       override def toString: String =
         s"Repeat.Infinite($min, $regex)"
-
-    }
-
-    object Infinite {
-
-      def apply(min: Int, regex: Regex): ??[Infinite] =
-        if (min < 0)
-          Fatal.RepeatMinNegative(min).dead
-        else
-          new Infinite(min, regex).lift[??]
-
-      def unapply(arg: Infinite): Option[(Int, Regex)] =
-        (arg.min, arg.regex).some
 
     }
 

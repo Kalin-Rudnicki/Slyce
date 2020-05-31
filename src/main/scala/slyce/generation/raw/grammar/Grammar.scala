@@ -2,8 +2,7 @@ package slyce.generation.raw.grammar
 
 import scala.annotation.tailrec
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 
@@ -22,7 +21,7 @@ object Grammar {
             map.flatMap { m =>
               m.get(head.name) match {
                 case None =>
-                  (m + ((head.name, head))).lift[??]
+                  (m + ((head.name, head))).alive
                 case _: Some[NonTerminal] =>
                   Alive(m, NonFatal.DuplicateNTIgnored(head.name))
               }
@@ -31,7 +30,7 @@ object Grammar {
       }
 
     loop(
-      Map[String, NonTerminal]().lift[??],
+      Map[String, NonTerminal]().alive,
       initial :: others.toList
     ).map { m =>
       new Grammar(initial, m)

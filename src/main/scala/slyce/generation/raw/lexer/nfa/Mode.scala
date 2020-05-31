@@ -6,8 +6,7 @@ import scala.collection.mutable.{Set => MSet}
 
 import scalaz.Scalaz._
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
@@ -98,15 +97,20 @@ class Mode(val name: String) {
         .toList
 
     for {
+      _ <-
+        name
+          .matches("^[A-Za-z][A-Za-z0-9_]*$")
+          .fold[??[Unit]](().alive, Fatal.BadModeName(name).dead)
       res0 <- join(joinedStart, myStart)
-      res1 <-
-        Alive(res0, shadowedBy.map(t => NonFatal.CompletelyShadowedRegex(t._1, t._2.toList)): _*).asInstanceOf[??[dfa.State]]
-      accessibleStates = State.epsilons(
+      _ <- Alive(res0, shadowedBy.map(t => NonFatal.CompletelyShadowedRegex(t._1, t._2.toList)): _*)
+      _ = State.epsilons(
         Set(initialState),
         s =>
-          s.transitions.epsilonTransitions.toSet | s.transitions.transitions.toSet.flatMap((_s: (Char, MList[State])) =>
-            _s._2.toSet
-          )
+          s.transitions.epsilonTransitions.toSet |
+            s.transitions.transitions.toSet
+              .flatMap { (_s: (Char, MList[State])) =>
+                _s._2.toSet
+              }
       )
     } yield ()
   }

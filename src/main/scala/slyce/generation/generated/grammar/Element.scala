@@ -2,8 +2,7 @@ package slyce.generation.generated.grammar
 
 import scalaz.std.option.optionSyntax._
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import slyce.generation.GenerationMessage._
 
 sealed trait Element

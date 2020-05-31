@@ -5,6 +5,9 @@ import scala.collection.mutable.{ListBuffer => MList}
 
 import scalaz.Scalaz._
 
+import klib.core._
+import klib.handling.MessageAccumulator.Alive
+import slyce.generation.GenerationMessage._
 import slyce.generation.raw.lexer.nfa.Regex._
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
 
@@ -33,23 +36,29 @@ class State(val mode: Mode, val id: Int) {
   }
 
   // Transition on regex
-  def |~>(regex: Regex): State =
+  def |~>(regex: Regex): ??[State] =
     regex match {
       case Group(options) =>
         val newState: State = mode.newState
-        options.map(this |~> _).foreach(_ |== newState)
-        newState
+        for {
+          opts <- options.toList.map(this |~> _).invert
+          _ = opts.foreach(_ |== newState)
+        } yield newState
       case Sequence(list) =>
         // NOTE (KR) : I think this is right, as it is in reverse order?
-        list.foldRight(this)((reg, s) => s |~> reg)
+        list.foldRight(
+          Alive(this).asInstanceOf[??[State]]
+        ) { (reg, s) =>
+          s.flatMap(_ |~> reg)
+        }
       case cc: CC =>
-        this <<< cc
+        (this <<< cc).alive
       case repeat: Repeat =>
         @tailrec
-        def rec(input: State, times: Int, reg: Regex): State =
+        def rec(input: ??[State], times: Int, reg: Regex): ??[State] =
           if (times > 0)
             rec(
-              input |~> regex,
+              input.flatMap(_ |~> regex),
               times - 1,
               reg
             )
@@ -57,31 +66,40 @@ class State(val mode: Mode, val id: Int) {
             input
 
         @tailrec
-        def loop(input: State, times: Int, reg: Regex, skip: State = mode.newState): State = {
-          input |== skip
+        def loop(input: ??[State], times: Int, reg: Regex, skip: State = mode.newState): ??[State] = {
+          input.forEach(_ |== skip)
           if (times > 0)
             loop(
-              input |~> reg,
+              input.flatMap(_ |~> reg),
               times - 1,
               reg,
               skip
             )
           else
-            skip
+            skip.alive
         }
 
         repeat match {
           case Repeat.Between(min, max, reg) =>
-            loop(
-              rec(this, min, reg),
-              max - min,
-              reg
-            )
+            if (min < 0)
+              ???
+            else if (max <= 0)
+              ???
+            else
+              loop(
+                rec(this.alive, min, reg),
+                max - min,
+                reg
+              )
           case Repeat.Infinite(min, reg) =>
-            val afterMin: State = rec(this, min, reg)
-            val take: State = afterMin |~> reg
-            take |== afterMin
-            afterMin.free
+            if (min < 0)
+              ???
+            else
+              for {
+                afterMin <- rec(this.alive, min, reg)
+                take <- afterMin |~> reg
+                _ = take |== afterMin
+              } yield afterMin.free
         }
     }
 

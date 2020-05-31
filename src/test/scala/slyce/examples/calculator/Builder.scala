@@ -1,7 +1,6 @@
 package slyce.examples.calculator
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import slyce.generation.GenerationMessage.??
 import slyce.generation.TokenSpec._
 import slyce.generation.raw.lexer.nfa.Action._
@@ -14,27 +13,26 @@ object Builder {
 
   // =====| Lexer |=====
 
-  // =====| Create Regex |=====
-  val intR = CCC.d * (1, None)
-  val addOp = CC.only('+', '*')
-  val multOp = CC.only('*', '/')
-  val powOp = CC.only('^')
-  val variable = (CCC.letterUnderscoreNumber * (0, None)).map(r => CCC.lowerLetters =>> r)
-  val raw = CC.only("=()\n")
-  val whitespace = CCC.st
   // =====| Create NFA |=====
-  val nfa = NFA("Main")
-  val main = nfa.initialMode
+  val nfa: NFA = new NFA("Main")
+  val main: Mode = nfa.initialMode
   // =====| Attach to states |=====
-  main |~> intR |+ 1 << List(__$("int"))
-  main |~> addOp |+ 2 << List(__$("addOp"))
-  main |~> multOp |+ 3 << List(__$("multOp"))
-  main |~> powOp |+ 4 << List(__$("powOp"))
-  main |~> variable |+ 5 << List(__$("variable"))
-  main |~> raw |+ 6 << List(__@(None))
-  main |~> whitespace |+ 7 << Nil
-
-  nfa
+  val createdNfa: ??[NFA] = for {
+    s0 <- main |~> CCC.d * (1, None)
+    _ = s0 |+ 1 <|< List(__$("int"))
+    s1 <- main |~> CC.only('+', '*')
+    _ = s1 |+ 2 <|< List(__$("addOp"))
+    s2 <- main |~> CC.only('*', '/')
+    _ = s2 |+ 3 <|< List(__$("multOp"))
+    s3 <- main |~> CC.only('^')
+    _ = s3 |+ 4 <|< List(__$("powOp"))
+    s4 <- main |~> CCC.lowerLetters =>> CCC.letterUnderscoreNumber * (0, None)
+    _ = s4 |+ 5 <|< List(__$("variable"))
+    s5 <- main |~> CC.only('=', '(', ')', '\n')
+    _ = s5 |+ 6 <|< List(__@(None))
+    s6 <- main |~> CCC.st
+    _ = s6 |+ 7
+  } yield nfa
 
   val grammarErrs: ??[Unit] =
     ???

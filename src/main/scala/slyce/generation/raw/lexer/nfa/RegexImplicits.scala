@@ -115,7 +115,7 @@ object RegexImplicits {
 
     // =====|  |=====
 
-    def *(r: (Int, Option[Int])): ??[Regex] =
+    def *(r: (Int, Option[Int])): Regex =
       repeat(r)
 
     def =>>(next: Regex): Regex =
@@ -126,7 +126,7 @@ object RegexImplicits {
 
     // =====|  |=====
 
-    def repeat(repeat: (Int, Option[Int])): ??[Regex] =
+    def repeat(repeat: (Int, Option[Int])): Regex =
       repeat match {
         case (min, None) =>
           Repeat.Infinite(min, reg)

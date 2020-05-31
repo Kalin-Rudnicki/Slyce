@@ -4,14 +4,13 @@ import scala.collection.mutable.{ListBuffer => MList}
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
-import klib.fp.instances._
-import klib.fp.ops._
+import klib.core._
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 import slyce.generation.generated.lexer.dfa
 import slyce.generation.generated.lexer.dfa.DFA
 
-class NFA private (initialModeName: String) {
+class NFA(initialModeName: String) {
 
   val initialMode: Mode = new Mode(initialModeName)
   val modes: MList[Mode] = MList(initialMode)
@@ -22,6 +21,7 @@ class NFA private (initialModeName: String) {
     mode
   }
 
+  // TODO (KR) :  ; Fatal.BadModeName(initialModeName).dead
   def compile: ??[DFA] = {
     for {
       strModeMap <- modes.toList.foldLeft[??[Map[String, Mode]]](
@@ -42,15 +42,5 @@ class NFA private (initialModeName: String) {
       initialState = strModeStateMap(initialModeName)._2
     } yield new DFA(initialState)
   }
-
-}
-
-object NFA {
-
-  def apply(initialModeName: String = "main"): ??[NFA] =
-    if (initialModeName.isEmpty || !initialModeName.matches("^[A-Za-z][A-Za-z0-9_]*$"))
-      Fatal.BadModeName(initialModeName).dead
-    else
-      new NFA(initialModeName).lift[??]
 
 }
