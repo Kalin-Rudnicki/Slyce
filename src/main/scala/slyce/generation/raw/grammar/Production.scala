@@ -2,9 +2,16 @@ package slyce.generation.raw.grammar
 
 object Production {
 
-  class BasicProduction(
-      val elements: List[String]
+  class BasicProduction private (
+      val elements: List[Either[String, String]]
   )
+
+  object BasicProduction {
+
+    def apply(elements: Either[String, String]*): BasicProduction =
+      new BasicProduction(elements.toList)
+
+  }
 
   class UnwrapProduction(
       val preElements: List[String],

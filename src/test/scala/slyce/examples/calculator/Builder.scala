@@ -3,6 +3,7 @@ package slyce.examples.calculator
 import klib.core._
 import slyce.generation.GenerationMessage.??
 import slyce.generation.TokenSpec._
+import slyce.generation.raw.grammar._
 import slyce.generation.raw.lexer.nfa.Action._
 import slyce.generation.raw.lexer.nfa.Regex.CharClass.{Common => CCC}
 import slyce.generation.raw.lexer.nfa.Regex.{CharClass => CC}
@@ -34,7 +35,9 @@ object Builder {
     _ = s6 |+ 7
   } yield nfa
 
-  val grammarErrs: ??[Unit] =
-    ???
+  val grammar: Grammar =
+    Grammar(
+      new Production.BasicProduction()
+    )
 
 }
