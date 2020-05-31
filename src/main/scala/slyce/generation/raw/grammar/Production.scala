@@ -3,13 +3,13 @@ package slyce.generation.raw.grammar
 object Production {
 
   class BasicProduction(
-      val elements: List[Element]
+      val elements: List[String]
   )
 
   class UnwrapProduction(
-      val preElements: List[Element],
-      val unwrapElement: Element,
-      val postElements: List[Element]
+      val preElements: List[String],
+      val unwrapElement: String,
+      val postElements: List[String]
   )
 
   sealed trait ListProduction
@@ -37,9 +37,9 @@ object Production {
   }
 
   class OpProduction(
-      val tipe: OpProduction.Type,
+      val `type`: OpProduction.Type,
       val assoc: OpProduction.Assoc,
-      val assocElement: Element
+      val assocElement: String
   )
 
   object OpProduction {

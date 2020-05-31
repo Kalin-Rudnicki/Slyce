@@ -1,4 +1,4 @@
-package slyce.generation.raw.grammar
+package slyce.generation.generated.grammar
 
 import scalaz.std.option.optionSyntax._
 
