@@ -1,45 +1,35 @@
 package slyce
 
-import klib.fp.instances._
+import klib.dynamic._
 import klib.fp.ops._
-import klib.handling.MessageAccumulator._
-import slyce.generation.GenerationMessage._
 
 object Test {
 
-  def test[T](items: ??[T]*): Unit = {
-    val list: List[??[T]] = items.toList
-    println(list)
-    println(list.invert)
-    println(list.invertR)
-    println
+  case class Person(var firstName: String, var lastName: String, var age: Int) {
+
+    def asStr(f: Person => String): String =
+      f(this)
+
   }
 
   def main(args: Array[String]): Unit = {
 
-    test(
-      Alive(1, NonFatal.BasicMessage("~1.1"), NonFatal.BasicMessage("~1.2")),
-      Alive(2, NonFatal.BasicMessage("~2.1"), NonFatal.BasicMessage("~2.2")),
-      Alive(3, NonFatal.BasicMessage("~3.1"), NonFatal.BasicMessage("~3.2"))
-    )
+    val person: ??[Person] = Person("First-1", "Last-1", 1).lift[??]
 
-    test(
-      Dead(NonFatal.BasicMessage("~1.1"), NonFatal.BasicMessage("~1.2")),
-      Dead(NonFatal.BasicMessage("~2.1"), NonFatal.BasicMessage("~2.2")),
-      Dead(NonFatal.BasicMessage("~3.1"), NonFatal.BasicMessage("~3.2"))
-    )
+    println(person.firstName)
+    println(person.lastName)
+    println(person.age)
 
-    test(
-      Alive(1, NonFatal.BasicMessage("~1.1"), NonFatal.BasicMessage("~1.2")),
-      Dead(NonFatal.BasicMessage("~2.1"), NonFatal.BasicMessage("~2.2")),
-      Alive(2, NonFatal.BasicMessage("~3.1"), NonFatal.BasicMessage("~3.2"))
-    )
+    person.firstName = "First"
+    person.lastName = "Last"
+    person.age = 2
 
-    println(
-      Alive(1, NonFatal.BasicMessage("~1.1"), NonFatal.BasicMessage("~1.2"))
-        .asInstanceOf[??[Int]]
-        .flatMap(_ => Alive(2, NonFatal.BasicMessage("~2.1"), NonFatal.BasicMessage("~2.2")))
-    )
+    println(person)
+    println(person.asStr((p: Person) => s"${p.lastName}, ${p.firstName}"))
+
+    // Everything above this line is working how I would hope
+    val _4: ??[Int] = person.age - 2
+    println(_4)
 
   }
 

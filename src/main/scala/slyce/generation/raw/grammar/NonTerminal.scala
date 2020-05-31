@@ -6,9 +6,7 @@ import scalaz.std.option.optionSyntax._
 import slyce.generation.raw.grammar.Production._
 
 sealed trait NonTerminal {
-
   def name: String
-
 }
 
 object NonTerminal {

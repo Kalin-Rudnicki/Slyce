@@ -2,21 +2,25 @@ package slyce.generation.raw.grammar
 
 import scalaz.std.option.optionSyntax._
 
+import klib.fp.instances._
+import klib.fp.ops._
+import slyce.generation.GenerationMessage._
+
 sealed trait Element
 
 object Element {
 
-  def apply(name: String): Element =
+  def apply(name: String): ??[Element] =
     if (name.length == 0)
-      throw new RuntimeException("Exceptions are bad, but this should never happen")
+      Fatal.BadElementName(name).dead
     else
       name.charAt(0) match {
         case c if c.isLower =>
-          ElementT(name)
+          ElementT(name).^[??]
         case c if c.isUpper =>
-          ElementNT(name)
+          ElementNT(name).^[??]
         case _ =>
-          throw new RuntimeException("Exceptions are bad, but this should never happen")
+          Fatal.BadElementName(name).dead
       }
 
   case class ElementTText(name: String) extends Element

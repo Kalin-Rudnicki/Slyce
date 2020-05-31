@@ -61,6 +61,17 @@ object GenerationMessage {
       override def message: String =
         s"Bad mode name: '$name'"
     }
+
+    case class BadElementName(name: String)(implicit val pos: Position) extends Message {
+      override def message: String =
+        s"Bad element name: $name"
+    }
+
+    case class NtAlreadyExists(name: String)(implicit val pos: Position) extends Message {
+      override def message: String =
+        s"NonTerminal already exists: $name"
+    }
+
   }
 
   // =====| NonFatal |=====
@@ -74,6 +85,11 @@ object GenerationMessage {
     case class DuplicateModeIgnored(modeName: String)(implicit val pos: Position) extends Message {
       override def message: String =
         s"Mode $modeName was duplicated, and will be ignored"
+    }
+
+    case class DuplicateNTIgnored(ntName: String)(implicit val pos: Position) extends Message {
+      override def message: String =
+        s"Mode $ntName was duplicated, and will be ignored"
     }
 
     case class CompletelyShadowedRegex(lineNo: Int, shadowingLines: List[Int])(implicit val pos: Position) extends Message {
