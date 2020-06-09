@@ -11,7 +11,7 @@ import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
 
-class Grammar private (val initialNT: NonTerminal, map: Map[String, NonTerminal]) {}
+case class Grammar private (initialNT: String, map: Map[String, NonTerminal])
 
 object Grammar {
 
@@ -38,7 +38,7 @@ object Grammar {
       Map[String, NonTerminal]()._lift[??],
       initial :: others.toList
     ).map { m =>
-      new Grammar(initial, m)
+      new Grammar(initial.name, m)
     }
   }
 

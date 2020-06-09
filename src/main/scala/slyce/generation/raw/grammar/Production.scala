@@ -1,22 +1,27 @@
 package slyce.generation.raw.grammar
 
+import scalaz.\/
+
 object Production {
 
+  // Text \/ Terminal
+  type TextOrTerm = String \/ String
+
   class BasicProduction private (
-      val elements: List[Either[String, String]]
+      val elements: List[TextOrTerm]
   )
 
   object BasicProduction {
 
-    def apply(elements: Either[String, String]*): BasicProduction =
+    def apply(elements: TextOrTerm*): BasicProduction =
       new BasicProduction(elements.toList)
 
   }
 
-  class UnwrapProduction(
-      val preElements: List[String],
-      val unwrapElement: String,
-      val postElements: List[String]
+  case class UnwrapProduction(
+      preElements: List[String],
+      unwrapElement: String,
+      postElements: List[String]
   )
 
   sealed trait ListProduction
@@ -43,10 +48,10 @@ object Production {
 
   }
 
-  class OpProduction(
-      val `type`: OpProduction.Type,
-      val assoc: OpProduction.Assoc,
-      val assocElement: String
+  case class OpProduction(
+      `type`: OpProduction.Type,
+      assoc: OpProduction.Assoc,
+      assocElement: TextOrTerm
   )
 
   object OpProduction {
@@ -65,6 +70,15 @@ object Production {
       case object Right extends Assoc
     }
 
+    // =====| Helpers |=====
+    
+    def binLeft(assocElement: TextOrTerm): OpProduction =
+      OpProduction(
+        Type.Binary,
+        Assoc.Left,
+        assocElement
+      )
+    
   }
 
 }

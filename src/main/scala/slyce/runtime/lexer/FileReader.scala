@@ -2,6 +2,10 @@ package slyce.runtime.lexer
 
 import scala.language.implicitConversions
 
+import scalaz.\/
+import scalaz.\/-
+import scalaz.-\/
+import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.Scalaz.ToOptionOpsFromOption
 
@@ -17,10 +21,10 @@ final class FileReader(val source: Iterator[Char]) {
   private var relative: RelativePos = RelativePos(0, 0)
   private var global: Int = 0
 
-  private var queue: List[Either[Char, Group]] = Nil
+  private var queue: List[Char \/ Group] = Nil
 
   def getC: Option[Group] = {
-    def getFromQueue: Option[Either[Char, Group]] =
+    def getFromQueue: Option[Char \/ Group] =
       queue match {
         case Nil =>
           None
@@ -32,18 +36,18 @@ final class FileReader(val source: Iterator[Char]) {
     def getFromSource: Option[Char] =
       source.nextOption
 
-    def nextRaw: Option[Either[Char, Group]] =
+    def nextRaw: Option[Char \/ Group] =
       getFromQueue.cata(
         fQ => fQ.some,
-        getFromSource.map(Left(_))
+        getFromSource.map(-\/(_))
       )
 
     def nextOnlyChar: Option[Char] =
       queue match {
-        case Left(c) :: tail =>
+        case -\/(c) :: tail =>
           queue = tail
           c.some
-        case Right(_) :: _ =>
+        case \/-(_) :: _ =>
           None
         case Nil =>
           getFromSource
@@ -51,19 +55,20 @@ final class FileReader(val source: Iterator[Char]) {
 
     def nextSmart: Option[Group] =
       nextRaw.map {
-        case Left('\r') =>
+        case -\/('\r') =>
           nextOnlyChar match {
             case None =>
               newLine
             case Some('\n') =>
               newLine
             case Some(c2) =>
-              queue = Left(c2) :: queue
+              queue = c2.left :: queue
               newLine
           }
-        case Left(c) =>
+        case -\/(c) =>
           nextInLine(c)
-        case Right(cgr) =>
+        case 
+          \/-(cgr) =>
           cgr
       }
 
@@ -98,7 +103,7 @@ final class FileReader(val source: Iterator[Char]) {
     * @param list "Group"'s you want to give back, in the order you want to receive them
     */
   def pushBack(list: List[Group]): Unit =
-    queue = list.map(Right(_)) ::: queue
+    queue = list.map(\/-(_)) ::: queue
 
 }
 
