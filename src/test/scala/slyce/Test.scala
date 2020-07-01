@@ -1,7 +1,11 @@
 package slyce
 
-object Test {
+import scala.io.Source
 
-  def main(args: Array[String]): Unit = {}
+object Test extends App {
 
+  val chars: List[Char] = Source.fromFile("res-test/calc/src/calc.slf").toList
+  
+  println(Parser.parse(chars))
+  
 }
