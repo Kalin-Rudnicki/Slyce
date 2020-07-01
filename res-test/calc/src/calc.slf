@@ -1,5 +1,6 @@
 
 @include common
+@include tmp/common
 
 add_op=[+\-]
 mult_op=[*/]
