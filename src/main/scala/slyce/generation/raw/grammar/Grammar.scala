@@ -10,8 +10,12 @@ import klib.fp.instances.{given _}
 import klib.fp.ops.{given _}
 import klib.handling.MessageAccumulator._
 import slyce.generation.GenerationMessage._
+import slyce.generation.generated.{grammar => gen}
 
-case class Grammar private (initialNT: String, map: Map[String, NonTerminal])
+case class Grammar private (initialNT: String, map: Map[String, NonTerminal]) {
+  
+  
+}
 
 object Grammar {
 
