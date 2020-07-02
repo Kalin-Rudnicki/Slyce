@@ -1,10 +1,10 @@
-package slyce
+package slyce.todo
 
 import scala.language.implicitConversions
 
 import scalaz.NonEmptyList
 
-import slyce.Regex._
+import slyce.todo.Regex._
 
 sealed trait Regex {
 
