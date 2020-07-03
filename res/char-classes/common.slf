@@ -1,4 +1,4 @@
 
-letters_l=[a-z]
-letters_u=[A-Z]
-letters=[[:letters_l:][:letters_u:]]
+@define letters_l=[a-z]
+@define letters_u=[A-Z]
+@define letters=[[:letters_l:][:letters_u:]]

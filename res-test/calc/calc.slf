@@ -2,8 +2,8 @@
 @include common
 @include tmp/common
 
-add_op=[+\-]
-mult_op=[*/]
+@define add_op=[+\-]
+@define mult_op=[*/]
 
 @start General
 
@@ -11,7 +11,7 @@ mult_op=[*/]
 //[^\n]*\n                                      ;
 /*                                              ; -> MultiLineComment
 [ \t]                                           ;
-[=@()]                                          ; $
+[=@()]                                          ; @
 [:add_op:]                                      ; $add_op
 [:mult_op:]                                     ; $mult_op
 -?\d+                                           ; $int
