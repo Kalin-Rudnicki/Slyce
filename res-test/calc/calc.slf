@@ -1,23 +1,21 @@
 
-@include common
-@include tmp/common
-
 @define add_op=[+\-]
 @define mult_op=[*/]
 
 @start General
 
-#| General
+@state General
 //[^\n]*\n                                      ;
-/*                                              ; -> MultiLineComment
+/\*                                             ; -> MultiLineComment
 [ \t]                                           ;
-[=@()]                                          ; @
+[=()]                                           ; @
 [:add_op:]                                      ; $add_op
 [:mult_op:]                                     ; $mult_op
+[:pow_op:]                                      ; $pow_op
 -?\d+                                           ; $int
 -?\d+\.\d+                                      ; $float
-[:letters_l:][_[:letters:]]*                    ; $var
+[a-z][_a-zA-Z\d]*                               ; $var
 
-#| MultiLineComment
-*/                                              ; -> General
+@state MultiLineComment
+\*/                                             ; -> General
 .                                               ;

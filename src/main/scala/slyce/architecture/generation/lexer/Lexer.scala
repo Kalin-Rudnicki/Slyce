@@ -2,13 +2,14 @@ package slyce.architecture.generation.lexer
 
 import slyce.architecture.Stage
 
-trait Lexer[Data, Dfa] extends Stage[Data, String, Dfa]
+trait Lexer[Data, Err, Dfa] extends Stage[Data, Err, Dfa]
+
 object Lexer {
 
-  def apply[Data, Nfa, Dfa](
-      dataToNfa: DataToNfa[Data, Nfa],
-      nfaToDfa: NfaToDfa[Nfa, Dfa]
-  ): Lexer[Data, Dfa] =
+  def apply[Data, Err, Nfa, Dfa](
+      dataToNfa: DataToNfa[Data, Err, Nfa],
+      nfaToDfa: NfaToDfa[Nfa, Err, Dfa]
+  ): Lexer[Data, Err, Dfa] =
     (dataToNfa >+> nfaToDfa)(_)
 
 }

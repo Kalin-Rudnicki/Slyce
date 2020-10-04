@@ -10,7 +10,7 @@ object Parser {
       grammar: Grammar[Tok, Errs, RawTree],
       simplifier: Simplifier[RawTree, Errs, SimpleTree],
       formatter: ErrorFormatter[Src, Errs]
-  ): Parser[Src, Errs, SimpleTree] =
-    (lexer >+> grammar >+> simplifier)(_)
+  ): Parser[Src, String, SimpleTree] =
+    (lexer >+> grammar >+> simplifier <<+< formatter)(_)
 
 }

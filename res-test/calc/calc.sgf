@@ -1,2 +1,11 @@
-
-$int
+Lines   : (Line . !"\n" Line)*
+Line    : Expr
+        | Assign
+Assign  : var "=" Expr
+Expr    ~ >pow_op
+        | <mult_op
+        | <add_op
+        : "(" Expr ")"
+        | float
+        | int
+        | var
