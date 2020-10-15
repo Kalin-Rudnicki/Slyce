@@ -11,6 +11,7 @@ lazy val root = project
         "org.scalaz" %% "scalaz-core" % "7.2.30",
         "org.scalactic" %% "scalactic" % "3.1.1",
         "org.scalatest" %% "scalatest" % "3.1.1" % "test",
-        "org.scalameta" %% "scalameta" % "4.3.10"
+        "org.scalameta" %% "scalameta" % "4.3.10",
+        "com.chuusai" %% "shapeless" % "2.3.3"
       )
   )
