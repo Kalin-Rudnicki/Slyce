@@ -2,7 +2,7 @@ package slyce.implementations.generation.lexer
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 
-import helpers.CharOps
+import helpers._
 
 import Yields.Yield
 
@@ -21,20 +21,27 @@ final case class Dfa(initialState: Dfa.State) {
     }
   }
 
-  def output(name: String, pkg: List[String], idt: String = "  "): String = {
-    def idtStrs(strs: String*): List[String] =
-      strs.toList.map(s => s"$idt$s")
-
-    def idtLists(strLists: List[String]*): List[String] =
-      strLists.toList.flatMap(idtStrs(_: _*))
-
+  def toksStr(implicit idt: String): List[String] = {
     def tokString(tokName: String): String =
       s"final case class $tokName(text: String) extends Token"
 
+    val names = idxOf.toList.flatMap(_._1.yields.flatMap(_.yields.map(_.name))).sorted
+
+    List(
+      List(
+        "sealed trait Token",
+        "object Token {"
+      ),
+      idtStrs(names.map(tokString): _*),
+      "}" :: Nil
+    ).flatten
+  }
+
+  def dfaStr(implicit idt: String): List[String] = {
     def stateName(state: Dfa.State): String =
       s"s${this.idxOf(state)}"
 
-    def stateString(state: Dfa.State): String = {
+    def stateStringLines(state: Dfa.State): List[String] = {
       def lazyName(state: Dfa.State): String =
         s"Lazy(${stateName(state)})"
 
@@ -78,16 +85,16 @@ final case class Dfa(initialState: Dfa.State) {
           ),
           ")" :: Nil
         )
-      ).flatten.mkString("\n")
+      ).flatten
     }
 
-    idxOf.toList
-      .sortBy(_._2)
-      .map {
-        case (state, _) =>
-          stateString(state)
-      }
-      .mkString("\n")
+    List(
+      "val dfa: Dfa[Token] = {" :: Nil,
+      idtLists(idxOf.toList.sortBy(_._2).map(p => stateStringLines(p._1)): _*),
+      "" :: Nil,
+      idtStrs(s"Dfa(${stateName(initialState)})"),
+      "}" :: Nil
+    ).flatten
   }
 
 }

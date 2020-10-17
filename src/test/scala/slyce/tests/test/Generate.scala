@@ -81,11 +81,13 @@ object Generate extends App {
       errs.foreach(println)
       System.exit(1)
     case \/-(dfa) =>
+      implicit val idt: String = "  "
+
       println("Success:")
-      println
-      println(dfa.initialState.show)
       println()
-      println(dfa.output("Test", List("slyce.tests")))
+      println(dfa.toksStr.mkString("\n"))
+      println()
+      println(dfa.dfaStr.mkString("\n"))
   }
 
 }

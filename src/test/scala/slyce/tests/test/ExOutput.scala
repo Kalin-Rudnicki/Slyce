@@ -16,7 +16,7 @@ object ExOutput {
 
   }
 
-  lazy val dfa: Dfa[Token] = {
+  val dfa: Dfa[Token] = {
     lazy val s0: Dfa.State[Token] =
       Dfa.State(
         transitions = Map(
