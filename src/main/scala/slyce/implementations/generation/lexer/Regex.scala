@@ -6,7 +6,19 @@ sealed trait Regex
 
 object Regex {
 
-  sealed trait CharClass extends Regex
+  sealed trait CharClass extends Regex {
+
+    def chars: Set[Char]
+
+    def contains(c: Char): Boolean =
+      this match {
+        case CharClass.Inclusive(chars) =>
+          chars.contains(c)
+        case CharClass.Exclusive(chars) =>
+          !chars.contains(c)
+      }
+
+  }
 
   object CharClass {
     final case class Inclusive(chars: Set[Char]) extends CharClass

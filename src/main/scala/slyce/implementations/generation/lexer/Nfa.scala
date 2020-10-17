@@ -14,12 +14,12 @@ import helpers.TraverseOps
 
 final case class Nfa(
     startMode: String,
-    modes: List[(Data.Mode, Nfa.State)]
+    modes: Map[String, Nfa.State]
 )
 
 object Nfa {
 
-  class State private {
+  final class State private {
     private val _transitions: MList[(CharClass, State)] = MList()
     private val _epsilonTransitions: MList[State] = MList()
     private var _end: Option[Data.Mode.Line] = None
@@ -32,7 +32,7 @@ object Nfa {
           newState.right
         case Regex.Sequence(seq) =>
           seq
-            .foldLeft(this.right) {
+            .foldLeft(this.right: Err \/ State) {
               case (s, reg) =>
                 s.flatMap(_.on(reg))
             }
@@ -115,6 +115,9 @@ object Nfa {
 
     def end: Option[Data.Mode.Line] =
       _end
+
+    def isTrivial: Boolean =
+      _transitions.isEmpty && _end.isEmpty
 
   }
 
