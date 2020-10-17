@@ -13,6 +13,7 @@ package object lexer {
   object Yields {
 
     sealed trait Yield {
+      def name: String
       def textRange: (Option[Int], Option[Int])
       def spanRange: (Option[Int], Option[Int])
     }
@@ -22,7 +23,9 @@ package object lexer {
       final case class Text(
           textRange: (Option[Int], Option[Int]),
           spanRange: (Option[Int], Option[Int])
-      ) extends Yield
+      ) extends Yield {
+        val name: String = "Text"
+      }
       object Text {
 
         def std: Text =

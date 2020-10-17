@@ -1,4 +1,4 @@
-package slyce.tests
+package slyce.tests.test
 
 import scalaz.-\/
 import scalaz.Scalaz.ToOptionIdOps
@@ -8,7 +8,7 @@ import scalaz.\/-
 import slyce.implementations.generation.lexer._
 import Regex.CharClass._
 
-object Test extends App {
+object Generate extends App {
 
   val data: Data = Data(
     startMode = "General",
@@ -51,6 +51,22 @@ object Test extends App {
               yields = Yields.Yield.Terminal.std("ab").some,
               toMode = None
             )
+          ),
+          Data.Mode.Line(
+            lineNo = 5,
+            regex = Regex.Sequence(
+              Regex.Repeat(
+                Inclusive('/'),
+                2,
+                2.some
+              ),
+              Regex.Repeat * Exclusive('\n'),
+              Inclusive('\n')
+            ),
+            yields = Yields(
+              yields = None,
+              toMode = None
+            )
           )
         )
       )
@@ -68,6 +84,8 @@ object Test extends App {
       println("Success:")
       println
       println(dfa.initialState.show)
+      println()
+      println(dfa.output("Test", List("slyce.tests")))
   }
 
 }
