@@ -12,7 +12,12 @@ object DataToNfa extends DataToNfaF[Data, Err, Nfa] {
       mode.lines
         .map(Nfa.State.fromLine)
         .traverseErrs
-        .map(Nfa.State.join)
+        .map { ss =>
+          val s = Nfa.State.join(ss)
+          println(s.show)
+          println
+          s
+        }
 
     input.modes
       .map(m => makeMode(m).map((m, _)))

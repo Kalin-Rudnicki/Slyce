@@ -3,6 +3,8 @@ package slyce.implementations.generation.lexer
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToOptionIdOps
 
+import helpers.CharOps
+
 sealed trait Regex
 
 object Regex {
@@ -18,6 +20,9 @@ object Regex {
         case CharClass.Exclusive(chars) =>
           !chars.contains(c)
       }
+
+    override def toString: String =
+      s"${this.getClass.getSimpleName}(${this.chars.toList.sorted.map(_.unescape).mkString(", ")})"
 
   }
 

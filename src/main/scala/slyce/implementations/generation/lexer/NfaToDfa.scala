@@ -24,24 +24,15 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
 
     }
 
-    @tailrec
-    def nonTrivial(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
-      if (unseen.isEmpty)
-        seen
-      else {
-        val nowSeen = unseen | seen
-        nonTrivial(seen.flatMap(_.epsilonTransitions) &~ nowSeen, nowSeen)
-      }
-
     def joinNfaStates(modeName: String, states: Set[Nfa.State]): TmpDfaState = {
-      val nonTrivialStates = nonTrivial(states)
+      val nonTrivialStates = Nfa.State.nonTrivial(states)
       val transitionPairs = nonTrivialStates.toList.flatMap(_.transitions)
 
       val specifiedChars: Set[Char] = transitionPairs.flatMap(_._1.chars).toSet
       val transitions: Map[Set[Char], Option[Set[Nfa.State]]] =
         specifiedChars.toList
           .map { c =>
-            c -> nonTrivial(transitionPairs.filter(_._1.contains(c)).map(_._2).toSet)
+            c -> Nfa.State.nonTrivial(transitionPairs.filter(_._1.contains(c)).map(_._2).toSet)
           }
           .groupMap(_._2)(_._1)
           .toList
@@ -51,7 +42,7 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
           }
           .toMap
       val elseTransition: Option[Set[Nfa.State]] = {
-        val s = nonTrivial(
+        val s = Nfa.State.nonTrivial(
           transitionPairs
             .filter {
               case (_: Regex.CharClass.Exclusive, _) =>
@@ -99,7 +90,7 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
     val nfaModeMap: Map[String, (Set[Nfa.State], Map[Set[Nfa.State], TmpDfaState])] =
       input.modes.map {
         case (k, v) =>
-          val initialStateSet: Set[Nfa.State] = nonTrivial(Set(v))
+          val initialStateSet: Set[Nfa.State] = v.nonTrivial
           val mapped: Map[Set[Nfa.State], TmpDfaState] = buildMap(k, Set(initialStateSet))
           k -> (initialStateSet -> mapped)
       }
@@ -175,13 +166,13 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
       }.traverseErrs
 
     for {
-      _ <- modeStartCanNotYield
+      // _ <- modeStartCanNotYield
       _ <- toDfa
       dfa <- modeStarts.get(input.startMode) match {
         case Some(s) =>
           Dfa(dfaFromNfas(s)).right
         case None =>
-          List("Invalid start mode name").left
+          List(s"Invalid start mode '${input.startMode}'").left
       }
     } yield dfa
   }

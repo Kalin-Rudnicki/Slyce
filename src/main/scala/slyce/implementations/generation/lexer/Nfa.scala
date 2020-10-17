@@ -119,6 +119,38 @@ object Nfa {
     def isTrivial: Boolean =
       _transitions.isEmpty && _end.isEmpty
 
+    def nonTrivial: Set[Nfa.State] =
+      State.nonTrivial(Set(this))
+
+    def findAll: Set[State] =
+      State.findAll(Set(this))
+
+    def show: String = {
+      val all = this.findAll.toList.zipWithIndex.toMap
+
+      (
+        s"initial-state: ${all(this)}" ::
+          s"num-states:   ${all.size}" ::
+          all.toList.flatMap {
+            case (state, idx) =>
+              List(
+                s"$idx:" :: Nil,
+                "\ttransitions:" :: Nil,
+                state.transitions.map(s => s"\t\t${s._1} => ${all(s._2)}"),
+                "\tepsilon-transitions:" :: Nil,
+                state.epsilonTransitions.map(s => s"\t\t${all(s)}"),
+                "\tend:" :: Nil,
+                state.end.toList.flatMap { e =>
+                  List(
+                    s"\t\t${e.lineNo}",
+                    s"\t\t${e.yields}"
+                  )
+                }
+              ).flatten
+          }
+      ).mkString("\n")
+    }
+
   }
 
   object State {
@@ -136,6 +168,21 @@ object Nfa {
       states.foreach(state._epsilonTransitions.append)
       state
     }
+
+    @tailrec
+    def nonTrivial(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
+      if (unseen.isEmpty)
+        seen.filterNot(_.isTrivial)
+      else {
+        val nowSeen = unseen | seen
+        nonTrivial(unseen.flatMap(_.epsilonTransitions) &~ nowSeen, nowSeen)
+      }
+
+    def findAll(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
+      helpers.findAll(unseen, seen) { s =>
+        s.transitions.map(_._2).toSet |
+          s.epsilonTransitions.toSet
+      }
 
   }
 

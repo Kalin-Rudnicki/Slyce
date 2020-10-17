@@ -24,7 +24,7 @@ object Test extends App {
             lineNo = 5,
             regex = Regex.Sequence(
               Regex.Repeat(
-                Inclusive('\\'),
+                Inclusive('/'),
                 2,
                 2.some
               ),
@@ -176,47 +176,9 @@ object Test extends App {
       errs.foreach(println)
       System.exit(1)
     case \/-(dfa) =>
-      @tailrec
-      def findAllStates(unseen: Set[Dfa.State], seen: Set[Dfa.State] = Set()): Set[Dfa.State] =
-        if (unseen.isEmpty)
-          seen
-        else {
-          val nowSeen = seen | unseen
-          def references(state: Dfa.State): Set[Dfa.State] =
-            Set(
-              state.transitions.toList.flatMap(_._2).toSet,
-              state.elseTransition.toSet,
-              state.yields.map(_.toMode).toSet
-            ).flatten
-
-          findAllStates(unseen.flatMap(references) &~ nowSeen, nowSeen)
-        }
-
-      val stateMap =
-        findAllStates(Set(dfa.initialState)).toList.zipWithIndex.toMap
-
       println("Success:")
       println
-      println(s"initial-state: ${stateMap(dfa.initialState)}, ${stateMap.size}")
-      println
-      stateMap.toList.sortBy(_._2).foreach {
-        case (state, idx) =>
-          println(s"$idx:")
-          println("\ttransitions:")
-          state.transitions.foreach {
-            case (chars, to) =>
-              println(s"\t\t$chars => ${to.fold("")(stateMap(_).toString)}")
-          }
-          println("\telse-transition:")
-          state.elseTransition.foreach { to =>
-            println(s"\t\t$to")
-          }
-          println("\tyields:")
-          state.yields.foreach { yields =>
-            println(s"\t\tyields: ${yields.yields}")
-            println(s"\t\tto: ${stateMap(yields.toMode)}")
-          }
-      }
+      println(dfa.initialState.show)
   }
 
 }
