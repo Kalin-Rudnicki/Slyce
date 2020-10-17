@@ -166,7 +166,7 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
       }.traverseErrs
 
     for {
-      // _ <- modeStartCanNotYield
+      _ <- modeStartCanNotYield
       _ <- toDfa
       dfa <- modeStarts.get(input.startMode) match {
         case Some(s) =>

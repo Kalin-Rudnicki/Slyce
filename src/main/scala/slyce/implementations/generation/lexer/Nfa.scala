@@ -45,11 +45,7 @@ object Nfa {
           seqs.list.toList
             .map(this.on)
             .traverseErrs
-            .map { states =>
-              val newState = new State
-              states.foreach(_._epsilonTransitions.append(newState))
-              newState
-            }
+            .map(State.join)
         case Regex.Repeat(_, min, _) if min < 0 =>
           List(s"min ($min) < 0").left
         case Regex.Repeat(_, min, Some(max)) if max < min =>
@@ -159,8 +155,8 @@ object Nfa {
       for {
         _ <- ().right
         state = new State
-        _ = state._end = line.some
-        _ <- state.on(line.regex).leftMap(_.map(e => s"{line #${line.lineNo}} $e"))
+        end <- state.on(line.regex).leftMap(_.map(e => s"{line #${line.lineNo}} $e"))
+        _ = end._end = line.some
       } yield state
 
     def join(states: List[State]): State = {
