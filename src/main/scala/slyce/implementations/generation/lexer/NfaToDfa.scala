@@ -125,8 +125,18 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
     def dfaFromNfas(nfas: Set[Nfa.State]): Dfa.State =
       dfaMap(tmpMap(nfas))
 
-    dfaMap.toList
-      .map {
+    val modeStartCanNotYield =
+      modeStarts.toList.map {
+        case (m, s) =>
+          // TODO (KR) : Find this earlier, its not very helpful to only know the mode, should know the line that causes it
+          tmpMap(s).line.isDefined.fold(
+            List(s"Mode $m can yield on no input").left,
+            ().right
+          )
+      }.traverseErrs
+
+    val toDfa =
+      dfaMap.toList.map {
         case (tmpState, dfaState) =>
           dfaState.transitions = tmpState.transitions.map {
             case (on, to) =>
@@ -162,16 +172,18 @@ object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
             case None =>
               ().right
           }
+      }.traverseErrs
+
+    for {
+      _ <- modeStartCanNotYield
+      _ <- toDfa
+      dfa <- modeStarts.get(input.startMode) match {
+        case Some(s) =>
+          Dfa(dfaFromNfas(s)).right
+        case None =>
+          List("Invalid start mode name").left
       }
-      .traverseErrs
-      .flatMap { _ =>
-        modeStarts.get(input.startMode) match {
-          case Some(s) =>
-            Dfa(dfaFromNfas(s)).right
-          case None =>
-            List("Invalid start mode name").left
-        }
-      }
+    } yield dfa
   }
 
 }

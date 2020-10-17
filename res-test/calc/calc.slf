@@ -6,12 +6,12 @@
 /\*                                             ; -> MultiLineComment
 [ \t]                                           ;
 [=()]                                           ; @
-[+\-]                                           ; $add_op
-[*/]                                            ; $mult_op
-^                                               ; $pow_op
+[+\-]                                           ; $addOp
+[*/]                                            ; $multOp
+^                                               ; $powOp
 -?\d+                                           ; $int
 -?\d+\.\d+                                      ; $float
-[a-z][_a-zA-Z\d]*                               ; $var
+[_a-z][_a-zA-Z\d]*                               ; $var
 
 @mode MultiLineComment
 \*/                                             ; -> General
