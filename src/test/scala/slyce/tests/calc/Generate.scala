@@ -1,4 +1,4 @@
-package slyce.tests
+package slyce.tests.calc
 
 import scalaz.-\/
 import scalaz.Scalaz.ToOptionIdOps
@@ -8,7 +8,7 @@ import scalaz.\/-
 import slyce.implementations.generation.lexer._
 import Regex.CharClass._
 
-object Calc extends App {
+object Generate extends App {
 
   val data: Data = Data(
     startMode = "General",
@@ -58,7 +58,7 @@ object Calc extends App {
           //: [=()]
           Data.Mode.Line(
             lineNo = 8,
-            regex = Inclusive('=', '(', ')'),
+            regex = Inclusive('=', '(', ')', '\n'),
             yields = Yields(
               yields = Yields.Yield.Text.std.some,
               toMode = None
@@ -130,7 +130,7 @@ object Calc extends App {
               )
             ),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("var").some,
+              yields = Yields.Yield.Terminal.std("_var").some,
               toMode = None
             )
           )
@@ -174,9 +174,13 @@ object Calc extends App {
       errs.foreach(println)
       System.exit(1)
     case \/-(dfa) =>
+      implicit val idt: String = "  "
+
       println("Success:")
-      println
-      println(dfa.initialState.show)
+      println()
+      println(dfa.toksStr.mkString("\n"))
+      println()
+      println(dfa.dfaStr.mkString("\n"))
   }
 
 }

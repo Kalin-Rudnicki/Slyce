@@ -1,0 +1,12 @@
+x = 5
+x
+y = 4
+y
+z = x + y
+z
+// comment
+z + 10
+/* multi
+   line
+   comment */
+(x + y) * z

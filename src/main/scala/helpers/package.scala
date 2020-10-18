@@ -25,21 +25,20 @@ package object helpers {
 
   implicit class CharOps(char: Char) {
 
-    def unescape: String = {
-      val s =
-        char match {
-          case '\n' =>
-            "\\n"
-          case '\\' =>
-            "\\\\"
-          case '\t' =>
-            "\\t"
-          case c =>
-            c.toString
-        }
+    def unesc: String =
+      char match {
+        case '\n' =>
+          "\\n"
+        case '\\' =>
+          "\\\\"
+        case '\t' =>
+          "\\t"
+        case c =>
+          c.toString
+      }
 
-      s"'$s'"
-    }
+    def unescape: String =
+      s"'${char.unesc}'"
 
   }
 

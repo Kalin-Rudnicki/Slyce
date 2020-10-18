@@ -1,7 +1,9 @@
 package slyce.implementations.parsing
 
 class Lazy[+V] private (v: => V) {
+
   lazy val value: V = v
+
 }
 
 object Lazy {

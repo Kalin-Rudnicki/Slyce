@@ -5,13 +5,13 @@
 //[^\n]*\n                                      ;
 /\*                                             ; -> MultiLineComment
 [ \t]                                           ;
-[=()]                                           ; @
+[=()\n]                                         ; @
 [+\-]                                           ; $addOp
 [*/]                                            ; $multOp
 ^                                               ; $powOp
 -?\d+                                           ; $int
 -?\d+\.\d+                                      ; $float
-[_a-z][_a-zA-Z\d]*                               ; $var
+[_a-z][_a-zA-Z\d]*                              ; $_var
 
 @mode MultiLineComment
 \*/                                             ; -> General

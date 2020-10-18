@@ -25,11 +25,11 @@ final case class Dfa(initialState: Dfa.State) {
     def tokString(tokName: String): String =
       s"final case class $tokName(text: String) extends Token"
 
-    val names = idxOf.toList.flatMap(_._1.yields.flatMap(_.yields.map(_.name))).sorted
+    val names = idxOf.toList.flatMap(_._1.yields.flatMap(_.yields.map(_.name))).distinct.sorted
 
     List(
       List(
-        "sealed trait Token",
+        "sealed trait Token extends Dfa.Token",
         "object Token {"
       ),
       idtStrs(names.map(tokString): _*),
@@ -51,19 +51,22 @@ final case class Dfa(initialState: Dfa.State) {
         def yStr(y: Yield): String =
           s"Token.${y.name}($lambdaParam)"
 
-        s"Dfa.State.Yield(${stateName(yields.toMode)})($lambdaParam => ${yields.yields.map(yStr)})"
+        s"Dfa.State.Yield(${stateName(yields.toMode)})(${yields.yields.nonEmpty.fold(lambdaParam, "_")} => ${yields.yields.map(yStr)})"
       }
 
       List(
         s"lazy val ${stateName(state)}: Dfa.State[Token] =" :: Nil,
         idtLists(
           "Dfa.State(" :: Nil,
+          idtStrs(
+            s"id = ${idxOf(state)},"
+          ),
           state.transitions.isEmpty.fold(
             idtStrs(
-              "transition = Map(),"
+              "transitions = Map(),"
             ),
             idtLists(
-              "transition = Map(" :: Nil,
+              "transitions = Map(" :: Nil,
               idtStrs(
                 state.transitions.toList
                   .flatMap {
@@ -73,7 +76,8 @@ final case class Dfa(initialState: Dfa.State) {
                   .sortBy(_._1)
                   .map {
                     case (c, s) =>
-                      s"${c.toInt} -> ${s.map(lazyName)}, // ${c.unescape}"
+                      // Seems like the safest way to avoid all sorts of weird character escapes
+                      s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unescape}"
                   }: _*
               ),
               ")," :: Nil

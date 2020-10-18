@@ -40,7 +40,7 @@ object Regex {
         Inclusive(chars.toSet)
 
       val az: Inclusive = Inclusive('a'.to('z').toSet)
-      val AZ: Inclusive = Inclusive('a'.to('z').toSet)
+      val AZ: Inclusive = Inclusive('A'.to('Z').toSet)
       val d: Inclusive = Inclusive('0'.to('9').toSet)
 
     }
