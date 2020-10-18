@@ -10,3 +10,4 @@ z + 10
    line
    comment */
 (x + y) * z
+xyz = x * y * z

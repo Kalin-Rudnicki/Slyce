@@ -1,11 +1,15 @@
 package slyce.implementations.parsing
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 import helpers._
+import scalaz.-\/
 import scalaz.\/
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
+import scalaz.\/-
 
 final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
 
@@ -13,80 +17,144 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
     @tailrec
     def loop(
         state: Dfa.State[Tok],
+        startPos: Dfa.Token.Pos,
+        currentPos: Dfa.Token.Pos,
         remaining: List[Char],
         current: List[Char],
         past: List[Char],
         toks: List[Tok],
-        tok: Option[(Dfa.State[Tok], List[Tok])]
-    ): List[String] \/ List[Tok] =
+        yields: Option[(Dfa.Token.Pos, List[Char], Dfa.State.Yields[Tok])]
+    ): List[String] \/ List[Tok] = {
+      def calcToks(str: String, yields: List[Dfa.State.Yields.Yield[Tok]]): List[String] \/ List[Tok] = {
+        def calcYield(y: Dfa.State.Yields.Yield[Tok]): List[String] \/ Tok = {
+          def subStr(
+              pos: Dfa.Token.Pos,
+              s: String,
+              trim: (Int, Int)
+          ): List[String] \/ (Dfa.Token.Pos, Dfa.Token.Pos, String) = {
+            def calcIdx(i: Int): Int =
+              (i >= 0).fold(i, s.length + 1 + i)
+
+            val start = calcIdx(trim._1)
+            val end = calcIdx(trim._2)
+            val strs =
+              for {
+                before <- Try(s.substring(0, start))
+                in <- Try(s.substring(start, end))
+              } yield (before, in)
+
+            strs.toOption match {
+              case None =>
+                List(s"Unable to make Token @ ${startPos.pos}").left
+              case Some((before, in)) =>
+                val startPos = before.toList.foldLeft(pos)(_.onChar(_))
+                val endPos = in.toList.foldLeft(startPos)(_.onChar(_))
+                (startPos, endPos, in).right
+            }
+          }
+
+          for {
+            r1 <- subStr(startPos, str, y.spanRange)
+            (p1, p2, s1) = r1
+            r2 <- subStr(p1, s1, y.textRange)
+            (_, _, s2) = r2
+          } yield y.tokF(s2, p1, p2)
+        }
+
+        yields.map(calcYield).traverseErrs
+      }
+
       remaining match {
         case Nil =>
           current match {
             case Nil =>
               toks.reverse.right
             case _ =>
-              tok match {
+              yields match {
                 case None =>
                   List("Unexpected EOF").left
-                case Some((to, found)) =>
-                  loop(
-                    state = to,
-                    remaining = remaining.reverse_:::(past),
-                    current = Nil,
-                    past = Nil,
-                    toks = found ::: toks,
-                    tok = None
-                  )
+                case Some((pos, chars, Dfa.State.Yields(to, yields))) =>
+                  calcToks(chars.reverse.mkString, yields) match {
+                    case err @ -\/(_) =>
+                      err
+                    case \/-(nToks) =>
+                      loop(
+                        state = to,
+                        remaining = remaining.reverse_:::(past),
+                        current = Nil,
+                        startPos = pos,
+                        currentPos = pos,
+                        past = Nil,
+                        toks = nToks ::: toks,
+                        yields = None
+                      )
+                  }
               }
           }
         case c :: rem =>
           state(c) match {
             case None =>
-              tok match {
+              yields match {
                 case None =>
-                  List(s"Unexpected ${c.unescape}").left
-                case Some((to, found)) =>
-                  loop(
-                    state = to,
-                    remaining = remaining.reverse_:::(past),
-                    current = Nil,
-                    past = Nil,
-                    toks = found ::: toks,
-                    tok = None
-                  )
+                  List(s"Unexpected ${c.unescape} @ ${currentPos.pos}").left
+                case Some((pos, chars, Dfa.State.Yields(to, yields))) =>
+                  calcToks(chars.reverse.mkString, yields) match {
+                    case err @ -\/(_) =>
+                      err
+                    case \/-(nToks) =>
+                      loop(
+                        state = to,
+                        remaining = remaining.reverse_:::(past),
+                        current = Nil,
+                        startPos = pos,
+                        currentPos = pos,
+                        past = Nil,
+                        toks = nToks ::: toks,
+                        yields = None
+                      )
+                  }
               }
-            case Some(to) =>
-              to.yields match {
+            case Some(newState) =>
+              val nPos = currentPos.onChar(c)
+              newState.yields match {
                 case None =>
                   loop(
-                    state = to,
+                    state = newState,
                     remaining = rem,
                     current = c :: current,
+                    startPos = startPos,
+                    currentPos = nPos,
                     past = c :: past,
                     toks = toks,
-                    tok = tok
+                    yields = yields
                   )
-                case Some(Dfa.State.Yields(to2, yields)) =>
+                case yields @ Some(Dfa.State.Yields(to, _)) =>
                   val cur = c :: current
+
                   loop(
-                    state = to,
+                    state = newState,
                     remaining = rem,
                     current = cur,
+                    startPos = startPos,
+                    currentPos = nPos,
                     past = Nil,
                     toks = toks,
-                    tok = ??? // TODO (KR) : (to2, yields(cur.reverse.mkString).toList).some
+                    yields = yields.map((nPos, cur, _))
                   )
               }
           }
       }
+    }
 
     loop(
       state = initialState,
-      remaining = str.toCharArray.toList,
+      remaining = str.toList,
       current = Nil,
+      startPos = Dfa.Token.Pos._0,
+      currentPos = Dfa.Token.Pos._0,
       past = Nil,
       toks = Nil,
-      tok = None
+      yields = None
     )
   }
 
@@ -105,7 +173,7 @@ object Dfa {
     def text: String
 
     override def toString: String =
-      s"""$name("${text.map(_.unesc).mkString}")"""
+      s"$name(${text.unesc}, $start, $stop)"
 
   }
 
@@ -115,7 +183,26 @@ object Dfa {
         abs: Int,
         line: Int,
         inLine: Int
-    )
+    ) {
+
+      def onChar(c: Char): Pos =
+        c match {
+          case '\n' =>
+            Pos(abs + 1, line + 1, 0)
+          case _ =>
+            Pos(abs + 1, line, inLine + 1)
+        }
+
+      def pos: String =
+        s"$line:$inLine"
+
+    }
+
+    object Pos {
+
+      val _0: Pos = Pos(0, 0, 0)
+
+    }
 
   }
 

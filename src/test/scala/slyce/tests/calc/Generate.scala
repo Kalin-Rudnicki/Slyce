@@ -130,7 +130,7 @@ object Generate extends App {
               )
             ),
             yields = Yields(
-              yields = List(Yields.Yield.Terminal.std("_var")),
+              yields = List(Yields.Yield.Terminal("_var", (0, -1), (0, -1))),
               toMode = None
             )
           )

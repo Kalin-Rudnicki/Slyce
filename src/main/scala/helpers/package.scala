@@ -42,6 +42,12 @@ package object helpers {
 
   }
 
+  implicit class StringOps(string: String) {
+
+    def unesc: String =
+      '\"' + string.map(_.unesc).mkString + '\"'
+  }
+
   @tailrec
   def findAll[A](unseen: Set[A], seen: Set[A] = Set())(f: A => Set[A]): Set[A] =
     if (unseen.isEmpty)
