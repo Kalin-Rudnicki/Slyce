@@ -53,12 +53,12 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
             }
           }
 
-          for {
-            r1 <- subStr(startPos, str, y.spanRange)
-            (p1, p2, s1) = r1
-            r2 <- subStr(p1, s1, y.textRange)
-            (_, _, s2) = r2
-          } yield y.tokF(s2, p1, p2)
+          // NOTE : Removed the ability to be able to have span, and then pass text within span.
+          //      : Seemed overkill. Possibly bring this back in the future.
+          subStr(startPos, str, y.spanRange).map {
+            case (p1, p2, r) =>
+              y.tokF(r, p1, p2)
+          }
         }
 
         yields.map(calcYield).traverseErrs
@@ -226,8 +226,7 @@ object Dfa {
 
       final case class Yield[+Tok](
           tokF: (String, Token.Pos, Token.Pos) => Tok,
-          spanRange: (Int, Int),
-          textRange: (Int, Int)
+          spanRange: (Int, Int)
       )
 
       def apply[Tok](to: => State[Tok])(yields: Yield[Tok]*): Yields[Tok] =

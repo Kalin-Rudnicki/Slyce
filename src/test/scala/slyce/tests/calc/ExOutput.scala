@@ -104,8 +104,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.multOp.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -144,8 +143,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.float.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -179,8 +177,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.addOp.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -258,8 +255,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token._var.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -273,8 +269,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.powOp.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -291,8 +286,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.multOp.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -348,8 +342,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.int.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -363,8 +356,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.Text.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )
@@ -387,8 +379,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.addOp.apply,
-              spanRange = (0, -1),
-              textRange = (0, -1)
+              spanRange = (0, -1)
             )
           )
         )

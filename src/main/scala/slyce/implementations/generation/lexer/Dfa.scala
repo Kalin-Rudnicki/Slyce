@@ -105,8 +105,7 @@ final case class Dfa(initialState: Dfa.State) {
                         "Dfa.State.Yields.Yield(" :: Nil,
                         idtStrs(
                           s"tokF = Token.${y.name}.apply,",
-                          s"spanRange = ${y.spanRange},",
-                          s"textRange = ${y.textRange},"
+                          s"spanRange = ${y.spanRange},"
                         ),
                         ")," :: Nil
                       ).flatten
