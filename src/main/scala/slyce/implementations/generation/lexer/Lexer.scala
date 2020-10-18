@@ -2,11 +2,11 @@ package slyce.implementations.generation.lexer
 
 import scalaz.\/
 
-import slyce.architecture.generation.lexer.{Lexer => LexerF}
+import slyce.architecture.generation.{lexer => arch}
 
-object Lexer extends LexerF[Data, Err, Dfa] {
+object Lexer extends arch.Lexer[Data, Err, Dfa] {
 
   override def apply(input: Data): Err \/ Dfa =
-    LexerF.apply(DataToNfa, NfaToDfa)(input)
+    arch.Lexer.apply(DataToNfa, NfaToDfa)(input)
 
 }

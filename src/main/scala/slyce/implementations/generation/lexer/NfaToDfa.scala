@@ -8,9 +8,9 @@ import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 
 import helpers.TraverseOps
-import slyce.architecture.generation.lexer.{NfaToDfa => NfaToDfaF}
+import slyce.architecture.generation.{lexer => arch}
 
-object NfaToDfa extends NfaToDfaF[Nfa, Err, Dfa] {
+object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
   override def apply(input: Nfa): Err \/ Dfa = {
     final case class TmpDfaState(
         modeName: String,

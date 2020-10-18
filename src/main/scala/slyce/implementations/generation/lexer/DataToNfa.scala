@@ -3,9 +3,9 @@ package slyce.implementations.generation.lexer
 import helpers.TraverseOps
 import scalaz.\/
 
-import slyce.architecture.generation.lexer.{DataToNfa => DataToNfaF}
+import slyce.architecture.generation.{lexer => arch}
 
-object DataToNfa extends DataToNfaF[Data, Err, Nfa] {
+object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
 
   override def apply(input: Data): Err \/ Nfa = {
     def makeMode(mode: Data.Mode): Err \/ Nfa.State =
