@@ -1,12 +1,14 @@
-Lines   * Line . !NL Line
+
+@start Lines
+
+Lines   * !"\n"+ Line . !"\n"+ Line !"\n"+
 Line    : Expr
         | Assign
-NL      + "\n"
-Assign  : var "=" Expr
-Expr    ~ >pow_op
-        | <mult_op
-        | <add_op
+Assign  : _var "=" Expr
+Expr    ~ >powOp
+        | <multOp
+        | <addOp
         ^ !"(" Expr !")"
         | float
         | int
-        | var
+        | _var

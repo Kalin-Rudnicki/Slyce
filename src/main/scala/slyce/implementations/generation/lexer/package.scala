@@ -21,7 +21,7 @@ package object lexer {
       final case class Text(
           spanRange: (Int, Int)
       ) extends Yield {
-        val name: String = "Text"
+        val name: String = "raw"
       }
       object Text {
 
