@@ -66,7 +66,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                     toks = toks,
                     tok = tok
                   )
-                case Some(Dfa.State.Yield(to2, yields)) =>
+                case Some(Dfa.State.Yields(to2, yields)) =>
                   val cur = c :: current
                   loop(
                     state = to,
@@ -74,7 +74,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                     current = cur,
                     past = Nil,
                     toks = toks,
-                    tok = (to2, yields(cur.reverse.mkString).toList).some
+                    tok = ??? // TODO (KR) : (to2, yields(cur.reverse.mkString).toList).some
                   )
               }
           }
@@ -98,6 +98,10 @@ object Dfa {
 
     def name: String = this.getClass.getSimpleName
 
+    def start: Token.Pos
+
+    def stop: Token.Pos
+
     def text: String
 
     override def toString: String =
@@ -105,11 +109,21 @@ object Dfa {
 
   }
 
+  object Token {
+
+    final case class Pos(
+        abs: Int,
+        line: Int,
+        inLine: Int
+    )
+
+  }
+
   final case class State[+Tok](
       id: Int,
       transitions: Map[Char, Option[Lazy[State[Tok]]]],
       elseTransition: Option[Lazy[State[Tok]]],
-      yields: Option[State.Yield[Tok]]
+      yields: Option[State.Yields[Tok]]
   ) {
 
     def apply(c: Char): Option[State[Tok]] =
@@ -119,17 +133,21 @@ object Dfa {
 
   object State {
 
-    final class Yield[+Tok](_to: => State[Tok], val yields: String => Option[Tok]) {
-      lazy val to: State[Tok] = _to
-    }
+    final class Yields[+Tok](val to: Lazy[State[Tok]], val yields: List[Yields.Yield[Tok]])
 
-    object Yield {
+    object Yields {
 
-      def apply[Tok](to: State[Tok])(yields: String => Option[Tok]): Yield[Tok] =
-        new Yield(to, yields)
+      final case class Yield[+Tok](
+          tokF: (String, Token.Pos, Token.Pos) => Tok,
+          spanRange: (Int, Int),
+          textRange: (Int, Int)
+      )
 
-      def unapply[Tok](arg: Yield[Tok]): Option[(State[Tok], String => Option[Tok])] =
-        (arg.to, arg.yields).some
+      def apply[Tok](to: => State[Tok])(yields: Yield[Tok]*): Yields[Tok] =
+        new Yields(Lazy(to), yields.toList)
+
+      def unapply[Tok](arg: Yields[Tok]): Option[(State[Tok], List[Yield[Tok]])] =
+        (arg.to.value, arg.yields).some
 
     }
 

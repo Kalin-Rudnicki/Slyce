@@ -23,9 +23,9 @@ final case class Dfa(initialState: Dfa.State) {
 
   def toksStr(implicit idt: String): List[String] = {
     def tokString(tokName: String): String =
-      s"final case class $tokName(text: String) extends Token"
+      s"final case class $tokName(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token"
 
-    val names = idxOf.toList.flatMap(_._1.yields.flatMap(_.yields.map(_.name))).distinct.sorted
+    val names = idxOf.toList.flatMap(_._1.yields.toList.flatMap(_.yields.map(_.name))).distinct.sorted
 
     List(
       List(
@@ -84,9 +84,40 @@ final case class Dfa(initialState: Dfa.State) {
             )
           ),
           idtStrs(
-            s"elseTransition = ${state.elseTransition.map(lazyName)},",
-            s"yields = ${state.yields.map(yieldsStr)},"
+            s"elseTransition = ${state.elseTransition.map(lazyName)},"
           ),
+          state.yields.fold(
+            idtStrs(
+              "yields = None,"
+            )
+          ) { yields =>
+            yields.yields.isEmpty.fold(
+              idtStrs(
+                s"yields = Some(Dfa.State.Yields(${stateName(yields.toMode)})()),"
+              ),
+              idtLists(
+                s"yields = Some(" :: Nil,
+                idtLists(
+                  s"Dfa.State.Yields(${stateName(yields.toMode)})(" :: Nil,
+                  idtLists(
+                    yields.yields.map { y =>
+                      List(
+                        "Dfa.State.Yields.Yield(" :: Nil,
+                        idtStrs(
+                          s"tokF = Token.${y.name}.apply,",
+                          s"spanRange = ${y.spanRange},",
+                          s"textRange = ${y.textRange},"
+                        ),
+                        ")," :: Nil
+                      ).flatten
+                    }: _*
+                  ),
+                  ")," :: Nil
+                ),
+                ")," :: Nil
+              )
+            )
+          },
           ")" :: Nil
         )
       ).flatten
@@ -114,40 +145,12 @@ object Dfa {
     def findAll: Set[State] =
       State.findAll(Set(this))
 
-    def show: String = {
-      val all = this.findAll.toList.zipWithIndex.toMap
-
-      (
-        s"initial-state: ${all(this)}" ::
-          s"num-states:   ${all.size}" ::
-          all.toList.flatMap {
-            case (state, idx) =>
-              List(
-                s"$idx:" :: Nil,
-                "\ttransitions:" :: Nil,
-                state.transitions.map(s =>
-                  s"\t\t(${s._1.toList.sorted.map(_.unescape).mkString(", ")}) => ${s._2.map(all)}"
-                ),
-                "\telse-transition:" :: Nil,
-                state.elseTransition.map(s => s"\t\t${all(s)}"),
-                "\tyields:" :: Nil,
-                state.yields.toList.flatMap { y =>
-                  List(
-                    s"\t\t${all(y.toMode)}",
-                    s"\t\t${y.yields}"
-                  )
-                }
-              ).flatten
-          }
-      ).mkString("\n")
-    }
-
   }
 
   object State {
 
     final case class Yields(
-        yields: Option[Yield],
+        yields: List[Yield],
         toMode: State
     )
 

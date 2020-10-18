@@ -30,7 +30,7 @@ object Generate extends App {
               Inclusive('\n')
             ),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = None
             )
           ),
@@ -42,7 +42,7 @@ object Generate extends App {
               Inclusive('*')
             ),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = "MultiLineComment".some
             )
           ),
@@ -51,7 +51,7 @@ object Generate extends App {
             lineNo = 7,
             regex = Inclusive(' ', '\t'),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = None
             )
           ),
@@ -60,7 +60,7 @@ object Generate extends App {
             lineNo = 8,
             regex = Inclusive('=', '(', ')', '\n'),
             yields = Yields(
-              yields = Yields.Yield.Text.std.some,
+              yields = List(Yields.Yield.Text.std),
               toMode = None
             )
           ),
@@ -69,7 +69,7 @@ object Generate extends App {
             lineNo = 9,
             regex = Inclusive('+', '-'),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("addOp").some,
+              yields = List(Yields.Yield.Terminal.std("addOp")),
               toMode = None
             )
           ),
@@ -78,7 +78,7 @@ object Generate extends App {
             lineNo = 10,
             regex = Inclusive('*', '/'),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("multOp").some,
+              yields = List(Yields.Yield.Terminal.std("multOp")),
               toMode = None
             )
           ),
@@ -87,7 +87,7 @@ object Generate extends App {
             lineNo = 11,
             regex = Inclusive('^'),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("powOp").some,
+              yields = List(Yields.Yield.Terminal.std("powOp")),
               toMode = None
             )
           ),
@@ -99,7 +99,7 @@ object Generate extends App {
               Regex.Repeat + Inclusive.d
             ),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("int").some,
+              yields = List(Yields.Yield.Terminal.std("int")),
               toMode = None
             )
           ),
@@ -113,7 +113,7 @@ object Generate extends App {
               Regex.Repeat + Inclusive.d
             ),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("float").some,
+              yields = List(Yields.Yield.Terminal.std("float")),
               toMode = None
             )
           ),
@@ -130,7 +130,7 @@ object Generate extends App {
               )
             ),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("_var").some,
+              yields = List(Yields.Yield.Terminal.std("_var")),
               toMode = None
             )
           )
@@ -148,7 +148,7 @@ object Generate extends App {
               Inclusive('/')
             ),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = "General".some
             )
           ),
@@ -157,7 +157,7 @@ object Generate extends App {
             lineNo = 18,
             regex = Exclusive(),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = None
             )
           )

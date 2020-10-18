@@ -21,7 +21,7 @@ object Generate extends App {
             lineNo = 1,
             regex = Inclusive('a'),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("a").some,
+              yields = List(Yields.Yield.Terminal.std("a")),
               toMode = None
             )
           ),
@@ -29,7 +29,7 @@ object Generate extends App {
             lineNo = 2,
             regex = Inclusive('b'),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("b").some,
+              yields = List(Yields.Yield.Terminal.std("b")),
               toMode = None
             )
           ),
@@ -48,7 +48,7 @@ object Generate extends App {
               )
             ),
             yields = Yields(
-              yields = Yields.Yield.Terminal.std("ab").some,
+              yields = List(Yields.Yield.Terminal.std("ab")),
               toMode = None
             )
           ),
@@ -64,7 +64,7 @@ object Generate extends App {
               Inclusive('\n')
             ),
             yields = Yields(
-              yields = None,
+              yields = Nil,
               toMode = None
             )
           )

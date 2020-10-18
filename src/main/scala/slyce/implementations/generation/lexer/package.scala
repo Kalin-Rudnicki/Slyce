@@ -5,8 +5,7 @@ package object lexer {
   type Err = List[String]
 
   final case class Yields(
-      // TODO (KR) : Make this a List instead, allowing for multiple Yield
-      yields: Option[Yields.Yield],
+      yields: List[Yields.Yield],
       toMode: Option[String]
   )
 
@@ -14,34 +13,37 @@ package object lexer {
 
     sealed trait Yield {
       def name: String
-      def textRange: (Option[Int], Option[Int])
-      def spanRange: (Option[Int], Option[Int])
+      def spanRange: (Int, Int)
+      def textRange: (Int, Int)
     }
 
     object Yield {
 
+      final case class Range(
+      )
+
       final case class Text(
-          textRange: (Option[Int], Option[Int]),
-          spanRange: (Option[Int], Option[Int])
+          spanRange: (Int, Int),
+          textRange: (Int, Int)
       ) extends Yield {
         val name: String = "Text"
       }
       object Text {
 
         def std: Text =
-          Text((None, None), (None, None))
+          Text((0, -1), (0, -1))
 
       }
 
       final case class Terminal(
           name: String,
-          textRange: (Option[Int], Option[Int]),
-          spanRange: (Option[Int], Option[Int])
+          spanRange: (Int, Int),
+          textRange: (Int, Int)
       ) extends Yield
       object Terminal {
 
         def std(name: String): Terminal =
-          Terminal(name, (None, None), (None, None))
+          Terminal(name, (0, -1), (0, -1))
 
       }
 
