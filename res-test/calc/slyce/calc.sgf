@@ -2,13 +2,13 @@
 @start Lines
 
 Lines   * !"\n"+ Line . !"\n"+ Line !"\n"+
-Line    : Expr
+Line    ^ Expr
         | Assign
 Assign  : _var "=" Expr
 Expr    ~ >powOp
         | <multOp
         | <addOp
         ^ !"(" Expr !")"
-        | float
         | int
+        | float
         | _var
