@@ -6,7 +6,7 @@ package object lexer {
 
   final case class Yields(
       yields: List[Yields.Yield],
-      toMode: Option[String]
+      toMode: Option[String],
   )
 
   object Yields {
@@ -19,7 +19,7 @@ package object lexer {
     object Yield {
 
       final case class Text(
-          spanRange: (Int, Int)
+          spanRange: (Int, Int),
       ) extends Yield {
         val name: String = "raw"
       }
@@ -32,7 +32,7 @@ package object lexer {
 
       final case class Terminal(
           name: String,
-          spanRange: (Int, Int)
+          spanRange: (Int, Int),
       ) extends Yield
       object Terminal {
 

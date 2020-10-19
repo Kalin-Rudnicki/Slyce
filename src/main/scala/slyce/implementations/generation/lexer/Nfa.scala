@@ -14,7 +14,7 @@ import helpers.TraverseOps
 
 final case class Nfa(
     startMode: String,
-    modes: Map[String, Nfa.State]
+    modes: Map[String, Nfa.State],
 )
 
 object Nfa {

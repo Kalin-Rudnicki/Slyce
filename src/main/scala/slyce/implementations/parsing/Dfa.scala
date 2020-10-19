@@ -23,14 +23,14 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
         current: List[Char],
         past: List[Char],
         toks: List[Tok],
-        yields: Option[(Dfa.Token.Pos, List[Char], Dfa.State.Yields[Tok])]
+        yields: Option[(Dfa.Token.Pos, List[Char], Dfa.State.Yields[Tok])],
     ): List[String] \/ List[Tok] = {
       def calcToks(str: String, yields: List[Dfa.State.Yields.Yield[Tok]]): List[String] \/ List[Tok] = {
         def calcYield(y: Dfa.State.Yields.Yield[Tok]): List[String] \/ Tok = {
           def subStr(
               pos: Dfa.Token.Pos,
               s: String,
-              trim: (Int, Int)
+              trim: (Int, Int),
           ): List[String] \/ (Dfa.Token.Pos, Dfa.Token.Pos, String) = {
             def calcIdx(i: Int): Int =
               (i >= 0).fold(i, s.length + 1 + i)
@@ -86,7 +86,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                         currentPos = pos,
                         past = Nil,
                         toks = nToks ::: toks,
-                        yields = None
+                        yields = None,
                       )
                   }
               }
@@ -110,7 +110,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                         currentPos = pos,
                         past = Nil,
                         toks = nToks ::: toks,
-                        yields = None
+                        yields = None,
                       )
                   }
               }
@@ -126,7 +126,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                     currentPos = nPos,
                     past = c :: past,
                     toks = toks,
-                    yields = yields
+                    yields = yields,
                   )
                 case yields @ Some(Dfa.State.Yields(to, _)) =>
                   val cur = c :: current
@@ -139,7 +139,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
                     currentPos = nPos,
                     past = Nil,
                     toks = toks,
-                    yields = yields.map((nPos, cur, _))
+                    yields = yields.map((nPos, cur, _)),
                   )
               }
           }
@@ -154,7 +154,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
       currentPos = Dfa.Token.Pos._0,
       past = Nil,
       toks = Nil,
-      yields = None
+      yields = None,
     )
   }
 
@@ -182,7 +182,7 @@ object Dfa {
     final case class Pos(
         abs: Int,
         line: Int,
-        inLine: Int
+        inLine: Int,
     ) {
 
       def onChar(c: Char): Pos =
@@ -210,7 +210,7 @@ object Dfa {
       id: Int,
       transitions: Map[Char, Option[Lazy[State[Tok]]]],
       elseTransition: Option[Lazy[State[Tok]]],
-      yields: Option[State.Yields[Tok]]
+      yields: Option[State.Yields[Tok]],
   ) {
 
     def apply(c: Char): Option[State[Tok]] =
@@ -226,7 +226,7 @@ object Dfa {
 
       final case class Yield[+Tok](
           tokF: (String, Token.Pos, Token.Pos) => Tok,
-          spanRange: (Int, Int)
+          spanRange: (Int, Int),
       )
 
       def apply[Tok](to: => State[Tok])(yields: Yield[Tok]*): Yields[Tok] =

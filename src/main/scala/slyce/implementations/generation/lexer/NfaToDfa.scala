@@ -16,7 +16,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
         modeName: String,
         transitions: Map[Set[Char], Option[Set[Nfa.State]]],
         elseTransition: Option[Set[Nfa.State]],
-        line: Option[Data.Mode.Line]
+        line: Option[Data.Mode.Line],
     ) {
 
       val stateSets: Set[Set[Nfa.State]] =
@@ -51,7 +51,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
                 false
             }
             .map(_._2)
-            .toSet
+            .toSet,
         )
         s.nonEmpty.option(s)
       }
@@ -62,7 +62,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
         modeName,
         transitions,
         elseTransition,
-        line
+        line,
       )
     }
 
@@ -71,7 +71,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
         modeName: String,
         unseen: Set[Set[Nfa.State]],
         map: Map[Set[Nfa.State], TmpDfaState] = Map(),
-        seen: Set[Set[Nfa.State]] = Set()
+        seen: Set[Set[Nfa.State]] = Set(),
     ): Map[Set[Nfa.State], TmpDfaState] =
       unseen.toList match {
         case Nil =>
@@ -83,7 +83,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
             modeName,
             (tail.toSet | tmpDfa.stateSets) &~ newSeen,
             map + (head -> tmpDfa),
-            newSeen
+            newSeen,
           )
       }
 
@@ -122,7 +122,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
           // TODO (KR) : Find this earlier, its not very helpful to only know the mode, should know the line that causes it
           tmpMap(s).line.isDefined.fold(
             List(s"Mode $m can yield on no input").left,
-            ().right
+            ().right,
           )
       }.traverseErrs
 
@@ -144,7 +144,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
                       dfaState.yields = Dfa.State
                         .Yields(
                           yields,
-                          dfaFromNfas(to)
+                          dfaFromNfas(to),
                         )
                         .some
                       ().right
@@ -155,7 +155,7 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
                   dfaState.yields = Dfa.State
                     .Yields(
                       yields,
-                      dfaFromNfas(modeStarts(tmpState.modeName))
+                      dfaFromNfas(modeStarts(tmpState.modeName)),
                     )
                     .some
                   ().right

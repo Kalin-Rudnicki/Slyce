@@ -23,7 +23,7 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
           m1.map {
             case (m2, s) =>
               m2.name -> s
-          }.toMap
+          }.toMap,
         )
       }
   }

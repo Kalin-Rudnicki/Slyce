@@ -29,20 +29,20 @@ trait Stage[-I, +E, +O] {
   def >>+>[I2 <: I, E2 >: E, O2](that: Stage[(I2, O), E2, O2]): Stage[I2, E2, O2] = { input =>
     apply(input).fold(
       l => l.left,
-      that(input, _)
+      that(input, _),
     )
   }
 
   def <+<[E2 >: E, O2](that: Stage[E2, Nothing, O2]): Stage[I, O2, O] =
     apply(_).fold(
       that(_).swap,
-      r => r.right
+      r => r.right,
     )
 
   def <<+<[I2 <: I, E2](that: Stage[(I2, E), Nothing, E2]): Stage[I2, E2, O] = { input =>
     apply(input).fold(
       that(input, _).swap,
-      r => r.right
+      r => r.right,
     )
   }
 

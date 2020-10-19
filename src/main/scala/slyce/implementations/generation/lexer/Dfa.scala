@@ -30,10 +30,10 @@ final case class Dfa(initialState: Dfa.State) {
     List(
       List(
         "sealed trait Token extends Dfa.Token",
-        "object Token {"
+        "object Token {",
       ),
       idtStrs(names.map(tokString): _*),
-      "}" :: Nil
+      "}" :: Nil,
     ).flatten
   }
 
@@ -59,11 +59,11 @@ final case class Dfa(initialState: Dfa.State) {
         idtLists(
           "Dfa.State(" :: Nil,
           idtStrs(
-            s"id = ${idxOf(state)},"
+            s"id = ${idxOf(state)},",
           ),
           state.transitions.isEmpty.fold(
             idtStrs(
-              "transitions = Map(),"
+              "transitions = Map(),",
             ),
             idtLists(
               "transitions = Map(" :: Nil,
@@ -78,22 +78,22 @@ final case class Dfa(initialState: Dfa.State) {
                     case (c, s) =>
                       // Seems like the safest way to avoid all sorts of weird character escapes
                       s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unescape}"
-                  }: _*
+                  }: _*,
               ),
-              ")," :: Nil
-            )
+              ")," :: Nil,
+            ),
           ),
           idtStrs(
-            s"elseTransition = ${state.elseTransition.map(lazyName)},"
+            s"elseTransition = ${state.elseTransition.map(lazyName)},",
           ),
           state.yields.fold(
             idtStrs(
-              "yields = None,"
-            )
+              "yields = None,",
+            ),
           ) { yields =>
             yields.yields.isEmpty.fold(
               idtStrs(
-                s"yields = Some(Dfa.State.Yields(${stateName(yields.toMode)})()),"
+                s"yields = Some(Dfa.State.Yields(${stateName(yields.toMode)})()),",
               ),
               idtLists(
                 s"yields = Some(" :: Nil,
@@ -105,20 +105,20 @@ final case class Dfa(initialState: Dfa.State) {
                         "Dfa.State.Yields.Yield(" :: Nil,
                         idtStrs(
                           s"tokF = Token.${y.name}.apply,",
-                          s"spanRange = ${y.spanRange},"
+                          s"spanRange = ${y.spanRange},",
                         ),
-                        ")," :: Nil
+                        ")," :: Nil,
                       ).flatten
-                    }: _*
+                    }: _*,
                   ),
-                  ")," :: Nil
+                  ")," :: Nil,
                 ),
-                ")," :: Nil
-              )
+                ")," :: Nil,
+              ),
             )
           },
-          ")" :: Nil
-        )
+          ")" :: Nil,
+        ),
       ).flatten
     }
 
@@ -127,7 +127,7 @@ final case class Dfa(initialState: Dfa.State) {
       idtLists(idxOf.toList.sortBy(_._2).map(p => stateStringLines(p._1)): _*),
       "" :: Nil,
       idtStrs(s"Dfa(${stateName(initialState)})"),
-      "}" :: Nil
+      "}" :: Nil,
     ).flatten
   }
 
@@ -150,7 +150,7 @@ object Dfa {
 
     final case class Yields(
         yields: List[Yield],
-        toMode: State
+        toMode: State,
     )
 
     def findAll(unseen: Set[State], seen: Set[State] = Set()): Set[State] =
