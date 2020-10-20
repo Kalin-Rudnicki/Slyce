@@ -3,3 +3,8 @@
 /target/
 /project/target/
 /project/project/target/
+
+/SlyceCommon/target/
+/SlyceGenerate/target/
+/SlyceParse/target/
+/SlyceTest/target/
