@@ -52,12 +52,19 @@ object Data {
         before: List[Element],
         unignored: Element,
         after: List[Element],
-    )
+    ) {
+
+      def toList: List[Element] =
+        before ::: unignored :: after
+
+    }
+
     object IgnoredList {
 
       def apply(before: Element*)(unignored: Element)(after: Element*): IgnoredList =
         IgnoredList(before.toList, unignored, after.toList)
 
+      // TODO (KR) :
       def fromElementList(list: ElementList): List[String] \/ IgnoredList =
         ???
 
@@ -88,6 +95,7 @@ object Data {
           before: IgnoredList,
           after: Option[IgnoredList],
       ) extends ListNT
+
       final case class +(
           before: IgnoredList,
           after: Option[IgnoredList],

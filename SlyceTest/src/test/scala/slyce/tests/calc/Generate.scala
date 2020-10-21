@@ -172,8 +172,8 @@ object Generate extends App {
     )
   }
 
-  val grammarData: slyce.generate.grammar.Data = {
-    import slyce.generate.grammar._
+  val grammarData: gram.Data = {
+    import gram._
     import Data.{Identifier => Id}
     import Data.{NonTerminal => NT}
     import Data.NT._

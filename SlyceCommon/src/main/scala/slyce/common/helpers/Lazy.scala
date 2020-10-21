@@ -1,6 +1,6 @@
 package slyce.common.helpers
 
-class Lazy[+V] private (v: => V) {
+final class Lazy[+V] private (v: => V) {
 
   lazy val value: V = v
 
