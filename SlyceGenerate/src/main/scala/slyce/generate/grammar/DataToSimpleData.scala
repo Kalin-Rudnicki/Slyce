@@ -2,11 +2,15 @@ package slyce.generate.grammar
 
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.ToEitherOps
+import scalaz.Scalaz.ToOptionIdOps
 import scalaz.\/
 
 import slyce.common.helpers._
 import slyce.generate.architecture.{grammar => arch}
+import slyce.generate.grammar.Data.Identifier
 import slyce.generate.grammar.Data.NT
+import slyce.generate.grammar.DataToSimpleData.Element.ReductionList
 
 object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
@@ -43,27 +47,23 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
     final case class ReductionList(reductions: NonEmptyList[ReductionList.Reduction]) extends Element
     object ReductionList {
+
       final case class Reduction(elements: List[Pointer[Element]])
+      object Reduction {
+
+        def apply(elements: Pointer[Element]*): Reduction =
+          new Reduction(elements.toList)
+
+      }
+
+      def apply(r0: Reduction, rN: Reduction*): ReductionList =
+        new ReductionList(NonEmptyList(r0, rN: _*))
+
     }
 
   }
 
   override def apply(input: Data): Err \/ SimpleData = {
-    // TODO (KR) : Check for duplicates
-    val ntMap: Map[String, Pointer[Element]] = input.nts.map {
-      case Data.NonTerminal(name, nt) =>
-        name -> (
-          nt match {
-            case nt: NT.StandardNT =>
-              standardNT(nt)
-            case nt: NT.ListNT =>
-              listNT(nt)
-            case nt: NT.AssocNT =>
-              assocNT(nt)
-          }
-        )
-    }.toMap
-
     def standardNT(nt: NT.StandardNT): Pointer[Element] =
       Pointer(
         nt match {
@@ -91,12 +91,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         Pointer.withSelf { self =>
           Pointer(
             Element.ReductionList(
-              NonEmptyList(
-                Element.ReductionList.Reduction(
-                  `this`.toList.map(element) ::: self :: Nil,
-                ),
-                Element.ReductionList.Reduction(Nil),
+              Element.ReductionList.Reduction(
+                `this`.toList.map(element) ::: self :: Nil,
               ),
+              Element.ReductionList.Reduction(),
             ),
           )
         }
@@ -108,16 +106,14 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       ): Pointer[Element] =
         Pointer(
           Element.ReductionList(
-            NonEmptyList(
-              Element.ReductionList.Reduction(
-                `this`.toList.map(element) ::: that :: Nil,
-              ),
-              canBeEmpty
-                .option(
-                  Element.ReductionList.Reduction(Nil),
-                )
-                .toList: _*,
+            Element.ReductionList.Reduction(
+              `this`.toList.map(element) ::: that :: Nil,
             ),
+            canBeEmpty
+              .option(
+                Element.ReductionList.Reduction(),
+              )
+              .toList: _*,
           ),
         )
 
@@ -161,14 +157,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                   Pointer.withSelf { self =>
                     Pointer(
                       Element.ReductionList(
-                        NonEmptyList(
-                          Element.ReductionList.Reduction(
-                            self :: element(assocElement) :: next :: Nil,
-                          ),
-                          Element.ReductionList.Reduction(
-                            next :: Nil,
-                          ),
+                        Element.ReductionList.Reduction(
+                          self :: element(assocElement) :: next :: Nil,
                         ),
+                        Element.ReductionList.Reduction(next),
                       ),
                     )
                   }
@@ -176,14 +168,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                   Pointer.withSelf { self =>
                     Pointer(
                       Element.ReductionList(
-                        NonEmptyList(
-                          Element.ReductionList.Reduction(
-                            next :: element(assocElement) :: self :: Nil,
-                          ),
-                          Element.ReductionList.Reduction(
-                            next :: Nil,
-                          ),
+                        Element.ReductionList.Reduction(
+                          next :: element(assocElement) :: self :: Nil,
                         ),
+                        Element.ReductionList.Reduction(next),
                       ),
                     )
                   }
@@ -199,7 +187,105 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
           listNT(nt)
       }
 
-    ???
+    // TODO (KR) : Check for duplicates
+    val ntMap: Map[String, Pointer[Element]] = input.nts.map {
+      case Data.NonTerminal(name, nt) =>
+        name -> (
+          nt match {
+            case nt: NT.StandardNT =>
+              standardNT(nt)
+            case nt: NT.ListNT =>
+              listNT(nt)
+            case nt: NT.AssocNT =>
+              assocNT(nt)
+          }
+        )
+    }.toMap
+
+    def rListToSet(rList: ReductionList): Set[ReductionList] =
+      rList.reductions.list.toList.flatMap { r =>
+        r.elements.flatMap { (ptr: Pointer[Element]) =>
+          ptr match {
+            case Pointer(v) =>
+              v match {
+                case rList2: ReductionList =>
+                  rList2.some
+                case _ =>
+                  None
+              }
+          }
+        }
+      }.toSet
+
+    val initialSet: Set[ReductionList] =
+      ntMap.toList
+        .map(_._2)
+        .toSet
+        .flatMap { (ptr: Pointer[Element]) =>
+          ptr match {
+            case Pointer(v) =>
+              v match {
+                case rList: ReductionList =>
+                  rList.some
+                case _ =>
+                  None
+              }
+          }
+        }
+
+    val reductionMap: Map[ReductionList, Int] =
+      findAll(initialSet)(rListToSet).toList.zipWithIndex.toMap
+
+    ntMap.foreach {
+      case (name, elem) =>
+        elem match {
+          case Pointer(v) =>
+            v match {
+              case rList: ReductionList =>
+                println(s"$name => reductionMap(${reductionMap(rList)})")
+              case Element.Identifier(id) =>
+                println(s"$name => $id")
+            }
+        }
+    }
+
+    println
+    println
+
+    reductionMap.foreach {
+      case (rList, i) =>
+        println(s"=====| $i |=====")
+        rList.reductions.zipWithIndex.foreach {
+          case (r, i2) =>
+            println(s"--- $i2 (${r.elements.length}) ---")
+            r.elements.foreach {
+              case Pointer(v) =>
+                v match {
+                  case Element.Identifier(id) =>
+                    id match {
+                      case Identifier.NonTerminal(name) =>
+                        ntMap(name) match {
+                          case Pointer(v) =>
+                            v match {
+                              case rList: ReductionList =>
+                                println(s"reductionMap(${reductionMap(rList)})")
+                              case _ =>
+                                println(v)
+                            }
+                        }
+                      case _ =>
+                        println(id)
+                    }
+                  case rList2: ReductionList =>
+                    println(s"reductionMap(${reductionMap(rList2)})")
+                }
+            }
+            println
+        }
+        println
+    }
+
+    Nil.left
   }
 
 }

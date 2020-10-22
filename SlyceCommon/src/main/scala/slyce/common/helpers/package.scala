@@ -51,7 +51,7 @@ package object helpers {
   }
 
   @tailrec
-  def findAll[A](unseen: Set[A], seen: Set[A] = Set())(f: A => Set[A]): Set[A] =
+  def findAll[A](unseen: Set[A], seen: Set[A] = Set[A]())(f: A => Set[A]): Set[A] =
     if (unseen.isEmpty)
       seen
     else {

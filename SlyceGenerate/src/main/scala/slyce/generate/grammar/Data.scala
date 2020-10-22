@@ -1,7 +1,10 @@
 package slyce.generate.grammar
 
+import scalaz.IList
 import scalaz.NonEmptyList
 import scalaz.\/
+
+import slyce.common.helpers._
 
 case class Data(
     startNT: String,
@@ -23,7 +26,10 @@ object Data {
   object Identifier {
     final case class Terminal private[Identifier] (name: String) extends Identifier
     final case class NonTerminal private[Identifier] (name: String) extends Identifier
-    final case class Raw private[Identifier] (text: String) extends Identifier
+    final case class Raw private[Identifier] (text: String) extends Identifier {
+      override def toString: String =
+        s"Raw(${text.unesc})"
+    }
 
     def raw(text: String): Identifier =
       Raw(text)
@@ -56,6 +62,9 @@ object Data {
 
       def toList: List[Element] =
         before ::: unignored :: after
+
+      def toNel: NonEmptyList[Element] =
+        IList(before: _*) <::: NonEmptyList(unignored, after: _*)
 
     }
 

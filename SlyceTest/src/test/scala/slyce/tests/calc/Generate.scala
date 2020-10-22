@@ -270,7 +270,9 @@ object Generate extends App {
     )
   }
 
-  val lexer: slyce.generate.lexer.Err \/ slyce.generate.lexer.Dfa = lex.Lexer(lexerData)
+  val lexer: slyce.generate.lexer.Err \/ lex.Dfa = lex.Lexer(lexerData)
+
+  gram.DataToSimpleData(grammarData)
 
   lexer match {
     case -\/(errs) =>
@@ -280,11 +282,13 @@ object Generate extends App {
     case \/-(dfa) =>
       implicit val idt: String = "  "
 
+    /*
       println("Success:")
       println()
       println(dfa.toksStr.mkString("\n"))
       println()
       println(dfa.dfaStr.mkString("\n"))
+     */
   }
 
 }
