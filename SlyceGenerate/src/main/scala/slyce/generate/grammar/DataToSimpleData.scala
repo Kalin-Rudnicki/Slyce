@@ -1,16 +1,14 @@
 package slyce.generate.grammar
 
+import scala.annotation.tailrec
+
 import scalaz.NonEmptyList
-import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.\/
 
-import slyce.common.helpers._
 import slyce.generate.architecture.{grammar => arch}
-import slyce.generate.grammar.Data.Identifier
 import slyce.generate.grammar.Data.NT
-import slyce.generate.grammar.DataToSimpleData.Element.ReductionList
 
 object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
@@ -40,249 +38,173 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
    *
    */
 
-  sealed trait Element
-  object Element {
+  override def apply(input: Data): Err \/ SimpleData = {
+    val anonGenerator = SimpleData.Name.AnonList.generator
 
-    final case class Identifier(id: Data.Identifier) extends Element
+    @tailrec
+    def loop(
+        reductionLists: List[SimpleData.ReductionList],
+        todo: List[Data.NonTerminal],
+    ): List[SimpleData.ReductionList] = {
+      def elementList(elements: List[Data.Element]): (List[SimpleData.Identifier], List[SimpleData.ReductionList]) =
+        elements
+          .map(mapElement(anonGenerator(), _))
+          .foldRight((Nil: List[SimpleData.Identifier], Nil: List[SimpleData.ReductionList])) {
+            // TODO (KR) : Make sure this doesnt come out backwards
+            case ((id, extras1), (idList, extras2)) =>
+              (id :: idList, extras1 ::: extras2)
+          }
 
-    final case class ReductionList(reductions: NonEmptyList[ReductionList.Reduction]) extends Element
-    object ReductionList {
+      def reductionList(
+          name: SimpleData.Name,
+          reduction: NonEmptyList[List[Data.Element]],
+      ): (SimpleData.ReductionList, List[SimpleData.ReductionList]) = {
+        val r0: NonEmptyList[(List[SimpleData.Identifier], List[SimpleData.ReductionList])] =
+          reduction.map(elementList)
 
-      final case class Reduction(elements: List[Pointer[Element]])
-      object Reduction {
+        val r1: NonEmptyList[SimpleData.ReductionList.Reduction] =
+          r0.map(r => SimpleData.ReductionList.Reduction(r._1))
 
-        def apply(elements: Pointer[Element]*): Reduction =
-          new Reduction(elements.toList)
+        val r2: List[SimpleData.ReductionList] =
+          r0.list.toList.flatMap(_._2)
 
+        (SimpleData.ReductionList(name, r1), r2)
       }
 
-      def apply(r0: Reduction, rN: Reduction*): ReductionList =
-        new ReductionList(NonEmptyList(r0, rN: _*))
+      def mapElement(
+          name: => SimpleData.Name,
+          element: Data.Element,
+      ): (SimpleData.Identifier, List[SimpleData.ReductionList]) =
+        element match {
+          case id: Data.Identifier =>
+            (SimpleData.Identifier(id), Nil)
+          case lnt: NT.ListNT =>
+            lnt match {
+              case NT.ListNT.*(before, after) =>
+                after match {
+                  case None =>
+                    val (elems1, extras1) = elementList(before.toList)
 
-    }
+                    val n1 = name
+                    val id1 = SimpleData.Identifier.NonTerminal(n1)
 
-  }
+                    val rl1 = SimpleData.ReductionList(n1)(
+                      SimpleData.ReductionList.Reduction(elems1 ::: id1 :: Nil),
+                      SimpleData.ReductionList.Reduction(),
+                    )
 
-  override def apply(input: Data): Err \/ SimpleData = {
-    def standardNT(nt: NT.StandardNT): Pointer[Element] =
-      Pointer(
-        nt match {
-          case NT.StandardNT.`:`(elements) =>
-            Element.ReductionList(
-              elements.map { e1 =>
-                Element.ReductionList.Reduction(
-                  e1.map(e2 => element(e2._2)),
+                    (id1, rl1 :: extras1)
+                  case Some(after) =>
+                    val (elems1, extras1) = elementList(before.toList)
+                    val (elems2, extras2) = elementList(after.toList)
+
+                    val n1 = name
+                    val id1 = SimpleData.Identifier.NonTerminal(n1)
+                    val n2 = n1.next
+                    val id2 = SimpleData.Identifier.NonTerminal(n2)
+
+                    val rl1 = SimpleData.ReductionList(n1)(
+                      SimpleData.ReductionList.Reduction(elems1 ::: id2 :: Nil),
+                      SimpleData.ReductionList.Reduction(),
+                    )
+                    val rl2 = SimpleData.ReductionList(n2)(
+                      SimpleData.ReductionList.Reduction(elems2 ::: id2 :: Nil),
+                      SimpleData.ReductionList.Reduction(),
+                    )
+
+                    (id1, rl1 :: rl2 :: extras1 ::: extras2)
+                }
+              case NT.ListNT.+(before, after) =>
+                val (elems1, extras1) = elementList(before.toList)
+                val (elems2, extras2) =
+                  after.fold(
+                    (elems1, Nil: List[SimpleData.ReductionList]),
+                  )(a => elementList(a.toList))
+
+                val n1 = name
+                val id1 = SimpleData.Identifier.NonTerminal(n1)
+                val n2 = n1.next
+                val id2 = SimpleData.Identifier.NonTerminal(n2)
+
+                val rl1 = SimpleData.ReductionList(n1)(
+                  SimpleData.ReductionList.Reduction(elems1 ::: id2 :: Nil),
                 )
-              },
-            )
-          case NT.StandardNT.^(elements) =>
-            Element.ReductionList(
-              elements.map { e1 =>
-                Element.ReductionList.Reduction(
-                  e1.toList.map(element),
+                val rl2 = SimpleData.ReductionList(n2)(
+                  SimpleData.ReductionList.Reduction(elems2 ::: id2 :: Nil),
+                  SimpleData.ReductionList.Reduction(),
                 )
-              },
-            )
-        },
-      )
 
-    def listNT(nt: NT.ListNT): Pointer[Element] = {
-      def repeatThis(`this`: Data.NT.IgnoredList): Pointer[Element] =
-        Pointer.withSelf { self =>
-          Pointer(
-            Element.ReductionList(
-              Element.ReductionList.Reduction(
-                `this`.toList.map(element) ::: self :: Nil,
-              ),
-              Element.ReductionList.Reduction(),
-            ),
-          )
+                (id1, rl1 :: rl2 :: extras1 ::: extras2)
+            }
         }
 
-      def thisThenThat(
-          `this`: Data.NT.IgnoredList,
-          that: Pointer[Element],
-          canBeEmpty: Boolean,
-      ): Pointer[Element] =
-        Pointer(
-          Element.ReductionList(
-            Element.ReductionList.Reduction(
-              `this`.toList.map(element) ::: that :: Nil,
-            ),
-            canBeEmpty
-              .option(
-                Element.ReductionList.Reduction(),
-              )
-              .toList: _*,
-          ),
-        )
-
-      nt match {
-        case NT.ListNT.*(before, after) =>
-          after match {
-            case None =>
-              repeatThis(before)
-            case Some(after) =>
-              thisThenThat(
-                before,
-                repeatThis(after),
-                true,
-              )
-          }
-        case NT.ListNT.+(before, after) =>
-          after match {
-            case None =>
-              thisThenThat(
-                before,
-                repeatThis(before),
-                false,
-              )
-            case Some(after) =>
-              thisThenThat(
-                before,
-                repeatThis(after),
-                false,
-              )
-          }
-      }
-    }
-
-    def assocNT(nt: NT.AssocNT): Pointer[Element] =
-      nt match {
-        case NT.AssocNT(assocElements, base) =>
-          assocElements.list.toList.reverse.foldLeft(standardNT(base)) {
-            case (next, assoc) =>
-              assoc match {
-                case NT.AssocNT.AssocElement.<(assocElement) =>
-                  Pointer.withSelf { self =>
-                    Pointer(
-                      Element.ReductionList(
-                        Element.ReductionList.Reduction(
-                          self :: element(assocElement) :: next :: Nil,
-                        ),
-                        Element.ReductionList.Reduction(next),
-                      ),
-                    )
-                  }
-                case NT.AssocNT.AssocElement.>(assocElement) =>
-                  Pointer.withSelf { self =>
-                    Pointer(
-                      Element.ReductionList(
-                        Element.ReductionList.Reduction(
-                          next :: element(assocElement) :: self :: Nil,
-                        ),
-                        Element.ReductionList.Reduction(next),
-                      ),
-                    )
-                  }
-              }
-          }
-      }
-
-    def element(e: Data.Element): Pointer[Element] =
-      e match {
-        case i: Data.Identifier =>
-          Pointer(Element.Identifier(i))
-        case nt: NT.ListNT =>
-          listNT(nt)
-      }
-
-    // TODO (KR) : Check for duplicates
-    val ntMap: Map[String, Pointer[Element]] = input.nts.map {
-      case Data.NonTerminal(name, nt) =>
-        name -> (
+      todo match {
+        case Nil =>
+          reductionLists.reverse
+        case Data.NonTerminal(name, nt) :: rest =>
           nt match {
             case nt: NT.StandardNT =>
-              standardNT(nt)
+              nt match {
+                case NT.StandardNT.`:`(elements) =>
+                  loop(
+                    reductionList(SimpleData.Name.Named(name), elements.map(_.map(_._2)))._2 ::: reductionLists,
+                    rest,
+                  )
+                case NT.StandardNT.^(elements) =>
+                  loop(
+                    reductionList(SimpleData.Name.Named(name), elements.map(_.toList))._2 ::: reductionLists,
+                    rest,
+                  )
+              }
             case nt: NT.ListNT =>
-              listNT(nt)
-            case nt: NT.AssocNT =>
-              assocNT(nt)
-          }
-        )
-    }.toMap
+              loop(
+                mapElement(SimpleData.Name.Named(name), nt)._2 ::: reductionLists,
+                rest,
+              )
+            case NT.AssocNT(assocElements, base) =>
+              @tailrec
+              def loop2(
+                  name: SimpleData.Name,
+                  assoc: List[Data.NT.AssocNT.AssocElement],
+                  extras: List[SimpleData.ReductionList],
+              ): List[SimpleData.ReductionList] =
+                assoc match {
+                  case Nil =>
+                    extras
+                  case head :: tail =>
+                    val nextName: SimpleData.Name = name.next
+                    val myId = SimpleData.Identifier.NonTerminal(name)
+                    val nextId = SimpleData.Identifier.NonTerminal(nextName)
 
-    def rListToSet(rList: ReductionList): Set[ReductionList] =
-      rList.reductions.list.toList.flatMap { r =>
-        r.elements.flatMap { (ptr: Pointer[Element]) =>
-          ptr match {
-            case Pointer(v) =>
-              v match {
-                case rList2: ReductionList =>
-                  rList2.some
-                case _ =>
-                  None
-              }
-          }
-        }
-      }.toSet
-
-    val initialSet: Set[ReductionList] =
-      ntMap.toList
-        .map(_._2)
-        .toSet
-        .flatMap { (ptr: Pointer[Element]) =>
-          ptr match {
-            case Pointer(v) =>
-              v match {
-                case rList: ReductionList =>
-                  rList.some
-                case _ =>
-                  None
-              }
-          }
-        }
-
-    val reductionMap: Map[ReductionList, Int] =
-      findAll(initialSet)(rListToSet).toList.zipWithIndex.toMap
-
-    ntMap.foreach {
-      case (name, elem) =>
-        elem match {
-          case Pointer(v) =>
-            v match {
-              case rList: ReductionList =>
-                println(s"$name => reductionMap(${reductionMap(rList)})")
-              case Element.Identifier(id) =>
-                println(s"$name => $id")
-            }
-        }
-    }
-
-    println
-    println
-
-    reductionMap.foreach {
-      case (rList, i) =>
-        println(s"=====| $i |=====")
-        rList.reductions.zipWithIndex.foreach {
-          case (r, i2) =>
-            println(s"--- $i2 (${r.elements.length}) ---")
-            r.elements.foreach {
-              case Pointer(v) =>
-                v match {
-                  case Element.Identifier(id) =>
-                    id match {
-                      case Identifier.NonTerminal(name) =>
-                        ntMap(name) match {
-                          case Pointer(v) =>
-                            v match {
-                              case rList: ReductionList =>
-                                println(s"reductionMap(${reductionMap(rList)})")
-                              case _ =>
-                                println(v)
-                            }
-                        }
-                      case _ =>
-                        println(id)
+                    // TODO (KR) : Make sure associativity is correct
+                    val moreExtras = head match {
+                      case NT.AssocNT.AssocElement.<(element) =>
+                        val (assocId, extras) = mapElement(anonGenerator(), element)
+                        SimpleData.ReductionList(name)(
+                          SimpleData.ReductionList.Reduction(myId, assocId, nextId),
+                          SimpleData.ReductionList.Reduction(nextId),
+                        ) :: extras
+                      case NT.AssocNT.AssocElement.>(element) =>
+                        val (assocId, extras) = mapElement(anonGenerator(), element)
+                        SimpleData.ReductionList(name)(
+                          SimpleData.ReductionList.Reduction(nextId, assocId, myId),
+                          SimpleData.ReductionList.Reduction(nextId),
+                        ) :: extras
                     }
-                  case rList2: ReductionList =>
-                    println(s"reductionMap(${reductionMap(rList2)})")
+
+                    loop2(
+                      nextName,
+                      tail,
+                      moreExtras ::: extras,
+                    )
                 }
-            }
-            println
-        }
-        println
+
+              loop(
+                loop2(SimpleData.Name.Named(name), assocElements.list.toList, Nil) ::: reductionLists,
+                rest,
+              )
+          }
+      }
     }
 
     Nil.left

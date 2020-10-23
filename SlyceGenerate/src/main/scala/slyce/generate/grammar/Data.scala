@@ -73,10 +73,6 @@ object Data {
       def apply(before: Element*)(unignored: Element)(after: Element*): IgnoredList =
         IgnoredList(before.toList, unignored, after.toList)
 
-      // TODO (KR) :
-      def fromElementList(list: ElementList): List[String] \/ IgnoredList =
-        ???
-
     }
 
     sealed trait StandardNT extends NT

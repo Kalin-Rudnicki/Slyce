@@ -12,13 +12,13 @@ object ExOutput extends App {
 
   sealed trait Token extends Dfa.Token
   object Token {
-    final case class Text(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class _var(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class addOp(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class float(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class int(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class multOp(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class powOp(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
+    final case class raw(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
   }
 
   val dfa: Dfa[Token] = {
@@ -356,7 +356,7 @@ object ExOutput extends App {
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.Text.apply,
+              tokF = Token.raw.apply,
               spanRange = (0, -1),
             ),
           ),
