@@ -103,14 +103,14 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                     val n2 = n1.next
                     val id2 = SimpleData.Identifier.NonTerminal(n2)
 
-                    val rl1 = SimpleData.ReductionList(n1)(
-                      SimpleData.ReductionList.Reduction(elems1 ::: id2 :: Nil),
-                      SimpleData.ReductionList.Reduction(),
-                    )
-                    val rl2 = SimpleData.ReductionList(n2)(
-                      SimpleData.ReductionList.Reduction(elems2 ::: id2 :: Nil),
-                      SimpleData.ReductionList.Reduction(),
-                    )
+                    def rlFrom(n: SimpleData.Name, elems: List[SimpleData.Identifier]): SimpleData.ReductionList =
+                      SimpleData.ReductionList(n)(
+                        SimpleData.ReductionList.Reduction(elems ::: id2 :: Nil),
+                        SimpleData.ReductionList.Reduction(),
+                      )
+
+                    val rl1 = rlFrom(n1, elems1)
+                    val rl2 = rlFrom(n2, elems2)
 
                     (id1, rl1 :: rl2 :: extras1 ::: extras2)
                 }
@@ -138,24 +138,30 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
             }
         }
 
+      def standardNT(
+          name: SimpleData.Name,
+          nt: Data.NT.StandardNT,
+      ): (SimpleData.Identifier, List[SimpleData.ReductionList]) =
+        (
+          SimpleData.Identifier.NonTerminal(name),
+          nt match {
+            case NT.StandardNT.`:`(elements) =>
+              reductionList(name, elements.map(_.map(_._2)))._2
+            case NT.StandardNT.^(elements) =>
+              reductionList(name, elements.map(_.toList))._2
+          },
+        )
+
       todo match {
         case Nil =>
           reductionLists.reverse
         case Data.NonTerminal(name, nt) :: rest =>
           nt match {
             case nt: NT.StandardNT =>
-              nt match {
-                case NT.StandardNT.`:`(elements) =>
-                  loop(
-                    reductionList(SimpleData.Name.Named(name), elements.map(_.map(_._2)))._2 ::: reductionLists,
-                    rest,
-                  )
-                case NT.StandardNT.^(elements) =>
-                  loop(
-                    reductionList(SimpleData.Name.Named(name), elements.map(_.toList))._2 ::: reductionLists,
-                    rest,
-                  )
-              }
+              loop(
+                standardNT(SimpleData.Name.Named(name), nt)._2 ::: reductionLists,
+                rest,
+              )
             case nt: NT.ListNT =>
               loop(
                 mapElement(SimpleData.Name.Named(name), nt)._2 ::: reductionLists,
@@ -170,7 +176,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
               ): List[SimpleData.ReductionList] =
                 assoc match {
                   case Nil =>
-                    extras
+                    standardNT(name, base)._2 ::: extras
                   case head :: tail =>
                     val nextName: SimpleData.Name = name.next
                     val myId = SimpleData.Identifier.NonTerminal(name)
@@ -205,6 +211,20 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
               )
           }
       }
+    }
+
+    val rls: List[SimpleData.ReductionList] =
+      loop(
+        Nil,
+        input.nts,
+      )
+
+    rls.foreach { rl =>
+      println(rl.name.str)
+      rl.reductions.foreach { r =>
+        println("    > " + r.elements.map(_.str).mkString(" "))
+      }
+      println
     }
 
     Nil.left

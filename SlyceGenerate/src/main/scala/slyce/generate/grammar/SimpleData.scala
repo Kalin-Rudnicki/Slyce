@@ -1,6 +1,9 @@
 package slyce.generate.grammar
 
 import scalaz.NonEmptyList
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
+
+import slyce.common.helpers._
 
 case class SimpleData(
     startNT: String,
@@ -9,7 +12,20 @@ case class SimpleData(
 // TODO (KR) : Is this really the right name for this?
 object SimpleData {
 
-  sealed trait Identifier
+  sealed trait Identifier {
+
+    def str: String =
+      this match {
+        case Identifier.Raw(text) =>
+          text.unesc
+        case Identifier.Terminal(name) =>
+          name
+        case Identifier.NonTerminal(name) =>
+          name.str
+      }
+
+  }
+
   object Identifier {
 
     final case class Raw(text: String) extends Identifier
@@ -38,6 +54,14 @@ object SimpleData {
           Name.AnonList(num = num, idx = idx + 1)
         case Name.Named(name, idx) =>
           Name.Named(name, idx + 1)
+      }
+
+    def str: String =
+      this match {
+        case Name.AnonList(num, idx) =>
+          s"AnonList$num${(idx == 0).fold("", s"_$idx")}"
+        case Name.Named(name, idx) =>
+          s"$name${(idx == 0).fold("", s"_$idx")}"
       }
 
   }
