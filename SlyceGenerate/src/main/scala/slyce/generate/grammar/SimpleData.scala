@@ -1,7 +1,7 @@
 package slyce.generate.grammar
 
 import scalaz.{NonEmptyList, \/}
-import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToOptionIdOps}
 import slyce.common.helpers._
 import slyce.generate.grammar.SimpleData.ReductionList
 
@@ -125,14 +125,23 @@ object SimpleData {
       // TODO (KR) : Assoc
   ) {
 
-    def standardized: List[List[Identifier]] =
-      reductions.list.toList.map {
-        _.elements.map {
-          case Identifier.NonTerminal(name) =>
-            Identifier.NonTerminal(name.standardize(this.name))
-          case i =>
-            i
-        }
+    def standardized: Option[(Name.AnonList, ReductionList, List[List[Identifier]])] =
+      name match {
+        case name: Name.AnonList =>
+          (
+            name,
+            this,
+            reductions.list.toList.map {
+              _.elements.map {
+                case Identifier.NonTerminal(name) =>
+                  Identifier.NonTerminal(name.standardize(this.name))
+                case i =>
+                  i
+              }
+            },
+          ).some
+        case _ =>
+          None
       }
 
   }

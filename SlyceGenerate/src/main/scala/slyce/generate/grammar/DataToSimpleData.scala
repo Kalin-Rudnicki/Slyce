@@ -1,14 +1,13 @@
 package slyce.generate.grammar
 
 import scala.annotation.tailrec
-
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.\/
-
 import slyce.generate.architecture.{grammar => arch}
 import slyce.generate.grammar.Data.NT
+import slyce.generate.grammar.SimpleData.{Identifier, Name}
 
 object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
@@ -217,40 +216,82 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         input.nts,
       )
 
-    rls.foreach { rl =>
+    val (namedRls, anon) =
+      rls.foldLeft(
+        (
+          Nil: List[SimpleData.ReductionList],
+          Nil: List[(SimpleData.Name.AnonList, SimpleData.ReductionList, List[List[SimpleData.Identifier]])],
+        ),
+      ) {
+        case ((named, anon), rl) =>
+          rl.standardized match {
+            case None =>
+              (rl :: named, anon)
+            case Some(std) =>
+              (named, std :: anon)
+          }
+      }
+
+    val (anonRls, toReduce) =
+      anon
+        .groupBy(_._3)
+        .toList
+        .map(_._2)
+        .foldLeft(
+          (
+            Nil: List[SimpleData.ReductionList],
+            Nil: List[Int],
+          ),
+        ) {
+          case (prev @ (aRls, tIgn), grouped) =>
+            grouped.sortBy(_._1.num) match {
+              case Nil =>
+                prev
+              case head :: tail =>
+                (head._2 :: aRls, tail.map(_._1.num) ::: tIgn)
+            }
+        }
+
+    val reduceName: SimpleData.Name => SimpleData.Name = {
+      case name: SimpleData.Name.AnonList =>
+        name.copy(num = name.num - toReduce.count(_ <= name.num))
+      case name =>
+        name
+    }
+
+    val reduceId: SimpleData.Identifier => SimpleData.Identifier = {
+      case Identifier.NonTerminal(name) =>
+        Identifier.NonTerminal(reduceName(name))
+      case id =>
+        id
+    }
+
+    val newRls: List[SimpleData.ReductionList] =
+      (namedRls ::: anonRls)
+        .sortBy(_.name.str)
+        .map {
+          case SimpleData.ReductionList(name, reductions) =>
+            SimpleData.ReductionList(
+              reduceName(name),
+              reductions.map { r =>
+                SimpleData.ReductionList.Reduction(
+                  r.elements.map(reduceId),
+                )
+              },
+            )
+        }
+
+    newRls.foreach { rl =>
       println(rl.name.str)
       rl.reductions.foreach { r =>
         println("    >  " + r.elements.map(_.str).mkString(" "))
       }
-      rl.standardized.foreach { r =>
-        println("    >> " + r.map(_.str).mkString(" "))
-      }
       println
     }
 
-    val duplicates: List[Int] =
-      rls
-        .map(rl => rl -> rl.standardized)
-        .groupMap(_._2)(_._1)
-        .toList
-        .flatMap {
-          _._2.collect {
-            case SimpleData.ReductionList(SimpleData.Name.AnonList(num, _), _) =>
-              num
-          }.sorted match {
-            case Nil =>
-              Nil
-            case _ :: tail =>
-              tail
-          }
-        }
-        .sorted
-
-    println(duplicates)
-
     SimpleData(
       input.startNT,
-      rls,
+      newRls,
     ).right
   }
 
