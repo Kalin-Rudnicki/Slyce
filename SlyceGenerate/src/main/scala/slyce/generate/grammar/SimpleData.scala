@@ -1,12 +1,13 @@
 package slyce.generate.grammar
 
-import scalaz.NonEmptyList
+import scalaz.{NonEmptyList, \/}
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
-
 import slyce.common.helpers._
+import slyce.generate.grammar.SimpleData.ReductionList
 
 case class SimpleData(
     startNT: String,
+    reductionLists: List[ReductionList],
 )
 
 // TODO (KR) : Is this really the right name for this?
@@ -14,15 +15,21 @@ object SimpleData {
 
   sealed trait Identifier {
 
-    def str: String =
-      this match {
-        case Identifier.Raw(text) =>
-          text.unesc
-        case Identifier.Terminal(name) =>
-          name
-        case Identifier.NonTerminal(name) =>
-          name.str
-      }
+    def str: String = {
+      val name = this.getClass.getName.split("[\\.$]").toList.last
+
+      val text =
+        this match {
+          case Identifier.Raw(text) =>
+            text.unesc
+          case Identifier.Terminal(name) =>
+            name
+          case Identifier.NonTerminal(name) =>
+            name.str
+        }
+
+      s"$name($text)"
+    }
 
   }
 
@@ -59,6 +66,15 @@ object SimpleData {
           Name.AnonList(num = num, idx = idx + 1)
         case Name.Named(name, idx) =>
           Name.Named(name, idx + 1)
+      }
+
+    // This serves the purpose of trying to resolve duplicates
+    def standardize(parent: Name): Name =
+      (parent, this) match {
+        case (Name.AnonList(pNum, _), Name.AnonList(tNum, idx)) if pNum == tNum =>
+          Name.AnonList(0, idx)
+        case _ =>
+          this
       }
 
     def str: String =
@@ -107,7 +123,20 @@ object SimpleData {
       // TODO (KR) : Ignored
       // TODO (KR) : List
       // TODO (KR) : Assoc
-  )
+  ) {
+
+    def standardized: List[List[Identifier]] =
+      reductions.list.toList.map {
+        _.elements.map {
+          case Identifier.NonTerminal(name) =>
+            Identifier.NonTerminal(name.standardize(this.name))
+          case i =>
+            i
+        }
+      }
+
+  }
+
   object ReductionList {
 
     final case class Reduction(elements: List[Identifier])

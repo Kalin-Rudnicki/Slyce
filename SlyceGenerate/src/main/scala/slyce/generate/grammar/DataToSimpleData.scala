@@ -50,7 +50,6 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         elements
           .map(mapElement(anonGenerator(), _))
           .foldRight((Nil: List[SimpleData.Identifier], Nil: List[SimpleData.ReductionList])) {
-            // TODO (KR) : Make sure this doesnt come out backwards
             case ((id, extras1), (idList, extras2)) =>
               (id :: idList, extras1 ::: extras2)
           }
@@ -155,8 +154,6 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         case Nil =>
           reductionLists.reverse
         case Data.NonTerminal(name, nt) :: rest =>
-          println(name + " " + nt)
-
           nt match {
             case nt: NT.StandardNT =>
               loop(
@@ -169,7 +166,6 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 rest,
               )
             case NT.AssocNT(assocElements, base) =>
-              println(3)
               @tailrec
               def loop2(
                   name: SimpleData.Name,
@@ -224,12 +220,38 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
     rls.foreach { rl =>
       println(rl.name.str)
       rl.reductions.foreach { r =>
-        println("    > " + r.elements.map(_.str).mkString(" "))
+        println("    >  " + r.elements.map(_.str).mkString(" "))
+      }
+      rl.standardized.foreach { r =>
+        println("    >> " + r.map(_.str).mkString(" "))
       }
       println
     }
 
-    Nil.left
+    val duplicates: List[Int] =
+      rls
+        .map(rl => rl -> rl.standardized)
+        .groupMap(_._2)(_._1)
+        .toList
+        .flatMap {
+          _._2.collect {
+            case SimpleData.ReductionList(SimpleData.Name.AnonList(num, _), _) =>
+              num
+          }.sorted match {
+            case Nil =>
+              Nil
+            case _ :: tail =>
+              tail
+          }
+        }
+        .sorted
+
+    println(duplicates)
+
+    SimpleData(
+      input.startNT,
+      rls,
+    ).right
   }
 
 }

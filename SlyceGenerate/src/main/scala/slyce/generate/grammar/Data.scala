@@ -3,8 +3,9 @@ package slyce.generate.grammar
 import scalaz.IList
 import scalaz.NonEmptyList
 import scalaz.\/
-
 import slyce.common.helpers._
+
+import scala.annotation.tailrec
 
 case class Data(
     startNT: String,
@@ -34,18 +35,25 @@ object Data {
     def raw(text: String): Identifier =
       Raw(text)
 
-    def apply(str: String): Identifier =
-      str.toList match {
-        case Nil =>
-          raw(str)
-        case c :: _ =>
-          if (c.isUpper)
-            NonTerminal(str)
-          else if (c.isLower)
-            Terminal(str)
-          else
+    def apply(str: String): Identifier = {
+      @tailrec
+      def identify(chars: List[Char]): Identifier =
+        chars match {
+          case Nil =>
             raw(str)
-      }
+          case c :: rest =>
+            if (c == '_')
+              identify(rest)
+            else if (c.isUpper)
+              NonTerminal(str)
+            else if (c.isLower)
+              Terminal(str)
+            else
+              raw(str)
+        }
+
+      identify(str.toList)
+    }
 
   }
 
