@@ -58,17 +58,19 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       def reductionList(
           name: SimpleData.Name,
           reduction: NonEmptyList[List[Data.Element]],
-      ): (SimpleData.ReductionList, List[SimpleData.ReductionList]) = {
-        val r0: NonEmptyList[(List[SimpleData.Identifier], List[SimpleData.ReductionList])] =
-          reduction.map(elementList)
+      ): List[SimpleData.ReductionList] = {
+        val mapped =
+          reduction
+            .map(elementList)
 
-        val r1: NonEmptyList[SimpleData.ReductionList.Reduction] =
-          r0.map(r => SimpleData.ReductionList.Reduction(r._1))
+        val added =
+          SimpleData.ReductionList(name, mapped.map(r => SimpleData.ReductionList.Reduction(r._1)))
 
-        val r2: List[SimpleData.ReductionList] =
-          r0.list.toList.flatMap(_._2)
+        val extras =
+          mapped.list.toList
+            .flatMap(_._2)
 
-        (SimpleData.ReductionList(name, r1), r2)
+        added :: extras
       }
 
       def mapElement(
@@ -141,25 +143,24 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       def standardNT(
           name: SimpleData.Name,
           nt: Data.NT.StandardNT,
-      ): (SimpleData.Identifier, List[SimpleData.ReductionList]) =
-        (
-          SimpleData.Identifier.NonTerminal(name),
-          nt match {
-            case NT.StandardNT.`:`(elements) =>
-              reductionList(name, elements.map(_.map(_._2)))._2
-            case NT.StandardNT.^(elements) =>
-              reductionList(name, elements.map(_.toList))._2
-          },
-        )
+      ): List[SimpleData.ReductionList] =
+        nt match {
+          case NT.StandardNT.`:`(elements) =>
+            reductionList(name, elements.map(_.map(_._2)))
+          case NT.StandardNT.^(elements) =>
+            reductionList(name, elements.map(_.toList))
+        }
 
       todo match {
         case Nil =>
           reductionLists.reverse
         case Data.NonTerminal(name, nt) :: rest =>
+          println(name + " " + nt)
+
           nt match {
             case nt: NT.StandardNT =>
               loop(
-                standardNT(SimpleData.Name.Named(name), nt)._2 ::: reductionLists,
+                standardNT(SimpleData.Name.Named(name), nt) ::: reductionLists,
                 rest,
               )
             case nt: NT.ListNT =>
@@ -168,6 +169,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 rest,
               )
             case NT.AssocNT(assocElements, base) =>
+              println(3)
               @tailrec
               def loop2(
                   name: SimpleData.Name,
@@ -176,7 +178,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
               ): List[SimpleData.ReductionList] =
                 assoc match {
                   case Nil =>
-                    standardNT(name, base)._2 ::: extras
+                    standardNT(name, base) ::: extras
                   case head :: tail =>
                     val nextName: SimpleData.Name = name.next
                     val myId = SimpleData.Identifier.NonTerminal(name)

@@ -28,7 +28,12 @@ object SimpleData {
 
   object Identifier {
 
-    final case class Raw(text: String) extends Identifier
+    final case class Raw(text: String) extends Identifier {
+
+      override def toString: String =
+        s"Raw(${text.unesc})"
+
+    }
 
     final case class Terminal(name: String) extends Identifier
 
@@ -59,9 +64,9 @@ object SimpleData {
     def str: String =
       this match {
         case Name.AnonList(num, idx) =>
-          s"AnonList$num${(idx == 0).fold("", s"_$idx")}"
+          s"AnonList$num${(idx == 0).fold("", s"_${idx + 1}")}"
         case Name.Named(name, idx) =>
-          s"$name${(idx == 0).fold("", s"_$idx")}"
+          s"$name${(idx == 0).fold("", s"_${idx + 1}")}"
       }
 
   }
