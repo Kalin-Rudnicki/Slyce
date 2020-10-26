@@ -284,7 +284,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
     newRls.foreach { rl =>
       println(rl.name.str)
       rl.reductions.foreach { r =>
-        println("    >  " + r.elements.map(_.str).mkString(" "))
+        println("    > " + r.elements.map(_.str).mkString(" "))
       }
       println
     }
