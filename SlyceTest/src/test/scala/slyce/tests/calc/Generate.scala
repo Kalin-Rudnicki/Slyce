@@ -270,14 +270,12 @@ object Generate extends App {
     )
   }
 
-  val idt: String = "  "
-
   val lines = for {
     dfa <- lex.Lexer(lexerData)
-    tokLines <- lex.DfaTokenLines((dfa, idt))
-    stateLines <- lex.DfaStateLines((dfa, idt))
+    tokLines <- lex.DfaTokenLines(dfa)
+    stateLines <- lex.DfaStateLines(dfa)
     simpleData <- gram.DataToSimpleData(grammarData)
-    ntLines <- gram.SimpleDataToNtLines((simpleData, idt))
+    ntLines <- gram.SimpleDataToNtLines(simpleData)
   } yield (
     tokLines,
     stateLines,
@@ -290,16 +288,19 @@ object Generate extends App {
       errs.foreach(println)
       System.exit(1)
     case \/-((tokLines, stateLines, ntLines)) =>
-      implicit val idt: String = "  "
+      import slyce.common.helpers.Idt._
 
       println("Success:")
       println()
-      println(tokLines.mkString("\n"))
-      println()
-      println(stateLines.mkString("\n"))
-      println()
-      println(ntLines.mkString("\n"))
-
+      println(
+        Group(
+          tokLines,
+          Break,
+          stateLines,
+          Break,
+          ntLines,
+        ).build("  "),
+      )
   }
 
 }

@@ -2,23 +2,22 @@ package slyce.generate.lexer
 
 import scalaz.\/
 import slyce.common.helpers._
+import slyce.common.helpers.Idt._
 import slyce.generate.architecture.{lexer => arch}
 import Yields.Yield
 import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToEitherOps}
 
 object DfaStateLines extends arch.DfaStateLines[Dfa] {
 
-  override def apply(input: (Dfa, String)): List[String] \/ List[String] = {
-    val dfa: Dfa = input._1
-    implicit val idt: String = input._2
-
+  override def apply(dfa: Dfa): List[String] \/ Idt = {
     def stateName(state: Dfa.State): String =
       s"s${dfa.idxOf(state)}"
 
-    def stateStringLines(state: Dfa.State): List[String] = {
+    def stateStringLines(state: Dfa.State): Idt = {
       def lazyName(state: Dfa.State): String =
         s"Lazy(${stateName(state)})"
 
+      // TODO (KR) : Is this unused?
       def yieldsStr(yields: Dfa.State.Yields): String = {
         val lambdaParam: String = "s"
 
@@ -28,20 +27,20 @@ object DfaStateLines extends arch.DfaStateLines[Dfa] {
         s"Dfa.State.Yield(${stateName(yields.toMode)})(${yields.yields.nonEmpty.fold(lambdaParam, "_")} => ${yields.yields.map(yStr)})"
       }
 
-      List(
-        s"lazy val ${stateName(state)}: Dfa.State[Token] =" :: Nil,
-        idtLists(
-          "Dfa.State(" :: Nil,
-          idtStrs(
+      Group(
+        s"lazy val ${stateName(state)}: Dfa.State[Token] =",
+        Indented(
+          "Dfa.State(",
+          Indented(
             s"id = ${dfa.idxOf(state)},",
           ),
           state.transitions.isEmpty.fold(
-            idtStrs(
+            Indented(
               "transitions = Map(),",
             ),
-            idtLists(
-              "transitions = Map(" :: Nil,
-              idtStrs(
+            Indented(
+              "transitions = Map(",
+              Indented(
                 state.transitions.toList
                   .flatMap {
                     case (ss, s) =>
@@ -51,58 +50,58 @@ object DfaStateLines extends arch.DfaStateLines[Dfa] {
                   .map {
                     case (c, s) =>
                       // Seems like the safest way to avoid all sorts of weird character escapes
-                      s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unescape}"
-                  }: _*,
+                      Str(s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unescape}")
+                  },
               ),
-              ")," :: Nil,
+              "),",
             ),
           ),
-          idtStrs(
+          Indented(
             s"elseTransition = ${state.elseTransition.map(lazyName)},",
           ),
           state.yields.fold(
-            idtStrs(
+            Indented(
               "yields = None,",
             ),
           ) { yields =>
             yields.yields.isEmpty.fold(
-              idtStrs(
+              Indented(
                 s"yields = Some(Dfa.State.Yields(${stateName(yields.toMode)})()),",
               ),
-              idtLists(
-                s"yields = Some(" :: Nil,
-                idtLists(
-                  s"Dfa.State.Yields(${stateName(yields.toMode)})(" :: Nil,
-                  idtLists(
+              Indented(
+                s"yields = Some(",
+                Indented(
+                  s"Dfa.State.Yields(${stateName(yields.toMode)})(",
+                  Indented(
                     yields.yields.map { y =>
-                      List(
-                        "Dfa.State.Yields.Yield(" :: Nil,
-                        idtStrs(
+                      Group(
+                        "Dfa.State.Yields.Yield(",
+                        Indented(
                           s"tokF = Token.${y.name}.apply,",
                           s"spanRange = ${y.spanRange},",
                         ),
-                        ")," :: Nil,
-                      ).flatten
-                    }: _*,
+                        "),",
+                      )
+                    },
                   ),
-                  ")," :: Nil,
+                  "),",
                 ),
-                ")," :: Nil,
+                "),",
               ),
             )
           },
-          ")" :: Nil,
+          ")",
         ),
-      ).flatten
+      )
     }
 
-    List(
-      "val dfa: Dfa[Token] = {" :: Nil,
-      idtLists(dfa.idxOf.toList.sortBy(_._2).map(p => stateStringLines(p._1)): _*),
-      "" :: Nil,
-      idtStrs(s"Dfa(${stateName(dfa.initialState)})"),
-      "}" :: Nil,
-    ).flatten.right
+    Group(
+      "val dfa: Dfa[Token] = {",
+      Indented(dfa.idxOf.toList.sortBy(_._2).map(p => stateStringLines(p._1))),
+      Break,
+      Indented(s"Dfa(${stateName(dfa.initialState)})"),
+      "}",
+    ).right
   }
 
 }

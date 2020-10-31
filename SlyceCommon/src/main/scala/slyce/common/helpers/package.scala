@@ -59,10 +59,4 @@ package object helpers {
       findAll(unseen.flatMap(f) &~ nowSeen, nowSeen)(f)
     }
 
-  def idtStrs(strs: String*)(implicit idt: String): List[String] =
-    strs.toList.map(s => s"$idt$s")
-
-  def idtLists(strLists: List[String]*)(implicit idt: String): List[String] =
-    strLists.toList.flatMap(idtStrs(_: _*))
-
 }
