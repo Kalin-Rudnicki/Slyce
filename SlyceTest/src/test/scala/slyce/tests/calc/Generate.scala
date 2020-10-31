@@ -269,25 +269,37 @@ object Generate extends App {
       ),
     )
   }
-  val lexer: slyce.generate.lexer.Err \/ lex.Dfa = lex.Lexer(lexerData)
 
-  gram.DataToSimpleData(grammarData)
+  val idt: String = "  "
 
-  lexer match {
+  val lines = for {
+    dfa <- lex.Lexer(lexerData)
+    tokLines <- lex.DfaTokenLines((dfa, idt))
+    stateLines <- lex.DfaStateLines((dfa, idt))
+    simpleData <- gram.DataToSimpleData(grammarData)
+    ntLines <- gram.SimpleDataToNtLines((simpleData, idt))
+  } yield (
+    tokLines,
+    stateLines,
+    ntLines,
+  )
+
+  lines match {
     case -\/(errs) =>
       println("Errors:")
       errs.foreach(println)
       System.exit(1)
-    case \/-(dfa) =>
+    case \/-((tokLines, stateLines, ntLines)) =>
       implicit val idt: String = "  "
 
-    /*
       println("Success:")
       println()
-      println(dfa.toksStr.mkString("\n"))
+      println(tokLines.mkString("\n"))
       println()
-      println(dfa.dfaStr.mkString("\n"))
-     */
+      println(stateLines.mkString("\n"))
+      println()
+      println(ntLines.mkString("\n"))
+
   }
 
 }
