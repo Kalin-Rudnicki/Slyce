@@ -1,4 +1,4 @@
-package slyce.generate.lexer
+package slyce.generate.formatting
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
@@ -8,11 +8,11 @@ import scalaz.\/
 import slyce.common.helpers._
 import slyce.common.helpers.Idt._
 import slyce.generate.architecture.{formatting => arch}
-import slyce.generate.grammar.SimpleData
+import slyce.generate.grammar._
 import slyce.generate.grammar.SimpleData.Identifier
+import slyce.generate.lexer._
 import slyce.generate.lexer.Yields.Yield
 
-// TODO (KR) : Probably makes sense to move this
 object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
 
   override def apply(input: (Dfa, SimpleData)): List[String] \/ Idt = {

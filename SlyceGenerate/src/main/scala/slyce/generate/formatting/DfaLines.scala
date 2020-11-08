@@ -1,10 +1,11 @@
-package slyce.generate.lexer
+package slyce.generate.formatting
 
 import scalaz.\/
 
 import slyce.common.helpers._
 import slyce.common.helpers.Idt._
 import slyce.generate.architecture.{formatting => arch}
+import slyce.generate.lexer._
 import Yields.Yield
 import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToEitherOps}
 

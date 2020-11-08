@@ -57,7 +57,7 @@ final case class StateMachine[Tok, Nt, RawTree <: Nt](
                       val newState = f(element)
                       val toksH :: toksT = toks
                       loop(
-                        // TODO (KR) : This is not correct
+                        // TODO (KR) : This is not correct, need a way to find which token is max
                         toksH,
                         StateMachine.StackElement(toksT, (newState, toksH.left) :: stackT) :: afterReturn ::: stacksT,
                       )

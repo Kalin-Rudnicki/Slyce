@@ -10,6 +10,7 @@ import scalaz.NonEmptyList
 import scalaz.\/
 import scalaz.\/-
 
+import slyce.generate.{formatting => fmt}
 import slyce.generate.{lexer => lex}
 import slyce.generate.{grammar => gram}
 
@@ -104,9 +105,9 @@ object Generate extends App {
     simpleData <- gram.DataToSimpleData(grammarData)
     stateMachine <- gram.SimpleDataToStateMachine(simpleData)
     // Format
-    tokLines <- lex.TokenLines((dfa, simpleData))
-    stateLines <- lex.DfaLines(dfa)
-    ntLines <- gram.NtLines(simpleData)
+    tokLines <- fmt.TokenLines((dfa, simpleData))
+    stateLines <- fmt.DfaLines(dfa)
+    ntLines <- fmt.NtLines(simpleData)
   } yield (
     tokLines,
     stateLines,

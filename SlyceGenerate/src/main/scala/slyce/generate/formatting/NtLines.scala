@@ -1,4 +1,4 @@
-package slyce.generate.grammar
+package slyce.generate.formatting
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
@@ -8,6 +8,7 @@ import slyce.common.helpers.CharOps
 import slyce.common.helpers.Idt
 import slyce.common.helpers.Idt._
 import slyce.generate.architecture.{formatting => arch}
+import slyce.generate.grammar._
 import slyce.generate.grammar.SimpleData.Identifier
 
 object NtLines extends arch.NtLines[SimpleData] {
