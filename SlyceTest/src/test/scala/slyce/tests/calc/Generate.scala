@@ -276,11 +276,12 @@ object Generate extends App {
 
   val lines = for {
     dfa <- lex.Lexer(lexerData)
-    tokLines <- lex.DfaTokenLines(dfa)
-    stateLines <- lex.DfaStateLines(dfa)
     simpleData <- gram.DataToSimpleData(grammarData)
     stateMachine <- gram.SimpleDataToStateMachine(simpleData)
-    ntLines <- gram.SimpleDataToNtLines(simpleData)
+    // Format
+    tokLines <- lex.TokenLines((dfa, simpleData))
+    stateLines <- lex.DfaLines(dfa)
+    ntLines <- gram.NtLines(simpleData)
   } yield (
     tokLines,
     stateLines,

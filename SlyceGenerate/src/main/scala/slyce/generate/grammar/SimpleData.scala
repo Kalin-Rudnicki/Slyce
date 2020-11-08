@@ -34,6 +34,9 @@ object SimpleData {
 
   object Identifier {
 
+    // TODO (KR) : Possibly move this somewhere else?
+    //           : Might be causing undesirable dependencies
+
     val EofName: String = "EOF"
     val Eof: Terminal = Terminal(s"$EofName.type")
 
@@ -71,7 +74,6 @@ object SimpleData {
         case Name.Named(name, idx) =>
           Name.Named(name, idx + 1)
       }
-
     // This serves the purpose of trying to resolve duplicates
     def standardize(parent: Name): Name =
       (parent, this) match {
