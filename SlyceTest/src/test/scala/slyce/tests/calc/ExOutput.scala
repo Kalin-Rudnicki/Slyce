@@ -12,6 +12,7 @@ object ExOutput extends App {
 
   sealed trait Token extends Dfa.Token
   object Token {
+    case object EOF extends Token
     final case class _var(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class addOp(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
     final case class float(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
@@ -21,20 +22,166 @@ object ExOutput extends App {
     final case class raw(text: String, start: Dfa.Token.Pos, stop: Dfa.Token.Pos) extends Token
   }
 
+  sealed trait NonTerminal
+  object NonTerminal {
+
+    sealed trait __Start extends NonTerminal
+    object __Start {
+
+      final case class _1(
+        _1: NonTerminal.Lines,
+        _2: Token.EOF.type,
+      ) extends __Start
+
+    }
+
+    sealed trait AnonList1 extends NonTerminal
+    object AnonList1 {
+
+      final case class _1(
+        _1: Token.raw,
+        _2: NonTerminal.AnonList1,
+      ) extends AnonList1
+
+      case object _2 extends AnonList1
+
+    }
+
+    sealed trait Assign extends NonTerminal
+    object Assign {
+
+      final case class _1(
+        _1: Token._var,
+        _2: Token.raw,
+        _3: NonTerminal.Expr,
+      ) extends Assign
+
+    }
+
+    sealed trait Expr extends NonTerminal
+    object Expr {
+
+      final case class _1(
+        _1: NonTerminal.Expr_2,
+        _2: Token.powOp,
+        _3: NonTerminal.Expr,
+      ) extends Expr
+
+      final case class _2(
+        _1: NonTerminal.Expr_2,
+      ) extends Expr
+
+    }
+
+    sealed trait Expr_2 extends NonTerminal
+    object Expr_2 {
+
+      final case class _1(
+        _1: NonTerminal.Expr_2,
+        _2: Token.multOp,
+        _3: NonTerminal.Expr_3,
+      ) extends Expr_2
+
+      final case class _2(
+        _1: NonTerminal.Expr_3,
+      ) extends Expr_2
+
+    }
+
+    sealed trait Expr_3 extends NonTerminal
+    object Expr_3 {
+
+      final case class _1(
+        _1: NonTerminal.Expr_3,
+        _2: Token.addOp,
+        _3: NonTerminal.Expr_4,
+      ) extends Expr_3
+
+      final case class _2(
+        _1: NonTerminal.Expr_4,
+      ) extends Expr_3
+
+    }
+
+    sealed trait Expr_4 extends NonTerminal
+    object Expr_4 {
+
+      final case class _1(
+        _1: Token.raw,
+        _2: NonTerminal.Expr,
+        _3: Token.raw,
+      ) extends Expr_4
+
+      final case class _2(
+        _1: Token.int,
+      ) extends Expr_4
+
+      final case class _3(
+        _1: Token.float,
+      ) extends Expr_4
+
+      final case class _4(
+        _1: Token._var,
+      ) extends Expr_4
+
+    }
+
+    sealed trait Line extends NonTerminal
+    object Line {
+
+      final case class _1(
+        _1: NonTerminal.Expr,
+      ) extends Line
+
+      final case class _2(
+        _1: NonTerminal.Assign,
+      ) extends Line
+
+    }
+
+    sealed trait Lines extends NonTerminal
+    object Lines {
+
+      final case class _1(
+        _1: NonTerminal.AnonList1,
+        _2: NonTerminal.Line,
+        _3: NonTerminal.Lines_2,
+      ) extends Lines
+
+      case object _2 extends Lines
+
+    }
+
+    sealed trait Lines_2 extends NonTerminal
+    object Lines_2 {
+
+      final case class _1(
+        _1: NonTerminal.AnonList1,
+        _2: NonTerminal.Line,
+        _3: NonTerminal.AnonList1,
+        _4: NonTerminal.Lines_2,
+      ) extends Lines_2
+
+      case object _2 extends Lines_2
+
+    }
+
+  }
+
   val dfa: Dfa[Token] = {
     lazy val s0: Dfa.State[Token] =
       Dfa.State(
         id = 0,
         transitions = Map(
           0x9.toChar -> Some(Lazy(s16)), // '\t'
-          0xa.toChar -> Some(Lazy(s1)), // '\n'
+          0xA.toChar -> Some(Lazy(s1)), // '\n'
           0x20.toChar -> Some(Lazy(s16)), // ' '
           0x28.toChar -> Some(Lazy(s1)), // '('
           0x29.toChar -> Some(Lazy(s1)), // ')'
-          0x2a.toChar -> Some(Lazy(s9)), // '*'
-          0x2b.toChar -> Some(Lazy(s3)), // '+'
-          0x2d.toChar -> Some(Lazy(s14)), // '-'
-          0x2f.toChar -> Some(Lazy(s7)), // '/'
+          0x2A.toChar -> Some(Lazy(s9)), // '*'
+          0x2B.toChar -> Some(Lazy(s3)), // '+'
+          0x2D.toChar -> Some(Lazy(s14)), // '-'
+          0x2F.toChar -> Some(Lazy(s7)), // '/'
           0x30.toChar -> Some(Lazy(s17)), // '0'
           0x31.toChar -> Some(Lazy(s17)), // '1'
           0x32.toChar -> Some(Lazy(s17)), // '2'
@@ -45,9 +192,9 @@ object ExOutput extends App {
           0x37.toChar -> Some(Lazy(s17)), // '7'
           0x38.toChar -> Some(Lazy(s17)), // '8'
           0x39.toChar -> Some(Lazy(s17)), // '9'
-          0x3d.toChar -> Some(Lazy(s1)), // '='
-          0x5e.toChar -> Some(Lazy(s4)), // '^'
-          0x5f.toChar -> Some(Lazy(s10)), // '_'
+          0x3D.toChar -> Some(Lazy(s1)), // '='
+          0x5E.toChar -> Some(Lazy(s4)), // '^'
+          0x5F.toChar -> Some(Lazy(s10)), // '_'
           0x61.toChar -> Some(Lazy(s10)), // 'a'
           0x62.toChar -> Some(Lazy(s10)), // 'b'
           0x63.toChar -> Some(Lazy(s10)), // 'c'
@@ -57,12 +204,12 @@ object ExOutput extends App {
           0x67.toChar -> Some(Lazy(s10)), // 'g'
           0x68.toChar -> Some(Lazy(s10)), // 'h'
           0x69.toChar -> Some(Lazy(s10)), // 'i'
-          0x6a.toChar -> Some(Lazy(s10)), // 'j'
-          0x6b.toChar -> Some(Lazy(s10)), // 'k'
-          0x6c.toChar -> Some(Lazy(s10)), // 'l'
-          0x6d.toChar -> Some(Lazy(s10)), // 'm'
-          0x6e.toChar -> Some(Lazy(s10)), // 'n'
-          0x6f.toChar -> Some(Lazy(s10)), // 'o'
+          0x6A.toChar -> Some(Lazy(s10)), // 'j'
+          0x6B.toChar -> Some(Lazy(s10)), // 'k'
+          0x6C.toChar -> Some(Lazy(s10)), // 'l'
+          0x6D.toChar -> Some(Lazy(s10)), // 'm'
+          0x6E.toChar -> Some(Lazy(s10)), // 'n'
+          0x6F.toChar -> Some(Lazy(s10)), // 'o'
           0x70.toChar -> Some(Lazy(s10)), // 'p'
           0x71.toChar -> Some(Lazy(s10)), // 'q'
           0x72.toChar -> Some(Lazy(s10)), // 'r'
@@ -73,7 +220,7 @@ object ExOutput extends App {
           0x77.toChar -> Some(Lazy(s10)), // 'w'
           0x78.toChar -> Some(Lazy(s10)), // 'x'
           0x79.toChar -> Some(Lazy(s10)), // 'y'
-          0x7a.toChar -> Some(Lazy(s10)), // 'z'
+          0x7A.toChar -> Some(Lazy(s10)), // 'z'
         ),
         elseTransition = None,
         yields = None,
@@ -87,7 +234,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.raw.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -112,7 +259,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.float.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -126,7 +273,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.addOp.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -140,7 +287,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.powOp.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -174,15 +321,15 @@ object ExOutput extends App {
       Dfa.State(
         id = 7,
         transitions = Map(
-          0x2a.toChar -> Some(Lazy(s5)), // '*'
-          0x2f.toChar -> Some(Lazy(s13)), // '/'
+          0x2A.toChar -> Some(Lazy(s5)), // '*'
+          0x2F.toChar -> Some(Lazy(s13)), // '/'
         ),
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.multOp.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -203,7 +350,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.multOp.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -231,12 +378,12 @@ object ExOutput extends App {
           0x47.toChar -> Some(Lazy(s10)), // 'G'
           0x48.toChar -> Some(Lazy(s10)), // 'H'
           0x49.toChar -> Some(Lazy(s10)), // 'I'
-          0x4a.toChar -> Some(Lazy(s10)), // 'J'
-          0x4b.toChar -> Some(Lazy(s10)), // 'K'
-          0x4c.toChar -> Some(Lazy(s10)), // 'L'
-          0x4d.toChar -> Some(Lazy(s10)), // 'M'
-          0x4e.toChar -> Some(Lazy(s10)), // 'N'
-          0x4f.toChar -> Some(Lazy(s10)), // 'O'
+          0x4A.toChar -> Some(Lazy(s10)), // 'J'
+          0x4B.toChar -> Some(Lazy(s10)), // 'K'
+          0x4C.toChar -> Some(Lazy(s10)), // 'L'
+          0x4D.toChar -> Some(Lazy(s10)), // 'M'
+          0x4E.toChar -> Some(Lazy(s10)), // 'N'
+          0x4F.toChar -> Some(Lazy(s10)), // 'O'
           0x50.toChar -> Some(Lazy(s10)), // 'P'
           0x51.toChar -> Some(Lazy(s10)), // 'Q'
           0x52.toChar -> Some(Lazy(s10)), // 'R'
@@ -247,8 +394,8 @@ object ExOutput extends App {
           0x57.toChar -> Some(Lazy(s10)), // 'W'
           0x58.toChar -> Some(Lazy(s10)), // 'X'
           0x59.toChar -> Some(Lazy(s10)), // 'Y'
-          0x5a.toChar -> Some(Lazy(s10)), // 'Z'
-          0x5f.toChar -> Some(Lazy(s10)), // '_'
+          0x5A.toChar -> Some(Lazy(s10)), // 'Z'
+          0x5F.toChar -> Some(Lazy(s10)), // '_'
           0x61.toChar -> Some(Lazy(s10)), // 'a'
           0x62.toChar -> Some(Lazy(s10)), // 'b'
           0x63.toChar -> Some(Lazy(s10)), // 'c'
@@ -258,12 +405,12 @@ object ExOutput extends App {
           0x67.toChar -> Some(Lazy(s10)), // 'g'
           0x68.toChar -> Some(Lazy(s10)), // 'h'
           0x69.toChar -> Some(Lazy(s10)), // 'i'
-          0x6a.toChar -> Some(Lazy(s10)), // 'j'
-          0x6b.toChar -> Some(Lazy(s10)), // 'k'
-          0x6c.toChar -> Some(Lazy(s10)), // 'l'
-          0x6d.toChar -> Some(Lazy(s10)), // 'm'
-          0x6e.toChar -> Some(Lazy(s10)), // 'n'
-          0x6f.toChar -> Some(Lazy(s10)), // 'o'
+          0x6A.toChar -> Some(Lazy(s10)), // 'j'
+          0x6B.toChar -> Some(Lazy(s10)), // 'k'
+          0x6C.toChar -> Some(Lazy(s10)), // 'l'
+          0x6D.toChar -> Some(Lazy(s10)), // 'm'
+          0x6E.toChar -> Some(Lazy(s10)), // 'n'
+          0x6F.toChar -> Some(Lazy(s10)), // 'o'
           0x70.toChar -> Some(Lazy(s10)), // 'p'
           0x71.toChar -> Some(Lazy(s10)), // 'q'
           0x72.toChar -> Some(Lazy(s10)), // 'r'
@@ -274,14 +421,14 @@ object ExOutput extends App {
           0x77.toChar -> Some(Lazy(s10)), // 'w'
           0x78.toChar -> Some(Lazy(s10)), // 'x'
           0x79.toChar -> Some(Lazy(s10)), // 'y'
-          0x7a.toChar -> Some(Lazy(s10)), // 'z'
+          0x7A.toChar -> Some(Lazy(s10)), // 'z'
         ),
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token._var.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -304,7 +451,7 @@ object ExOutput extends App {
       Dfa.State(
         id = 13,
         transitions = Map(
-          0xa.toChar -> Some(Lazy(s8)), // '\n'
+          0xA.toChar -> Some(Lazy(s8)), // '\n'
         ),
         elseTransition = Some(Lazy(s13)),
         yields = None,
@@ -329,7 +476,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.addOp.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -338,7 +485,7 @@ object ExOutput extends App {
       Dfa.State(
         id = 15,
         transitions = Map(
-          0x2a.toChar -> Some(Lazy(s18)), // '*'
+          0x2A.toChar -> Some(Lazy(s18)), // '*'
         ),
         elseTransition = Some(Lazy(s11)),
         yields = None,
@@ -354,7 +501,7 @@ object ExOutput extends App {
       Dfa.State(
         id = 17,
         transitions = Map(
-          0x2e.toChar -> Some(Lazy(s6)), // '.'
+          0x2E.toChar -> Some(Lazy(s6)), // '.'
           0x30.toChar -> Some(Lazy(s17)), // '0'
           0x31.toChar -> Some(Lazy(s17)), // '1'
           0x32.toChar -> Some(Lazy(s17)), // '2'
@@ -371,7 +518,7 @@ object ExOutput extends App {
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.int.apply,
-              spanRange = (0, -1),
+              spanRange = (0,-1),
             ),
           ),
         ),
@@ -380,7 +527,7 @@ object ExOutput extends App {
       Dfa.State(
         id = 18,
         transitions = Map(
-          0x2f.toChar -> Some(Lazy(s12)), // '/'
+          0x2F.toChar -> Some(Lazy(s12)), // '/'
         ),
         elseTransition = None,
         yields = Some(Dfa.State.Yields(s15)()),
@@ -389,147 +536,12 @@ object ExOutput extends App {
     Dfa(s0)
   }
 
-  object NonTerminal {
-
-    sealed trait AnonList1
-    object AnonList1 {
-
-      final case class _0(
-          _0: Token.raw,
-          _1: NonTerminal.AnonList1,
-      ) extends AnonList1
-
-      case object _1 extends AnonList1
-
-    }
-
-    sealed trait Assign
-    object Assign {
-
-      final case class _0(
-          _0: Token._var,
-          _1: Token.raw,
-          _2: NonTerminal.Expr,
-      ) extends Assign
-
-    }
-
-    sealed trait Expr
-    object Expr {
-
-      final case class _0(
-          _0: NonTerminal.Expr_2,
-          _1: Token.powOp,
-          _2: NonTerminal.Expr,
-      ) extends Expr
-
-      final case class _1(
-          _0: NonTerminal.Expr_2,
-      ) extends Expr
-
-    }
-
-    sealed trait Expr_2
-    object Expr_2 {
-
-      final case class _0(
-          _0: NonTerminal.Expr_2,
-          _1: Token.multOp,
-          _2: NonTerminal.Expr_3,
-      ) extends Expr_2
-
-      final case class _1(
-          _0: NonTerminal.Expr_3,
-      ) extends Expr_2
-
-    }
-
-    sealed trait Expr_3
-    object Expr_3 {
-
-      final case class _0(
-          _0: NonTerminal.Expr_3,
-          _1: Token.addOp,
-          _2: NonTerminal.Expr_4,
-      ) extends Expr_3
-
-      final case class _1(
-          _0: NonTerminal.Expr_4,
-      ) extends Expr_3
-
-    }
-
-    sealed trait Expr_4
-    object Expr_4 {
-
-      final case class _0(
-          _0: Token.raw,
-          _1: NonTerminal.Expr,
-          _2: Token.raw,
-      ) extends Expr_4
-
-      final case class _1(
-          _0: Token.int,
-      ) extends Expr_4
-
-      final case class _2(
-          _0: Token.float,
-      ) extends Expr_4
-
-      final case class _3(
-          _0: Token._var,
-      ) extends Expr_4
-
-    }
-
-    sealed trait Line
-    object Line {
-
-      final case class _0(
-          _0: NonTerminal.Expr,
-      ) extends Line
-
-      final case class _1(
-          _0: NonTerminal.Assign,
-      ) extends Line
-
-    }
-
-    sealed trait Lines
-    object Lines {
-
-      final case class _0(
-          _0: NonTerminal.AnonList1,
-          _1: NonTerminal.Line,
-          _2: NonTerminal.Lines_2,
-      ) extends Lines
-
-      case object _1 extends Lines
-
-    }
-
-    sealed trait Lines_2
-    object Lines_2 {
-
-      final case class _0(
-          _0: NonTerminal.AnonList1,
-          _1: NonTerminal.Line,
-          _2: NonTerminal.AnonList1,
-          _3: NonTerminal.Lines_2,
-      ) extends Lines_2
-
-      case object _1 extends Lines_2
-
-    }
-
-  }
-
   {
     val source = Source.fromFile("res-test/calc/samples/ex1.txt")
     val str = source.mkString
     source.close
 
-    dfa.parse(str) match {
+    dfa(str) match {
       case -\/(err) =>
         println("Error:")
         println()
@@ -540,4 +552,5 @@ object ExOutput extends App {
         toks.foreach(println)
     }
   }
+
 }

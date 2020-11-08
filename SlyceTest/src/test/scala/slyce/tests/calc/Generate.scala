@@ -1,5 +1,9 @@
 package slyce.tests.calc
 
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+
 import scalaz.-\/
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.NonEmptyList
@@ -275,6 +279,7 @@ object Generate extends App {
     tokLines <- lex.DfaTokenLines(dfa)
     stateLines <- lex.DfaStateLines(dfa)
     simpleData <- gram.DataToSimpleData(grammarData)
+    stateMachine <- gram.SimpleDataToStateMachine(simpleData)
     ntLines <- gram.SimpleDataToNtLines(simpleData)
   } yield (
     tokLines,
@@ -290,17 +295,71 @@ object Generate extends App {
     case \/-((tokLines, stateLines, ntLines)) =>
       import slyce.common.helpers.Idt._
 
+      val pkg = List("slyce", "tests", "calc")
+      val dir = "SlyceTest/src/test/scala"
+      val name = "ExOutput"
+      val file = new File(s"$dir/${pkg.mkString("/")}/$name.scala")
+
       println("Success:")
-      println()
-      println(
+      val writer = new BufferedWriter(new FileWriter(file))
+      val src =
         Group(
-          tokLines,
+          Group(
+            s"package ${pkg.mkString(".")}",
+            Break,
+            "import scala.io.Source",
+            Break,
+            "import scalaz.-\\/",
+            "import scalaz.\\/-",
+            Break,
+            "import slyce.parse._",
+            "import slyce.common.helpers._",
+          ),
           Break,
-          stateLines,
-          Break,
-          ntLines,
-        ).build("  "),
-      )
+          Group(
+            s"object $name extends App {",
+            Indented(
+              Break,
+              tokLines,
+              Break,
+              ntLines,
+              Break,
+              stateLines,
+              Break,
+              Group(
+                "{",
+                Indented(
+                  "val source = Source.fromFile(\"res-test/calc/samples/ex1.txt\")",
+                  "val str = source.mkString",
+                  "source.close",
+                  Break,
+                  "dfa(str) match {",
+                  Indented(
+                    "case -\\/(err) =>",
+                    Indented(
+                      "println(\"Error:\")",
+                      "println()",
+                      "err.foreach(println)",
+                    ),
+                    "case \\/-(toks) =>",
+                    Indented(
+                      "println(\"Success:\")",
+                      "println()",
+                      "toks.foreach(println)",
+                    ),
+                  ),
+                  "}",
+                ),
+                "}",
+              ),
+            ),
+            Break,
+            "}",
+          ),
+        ).build("  ")
+      println(src)
+      writer.write(src)
+      writer.close
   }
 
 }

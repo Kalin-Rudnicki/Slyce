@@ -62,7 +62,14 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
             .map(elementList)
 
         val added =
-          SimpleData.ReductionList(name, mapped.map(r => SimpleData.ReductionList.Reduction(r._1)))
+          SimpleData.ReductionList(
+            name,
+            mapped.zipWithIndex
+              .map {
+                case ((r, _), idx) =>
+                  SimpleData.ReductionList.Reduction(idx + 1, r)
+              },
+          )
 
         val extras =
           mapped.list.toList
@@ -89,8 +96,8 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                     val id1 = SimpleData.Identifier.NonTerminal(n1)
 
                     val rl1 = SimpleData.ReductionList(n1)(
-                      SimpleData.ReductionList.Reduction(elems1 ::: id1 :: Nil),
-                      SimpleData.ReductionList.Reduction(),
+                      SimpleData.ReductionList.Reduction(1, elems1 ::: id1 :: Nil),
+                      SimpleData.ReductionList.Reduction(2),
                     )
 
                     (id1, rl1 :: extras1)
@@ -105,8 +112,8 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
                     def rlFrom(n: SimpleData.Name, elems: List[SimpleData.Identifier]): SimpleData.ReductionList =
                       SimpleData.ReductionList(n)(
-                        SimpleData.ReductionList.Reduction(elems ::: id2 :: Nil),
-                        SimpleData.ReductionList.Reduction(),
+                        SimpleData.ReductionList.Reduction(1, elems ::: id2 :: Nil),
+                        SimpleData.ReductionList.Reduction(2),
                       )
 
                     val rl1 = rlFrom(n1, elems1)
@@ -127,11 +134,11 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 val id2 = SimpleData.Identifier.NonTerminal(n2)
 
                 val rl1 = SimpleData.ReductionList(n1)(
-                  SimpleData.ReductionList.Reduction(elems1 ::: id2 :: Nil),
+                  SimpleData.ReductionList.Reduction(1, elems1 ::: id2 :: Nil),
                 )
                 val rl2 = SimpleData.ReductionList(n2)(
-                  SimpleData.ReductionList.Reduction(elems2 ::: id2 :: Nil),
-                  SimpleData.ReductionList.Reduction(),
+                  SimpleData.ReductionList.Reduction(1, elems2 ::: id2 :: Nil),
+                  SimpleData.ReductionList.Reduction(2),
                 )
 
                 (id1, rl1 :: rl2 :: extras1 ::: extras2)
@@ -184,14 +191,14 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                       case NT.AssocNT.AssocElement.<(element) =>
                         val (assocId, extras) = mapElement(anonGenerator(), element)
                         SimpleData.ReductionList(name)(
-                          SimpleData.ReductionList.Reduction(myId, assocId, nextId),
-                          SimpleData.ReductionList.Reduction(nextId),
+                          SimpleData.ReductionList.Reduction(1, myId, assocId, nextId),
+                          SimpleData.ReductionList.Reduction(2, nextId),
                         ) :: extras
                       case NT.AssocNT.AssocElement.>(element) =>
                         val (assocId, extras) = mapElement(anonGenerator(), element)
                         SimpleData.ReductionList(name)(
-                          SimpleData.ReductionList.Reduction(nextId, assocId, myId),
-                          SimpleData.ReductionList.Reduction(nextId),
+                          SimpleData.ReductionList.Reduction(1, nextId, assocId, myId),
+                          SimpleData.ReductionList.Reduction(2, nextId),
                         ) :: extras
                     }
 
@@ -216,7 +223,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         input.nts,
       )
 
-    val (namedRls, anon) =
+    val (
+      namedRls: List[SimpleData.ReductionList],
+      anon: List[(Name.AnonList, SimpleData.ReductionList, List[List[Identifier]])],
+    ) =
       rls.foldLeft(
         (
           Nil: List[SimpleData.ReductionList],
@@ -232,7 +242,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
           }
       }
 
-    val (anonRls, toReduce) =
+    val (
+      anonRls: List[SimpleData.ReductionList],
+      toReduce: List[Int],
+    ) =
       anon
         .groupBy(_._3)
         .toList
@@ -273,25 +286,28 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
           case SimpleData.ReductionList(name, reductions) =>
             SimpleData.ReductionList(
               reduceName(name),
-              reductions.map { r =>
-                SimpleData.ReductionList.Reduction(
-                  r.elements.map(reduceId),
-                )
+              reductions.map {
+                case SimpleData.ReductionList.Reduction(idx, elements) =>
+                  SimpleData.ReductionList.Reduction(
+                    idx,
+                    elements.map(reduceId),
+                  )
               },
             )
         }
 
-    newRls.foreach { rl =>
-      println(rl.name.str)
-      rl.reductions.foreach { r =>
-        println("    > " + r.elements.map(_.str).mkString(" "))
-      }
-      println
-    }
+    val augmentedStart: SimpleData.ReductionList =
+      SimpleData.ReductionList(SimpleData.Name.Start)(
+        SimpleData.ReductionList.Reduction(
+          1,
+          SimpleData.Identifier.NonTerminal(SimpleData.Name.Named(input.startNT)),
+          SimpleData.Identifier.Eof,
+        ),
+      )
 
     SimpleData(
-      input.startNT,
-      newRls,
+      augmentedStart,
+      augmentedStart :: newRls,
     ).right
   }
 

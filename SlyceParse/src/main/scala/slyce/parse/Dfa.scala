@@ -11,11 +11,12 @@ import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.common.helpers._
+import slyce.parse.{architecture => arch}
 
 // TODO (KR) : Extend Lexer
-final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
+final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) extends arch.Lexer[String, List[String], Tok] {
 
-  def parse(str: String): List[String] \/ List[Tok] = {
+  override def apply(str: String): List[String] \/ List[Tok] = {
     @tailrec
     def loop(
         state: Dfa.State[Tok],
@@ -164,22 +165,13 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) {
 
 object Dfa {
 
-  trait Token {
-
-    def name: String = this.getClass.getSimpleName
-
-    def start: Token.Pos
-
-    def stop: Token.Pos
-
-    def text: String
-
-    override def toString: String =
-      s"$name(${text.unesc}, $start, $stop)"
-
-  }
-
+  trait Token
   object Token {
+
+    final case class Span(
+        start: Pos,
+        stop: Pos,
+    )
 
     final case class Pos(
         abs: Int,

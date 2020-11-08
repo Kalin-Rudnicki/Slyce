@@ -3,11 +3,10 @@ package slyce.generate.grammar
 import scalaz.{NonEmptyList, \/}
 import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToOptionIdOps}
 import slyce.common.helpers._
-import slyce.generate.grammar.SimpleData.ReductionList
 
 case class SimpleData(
-    startNT: String,
-    reductionLists: List[ReductionList],
+    augmentedStart: SimpleData.ReductionList,
+    reductionLists: List[SimpleData.ReductionList],
 )
 
 // TODO (KR) : Is this really the right name for this?
@@ -34,6 +33,9 @@ object SimpleData {
   }
 
   object Identifier {
+
+    val EofName: String = "EOF"
+    val Eof: Terminal = Terminal(s"$EofName.type")
 
     final case class Raw(text: String) extends Identifier {
 
@@ -88,6 +90,8 @@ object SimpleData {
   }
 
   object Name {
+
+    val Start: Name = Named("__Start")
 
     final case class AnonList private (num: Int, idx: Int) extends Name
     object AnonList {
@@ -148,11 +152,14 @@ object SimpleData {
 
   object ReductionList {
 
-    final case class Reduction(elements: List[Identifier])
+    final case class Reduction(
+        idx: Int,
+        elements: List[Identifier],
+    )
     object Reduction {
 
-      def apply(elems: Identifier*): Reduction =
-        Reduction(elems.toList)
+      def apply(idx: Int, elems: Identifier*): Reduction =
+        Reduction(idx, elems.toList)
 
     }
 

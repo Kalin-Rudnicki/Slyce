@@ -2,9 +2,11 @@ package slyce.generate.lexer
 
 import scalaz.Scalaz.ToEitherOps
 import scalaz.\/
+
 import slyce.common.helpers._
 import slyce.common.helpers.Idt._
 import slyce.generate.architecture.{lexer => arch}
+import slyce.generate.grammar.SimpleData.Identifier
 
 object DfaTokenLines extends arch.DfaTokenLines[Dfa] {
 
@@ -17,7 +19,10 @@ object DfaTokenLines extends arch.DfaTokenLines[Dfa] {
     Group(
       "sealed trait Token extends Dfa.Token",
       "object Token {",
-      Indented(names.map(tokString)),
+      Indented(
+        s"case object ${Identifier.EofName} extends Token",
+        names.map(tokString),
+      ),
       "}",
     ).right
   }

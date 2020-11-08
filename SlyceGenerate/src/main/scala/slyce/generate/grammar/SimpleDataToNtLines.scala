@@ -12,27 +12,28 @@ object SimpleDataToNtLines extends arch.SimpleDataToNtLines[SimpleData] {
 
   override def apply(input: SimpleData): List[String] \/ Idt =
     Group(
+      "sealed trait NonTerminal",
       "object NonTerminal {",
       Break,
       Indented(
         input.reductionLists.map { list =>
           val name = list.name.str
           Group(
-            s"sealed trait $name",
+            s"sealed trait $name extends NonTerminal",
             s"object $name {",
             Break,
-            list.reductions.list.toList.zipWithIndex.map {
-              case (r, i1) =>
+            list.reductions.list.toList.map {
+              r =>
                 r.elements.isEmpty.fold(
                   Indented(
-                    s"case object _${i1 + 1} extends $name",
+                    s"case object _${r.idx} extends $name",
                     Break,
                   ),
                   Indented(
-                    s"final case class _${i1 + 1}(",
+                    s"final case class _${r.idx}(",
                     Indented(
                       r.elements.zipWithIndex.map {
-                        case (e, i2) =>
+                        case (e, i) =>
                           val `type` =
                             e match {
                               case SimpleData.Identifier.Raw(_) =>
@@ -43,7 +44,7 @@ object SimpleDataToNtLines extends arch.SimpleDataToNtLines[SimpleData] {
                                 s"NonTerminal.${name.str}"
                             }
 
-                          Str(s"_${i2 + 1}: ${`type`},")
+                          Str(s"_${i + 1}: ${`type`},")
                       },
                     ),
                     s") extends $name",
