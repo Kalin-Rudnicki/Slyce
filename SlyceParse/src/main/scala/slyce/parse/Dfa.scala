@@ -168,6 +168,10 @@ object Dfa {
   trait Token
   object Token {
 
+    trait HasSpan {
+      def span: Span
+    }
+
     final case class Span(
         start: Pos,
         stop: Pos,
