@@ -1,13 +1,8 @@
 package slyce.generate.grammar
 
 import scala.annotation.tailrec
-import scala.collection.immutable.AbstractSet
-import scala.collection.immutable.SortedSet
 
-import scalaz.NonEmptyList
 import scalaz.Scalaz.ToEitherOps
-import scalaz.Scalaz.ToListOpsFromList
-import scalaz.Scalaz.ToOptionIdOps
 import scalaz.\/
 
 import slyce.common.helpers._
@@ -100,10 +95,7 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
     println
     println(idt.build("|   "))
 
-    StateMachine(
-      map(augmentedStart),
-      map.values.toList,
-    ).right
+    StateMachine(input.startNt, map).right
   }
 
 }

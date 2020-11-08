@@ -4,6 +4,7 @@ import scala.io.Source
 
 import scalaz.-\/
 import scalaz.\/-
+import scalaz.Scalaz.ToEitherOps
 
 import slyce.parse._
 import slyce.common.helpers._
@@ -230,20 +231,179 @@ object ExOutput extends App {
     Dfa(s0)
   }
 
+  val stateMachine: StateMachine[Token, NonTerminal, NonTerminal.List] = {
+    type State = StateMachine.State[Token, NonTerminal, NonTerminal.List]
+
+    lazy val s0: State =
+      StateMachine.State(
+        id = 0,
+        acceptF = Some {
+          case \/-(_: NonTerminal.List) => s1
+          case -\/(_: Token.__.`(`) => s2
+        },
+        returnFs = Nil,
+        finalReturn = None, // TODO : ...
+      )
+
+    lazy val s1: State =
+      StateMachine.State(
+        id = 1,
+        acceptF = Some {
+          case -\/(Token.EOF) => s3
+        },
+        returnFs = Nil,
+        finalReturn = None,
+      )
+
+    lazy val s2: State =
+      StateMachine.State(
+        id = 2,
+        acceptF = Some {
+          case -\/(_: Token._var) => s4
+          case \/-(_: NonTerminal.AnonList1) => s5
+        },
+        returnFs = List(
+          {
+            case list @ ((s, _) :: _) =>
+              // AnonList1[2] : 
+              (s, NonTerminal.AnonList1._2.right) :: list
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s3: State =
+      StateMachine.State(
+        id = 3,
+        acceptF = None,
+        returnFs = List(
+          {
+            case list =>
+              // __Start[1] : NonTerminal(List), Terminal(EOF.type)
+              ???
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s4: State =
+      StateMachine.State(
+        id = 4,
+        acceptF = Some {
+          case -\/(_: Token.__.`,`) => s6
+          case \/-(_: NonTerminal.AnonList1_2) => s7
+        },
+        returnFs = List(
+          {
+            case list @ ((s, _) :: _) =>
+              // AnonList1_2[2] : 
+              (s, NonTerminal.AnonList1_2._2.right) :: list
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s5: State =
+      StateMachine.State(
+        id = 5,
+        acceptF = Some {
+          case -\/(_: Token.__.`)`) => s8
+        },
+        returnFs = Nil,
+        finalReturn = None,
+      )
+
+    lazy val s6: State =
+      StateMachine.State(
+        id = 6,
+        acceptF = Some {
+          case -\/(_: Token._var) => s9
+        },
+        returnFs = Nil,
+        finalReturn = None,
+      )
+
+    lazy val s7: State =
+      StateMachine.State(
+        id = 7,
+        acceptF = None,
+        returnFs = List(
+          {
+            case list =>
+              // AnonList1[1] : Terminal(_var), NonTerminal(AnonList1_2)
+              ???
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s8: State =
+      StateMachine.State(
+        id = 8,
+        acceptF = None,
+        returnFs = List(
+          {
+            case list =>
+              // List[1] : Raw("("), NonTerminal(AnonList1), Raw(")")
+              ???
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s9: State =
+      StateMachine.State(
+        id = 9,
+        acceptF = Some {
+          case -\/(_: Token.__.`,`) => s6
+          case \/-(_: NonTerminal.AnonList1_2) => s10
+        },
+        returnFs = List(
+          {
+            case list @ ((s, _) :: _) =>
+              // AnonList1_2[2] : 
+              (s, NonTerminal.AnonList1_2._2.right) :: list
+          },
+        ),
+        finalReturn = None,
+      )
+
+    lazy val s10: State =
+      StateMachine.State(
+        id = 10,
+        acceptF = None,
+        returnFs = List(
+          {
+            case list =>
+              // AnonList1_2[1] : Raw(","), Terminal(_var), NonTerminal(AnonList1_2)
+              ???
+          },
+        ),
+        finalReturn = None,
+      )
+
+    StateMachine(s0)
+  }
+
   {
-    val source = Source.fromFile("res-test/calc/samples/ex1.txt")
+    val source = Source.fromFile("res-test/argList/samples/ex1.txt")
     val str = source.mkString
     source.close
 
-    dfa(str) match {
+    val res = for {
+      toks <- dfa(str)
+      rawTree <- stateMachine(toks)
+    } yield rawTree
+
+    res match {
       case -\/(err) =>
         println("Error:")
         println()
         err.foreach(println)
-      case \/-(toks) =>
+      case \/-(rawTree) =>
         println("Success:")
         println()
-        toks.foreach(println)
+        println(rawTree)
     }
   }
 

@@ -5,8 +5,8 @@ import scala.annotation.tailrec
 import scalaz.Scalaz.ToOptionIdOps
 
 final case class StateMachine(
-    augmentedStart: StateMachine.State,
-    states: List[StateMachine.State],
+    startNt: String,
+    rlMap: Map[StateMachine.ReductionList, StateMachine.State],
 )
 
 object StateMachine {

@@ -3,15 +3,11 @@ package slyce.parse
 import scala.annotation.tailrec
 
 import scalaz.-\/
-import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
-import scalaz.Scalaz.ToOptionIdOps
-import scalaz.Scalaz.ToOptionOpsFromOption
 import scalaz.\/
 import scalaz.\/-
 
-import slyce.common.helpers.Matcher
-import slyce.common.helpers.TraverseOps
+import slyce.common.helpers.Idt._
 import slyce.parse.{architecture => arch}
 
 final case class StateMachine[Tok, Nt, RawTree <: Nt](
@@ -26,24 +22,52 @@ final case class StateMachine[Tok, Nt, RawTree <: Nt](
     def loop(
         maxTok: Tok,
         stacks: List[StackElement],
-    ): List[String] \/ RawTree =
+    ): List[String] \/ RawTree = {
+      def printStack(label: String, list: List[(StateMachine.State[Tok, Nt, RawTree], Tok \/ Nt)]): Unit =
+        println(
+          Group(
+            s"$label:",
+            Indented(
+              list
+                .map {
+                  case (s, e) =>
+                    val eS = e match {
+                      case -\/(a) =>
+                        a
+                      case \/-(b) =>
+                        b
+                    }
+
+                    Str(s"${s.id} -> $eS")
+                },
+            ),
+          ).build("|   "),
+        )
+
+      printStack("loop", stacks.head.stack)
+
       stacks match {
         case Nil =>
           // TODO (KR) :
-          List("Error: TODO").left
+          List("Error: TODO (1)").left
         case StateMachine.StackElement(toks, stack) :: stacksT =>
           stack match {
             case Nil =>
               // TODO (KR) :
-              List("Error: TODO").left
-            case (StateMachine.State(acceptF, returnFs, finalReturn), element) :: stackT =>
+              List("Error: TODO (2)").left
+            case (StateMachine.State(_, acceptF, returnFs, finalReturn), element) :: _ =>
               finalReturn match {
                 case None =>
                   val afterReturn: List[StackElement] =
                     returnFs.map { f =>
                       StateMachine.StackElement(
-                        toks,
-                        f(stack),
+                        toks, { // TODO (KR) : debugging
+                          // println
+                          // printStack("before", stack)
+                          val res = f(stack)
+                          // printStack("after", res)
+                          res
+                        },
                       )
                     }
 
@@ -59,21 +83,24 @@ final case class StateMachine[Tok, Nt, RawTree <: Nt](
                       loop(
                         // TODO (KR) : This is not correct, need a way to find which token is max
                         toksH,
-                        StateMachine.StackElement(toksT, (newState, toksH.left) :: stackT) :: afterReturn ::: stacksT,
+                        StateMachine.StackElement(toksT, (newState, toksH.left) :: stack) :: afterReturn ::: stacksT,
                       )
                     case _ =>
-                      // TODO (KR) :
-                      List("Error: TODO").left
+                      loop(
+                        maxTok,
+                        afterReturn ::: stacksT,
+                      )
                   }
                 case Some(f) =>
                   f(stack).right
               }
           }
       }
+    }
 
-    val inputH :: inputT = input
+    val inputH :: inputT = input.map(_.left)
     loop(
-      inputH,
+      input.head,
       StateMachine.StackElement(
         inputT,
         (augmentedStart, inputH.left) :: Nil,
@@ -86,15 +113,16 @@ final case class StateMachine[Tok, Nt, RawTree <: Nt](
 object StateMachine {
 
   final case class StackElement[Tok, Nt, RawTree <: Nt](
-      toks: List[Tok],
+      queue: List[Tok \/ Nt],
       stack: List[(State[Tok, Nt, RawTree], Tok \/ Nt)],
   )
 
   final case class State[Tok, Nt, RawTree <: Nt](
+      id: Int,
       acceptF: Option[PartialFunction[Tok \/ Nt, State[Tok, Nt, RawTree]]],
       returnFs: List[PartialFunction[
-        List[(State[Tok, Nt, RawTree], Tok \/ Nt)],
-        List[(State[Tok, Nt, RawTree], Tok \/ Nt)],
+        (List[Tok \/ Nt], List[(State[Tok, Nt, RawTree], Tok \/ Nt)]),
+        (List[Tok \/ Nt], List[(State[Tok, Nt, RawTree], Tok \/ Nt)]),
       ]],
       finalReturn: Option[PartialFunction[
         List[(State[Tok, Nt, RawTree], Tok \/ Nt)],
@@ -103,3 +131,5 @@ object StateMachine {
   )
 
 }
+
+//

@@ -306,6 +306,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       )
 
     SimpleData(
+      input.startNT,
       augmentedStart,
       augmentedStart :: newRls,
     ).right

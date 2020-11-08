@@ -1,10 +1,12 @@
 package slyce.generate.grammar
 
-import scalaz.{NonEmptyList, \/}
-import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToOptionIdOps}
+import scalaz.NonEmptyList
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.ToOptionIdOps
 import slyce.common.helpers._
 
 case class SimpleData(
+    startNt: String,
     augmentedStart: SimpleData.ReductionList,
     reductionLists: List[SimpleData.ReductionList],
 )
