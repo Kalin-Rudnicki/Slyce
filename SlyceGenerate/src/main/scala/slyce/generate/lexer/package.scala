@@ -1,5 +1,7 @@
 package slyce.generate
 
+import slyce.generate.grammar.SimpleData.Identifier
+
 package object lexer {
 
   type Err = List[String]
@@ -21,7 +23,7 @@ package object lexer {
       final case class Text(
           spanRange: (Int, Int),
       ) extends Yield {
-        val name: String = "raw"
+        val name: String = Identifier.RawName
       }
       object Text {
 

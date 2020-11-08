@@ -1,13 +1,14 @@
 package slyce.generate.lexer
 
 import scalaz.\/
+
 import slyce.common.helpers._
 import slyce.common.helpers.Idt._
-import slyce.generate.architecture.{lexer => arch}
+import slyce.generate.architecture.{formatting => arch}
 import Yields.Yield
 import scalaz.Scalaz.{ToBooleanOpsFromBoolean, ToEitherOps}
 
-object DfaStateLines extends arch.DfaStateLines[Dfa] {
+object DfaLines extends arch.DfaLines[Dfa] {
 
   override def apply(dfa: Dfa): List[String] \/ Idt = {
     def stateName(state: Dfa.State): String =

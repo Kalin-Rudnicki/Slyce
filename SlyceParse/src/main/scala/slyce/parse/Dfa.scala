@@ -60,7 +60,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) extends ar
           //      : Seemed overkill. Possibly bring this back in the future.
           subStr(startPos, str, y.spanRange).map {
             case (p1, p2, r) =>
-              y.tokF(r, p1, p2)
+              y.tokF(r, Dfa.Token.Span(p1, p2))
           }
         }
 
@@ -219,7 +219,7 @@ object Dfa {
     object Yields {
 
       final case class Yield[+Tok](
-          tokF: (String, Token.Pos, Token.Pos) => Tok,
+          tokF: (String, Token.Span) => Tok,
           spanRange: (Int, Int),
       )
 

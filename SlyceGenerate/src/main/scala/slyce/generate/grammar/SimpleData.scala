@@ -37,6 +37,8 @@ object SimpleData {
     val EofName: String = "EOF"
     val Eof: Terminal = Terminal(s"$EofName.type")
 
+    val RawName: String = "__"
+
     final case class Raw(text: String) extends Identifier {
 
       override def toString: String =

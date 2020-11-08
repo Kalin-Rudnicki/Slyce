@@ -4,11 +4,13 @@ import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.\/
 
+import slyce.common.helpers.CharOps
 import slyce.common.helpers.Idt
 import slyce.common.helpers.Idt._
-import slyce.generate.architecture.{grammar => arch}
+import slyce.generate.architecture.{formatting => arch}
+import slyce.generate.grammar.SimpleData.Identifier
 
-object SimpleDataToNtLines extends arch.SimpleDataToNtLines[SimpleData] {
+object NtLines extends arch.NtLines[SimpleData] {
 
   override def apply(input: SimpleData): List[String] \/ Idt =
     Group(
@@ -36,8 +38,8 @@ object SimpleDataToNtLines extends arch.SimpleDataToNtLines[SimpleData] {
                         case (e, i) =>
                           val `type` =
                             e match {
-                              case SimpleData.Identifier.Raw(_) =>
-                                "Token.raw"
+                              case SimpleData.Identifier.Raw(text) =>
+                                s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
                               case SimpleData.Identifier.Terminal(name) =>
                                 s"Token.$name"
                               case SimpleData.Identifier.NonTerminal(name) =>
