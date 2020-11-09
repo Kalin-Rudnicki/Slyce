@@ -2,6 +2,7 @@ package slyce.generate.grammar
 
 import scala.annotation.tailrec
 
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToOptionIdOps
 
 final case class StateMachine(
@@ -29,7 +30,7 @@ object StateMachine {
 
     val returns: Set[(SimpleData.Name, Int, List[SimpleData.Identifier])] =
       reductions.flatMap {
-        case ReductionList.Reduction(name, idx, elements, Nil) =>
+        case ReductionList.Reduction(name, idx, elements, Nil, true) =>
           (name, idx, elements).some
         case _ =>
           None
@@ -60,6 +61,7 @@ object StateMachine {
         idx: Int,
         seen: List[SimpleData.Identifier],
         unseen: List[SimpleData.Identifier],
+        canReturn: Boolean,
     ) {
 
       def advance: Option[(SimpleData.Identifier, Reduction)] =
@@ -74,6 +76,7 @@ object StateMachine {
                 idx,
                 seen :+ head,
                 tail,
+                true, // TODO (KR) : This could very likely be `canReturn`
               ),
             ).some
         }
@@ -87,8 +90,36 @@ object StateMachine {
         reductions: Set[Reduction],
         nameMap: Map[SimpleData.Name, ReductionList],
         canPassThrough: Map[SimpleData.Name, Boolean],
-    ): ReductionList =
-      ???
+    ): ReductionList = {
+      @tailrec
+      def loop(
+          todo: Set[Reduction],
+          alreadySeen: Set[Reduction],
+      ): ReductionList = {
+        val newRls = todo &~ alreadySeen
+        if (newRls.isEmpty)
+          ReductionList(alreadySeen)
+        else {
+          // TODO (KR) : Need a way to say that you can not actually return on something you were passed
+          loop(
+            newRls.flatMap { r =>
+              r.advance match {
+                case Some((SimpleData.Identifier.NonTerminal(name), passed)) =>
+                  canPassThrough(name).option(passed.copy(canReturn = false)).toList ::: nameMap(name).reductions.toList
+                case _ =>
+                  Nil
+              }
+            },
+            todo | alreadySeen,
+          )
+        }
+      }
+
+      loop(
+        reductions,
+        Set.empty,
+      )
+    }
 
   }
 

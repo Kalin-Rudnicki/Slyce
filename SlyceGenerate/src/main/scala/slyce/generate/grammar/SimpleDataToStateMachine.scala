@@ -28,6 +28,7 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
                     idx,
                     Nil,
                     elements,
+                    true,
                   )
               }.toSet,
             )
@@ -112,13 +113,13 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
                     case SimpleData.Identifier.NonTerminal(name) :: t2 =>
                       known.get(name) match {
                         case Some(canPass) =>
-                          if (canPass) {
+                          if (canPass)
                             loop2(
                               true,
                               t,
                               t2 :: seen,
                             )
-                          } else
+                          else
                             loop2(
                               true,
                               t,

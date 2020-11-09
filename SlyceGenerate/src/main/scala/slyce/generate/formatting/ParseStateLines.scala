@@ -140,8 +140,8 @@ object ParseStateLines extends arch.ParseStateLines[StateMachine] {
                                     case todoH :: todoT =>
                                       val inner = patternName(todoH, s"_$idx".some)
                                       val wrapped =
-                                        todoT match {
-                                          case Nil =>
+                                        idx match {
+                                          case 1 =>
                                             s"stateElem(state, $inner)"
                                           case _ =>
                                             s"elem($inner)"
