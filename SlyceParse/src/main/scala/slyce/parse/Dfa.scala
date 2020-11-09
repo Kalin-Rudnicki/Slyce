@@ -13,8 +13,10 @@ import scalaz.Scalaz.ToOptionIdOps
 import slyce.common.helpers._
 import slyce.parse.{architecture => arch}
 
-// TODO (KR) : Extend Lexer
-final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) extends arch.Lexer[String, List[String], Tok] {
+final case class Dfa[+Tok <: Dfa.Token](
+    initialState: Dfa.State[Tok],
+    eofTok: Tok,
+) extends arch.Lexer[String, List[String], Tok] {
 
   override def apply(str: String): List[String] \/ List[Tok] = {
     @tailrec
@@ -71,7 +73,7 @@ final case class Dfa[+Tok <: Dfa.Token](initialState: Dfa.State[Tok]) extends ar
         case Nil =>
           current match {
             case Nil =>
-              toks.reverse.right
+              (eofTok :: toks).reverse.right
             case _ =>
               yields match {
                 case None =>

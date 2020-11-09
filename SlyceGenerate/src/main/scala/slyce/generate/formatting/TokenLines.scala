@@ -22,7 +22,7 @@ object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
     ) = input
 
     def tokString(text: Boolean, tokName: String): Idt =
-      s"final case class $tokName(${text.fold("text: String, ", "")}span: Dfa.Token.Span) extends Token"
+      s"final case class $tokName(${text.fold("text: String, ", "")}span: Dfa.Token.Span) extends HasSpanToken"
 
     val names: List[String] =
       dfa.idxOf.toList
@@ -53,6 +53,7 @@ object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
 
     Group(
       "sealed trait Token extends Dfa.Token",
+      "sealed trait HasSpanToken extends Token with Dfa.Token.HasSpan",
       "object Token {",
       Indented(
         s"case object ${Identifier.EofName} extends Token",
@@ -86,6 +87,11 @@ object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
           ),
         ),
         names.map(tokString(true, _)),
+      ),
+      "}",
+      "object HasSpanToken {",
+      Indented(
+        "def unapply(arg: HasSpanToken): Option[Dfa.Token.Span] = arg.span.some",
       ),
       "}",
     ).right

@@ -283,10 +283,12 @@ object Generate extends App {
     tokLines <- fmt.TokenLines((dfa, simpleData))
     stateLines <- fmt.DfaLines(dfa)
     ntLines <- fmt.NtLines(simpleData)
+    parseStateLines <- fmt.ParseStateLines(stateMachine)
   } yield (
     tokLines,
     stateLines,
     ntLines,
+    parseStateLines,
   )
 
   lines match {
@@ -294,7 +296,7 @@ object Generate extends App {
       println("Errors:")
       errs.foreach(println)
       System.exit(1)
-    case \/-((tokLines, stateLines, ntLines)) =>
+    case \/-((tokLines, stateLines, ntLines, parseStateLines)) =>
       import slyce.common.helpers.Idt._
 
       val pkg = List("slyce", "tests", "calc")
@@ -313,6 +315,8 @@ object Generate extends App {
             Break,
             "import scalaz.-\\/",
             "import scalaz.\\/-",
+            "import scalaz.Scalaz.ToBooleanOpsFromBoolean",
+            "import scalaz.Scalaz.ToOptionIdOps",
             Break,
             "import slyce.parse._",
             "import slyce.common.helpers._",
@@ -328,6 +332,8 @@ object Generate extends App {
               Break,
               stateLines,
               Break,
+              parseStateLines,
+              Break,
               Group(
                 "{",
                 Indented(
@@ -335,7 +341,16 @@ object Generate extends App {
                   "val str = source.mkString",
                   "source.close",
                   Break,
-                  "dfa(str) match {",
+                  Group(
+                    "val res = for {",
+                    Indented(
+                      "toks <- dfa(str)",
+                      "rawTree <- stateMachine(toks)",
+                    ),
+                    "} yield rawTree",
+                  ),
+                  Break,
+                  "res match {",
                   Indented(
                     "case -\\/(err) =>",
                     Indented(
@@ -343,11 +358,11 @@ object Generate extends App {
                       "println()",
                       "err.foreach(println)",
                     ),
-                    "case \\/-(toks) =>",
+                    "case \\/-(rawTree) =>",
                     Indented(
                       "println(\"Success:\")",
                       "println()",
-                      "toks.foreach(println)",
+                      "println(rawTree)",
                     ),
                   ),
                   "}",

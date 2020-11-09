@@ -4,7 +4,8 @@ import scala.io.Source
 
 import scalaz.-\/
 import scalaz.\/-
-import scalaz.Scalaz.ToEitherOps
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.parse._
 import slyce.common.helpers._
@@ -12,6 +13,7 @@ import slyce.common.helpers._
 object ExOutput extends App {
 
   sealed trait Token extends Dfa.Token
+  sealed trait HasSpanToken extends Token with Dfa.Token.HasSpan
   object Token {
     case object EOF extends Token
     object __ {
@@ -28,11 +30,14 @@ object ExOutput extends App {
             ???
         }
 
-      final case class `,`(span: Dfa.Token.Span) extends Token
-      final case class `(`(span: Dfa.Token.Span) extends Token
-      final case class `)`(span: Dfa.Token.Span) extends Token
+      final case class `,`(span: Dfa.Token.Span) extends HasSpanToken
+      final case class `(`(span: Dfa.Token.Span) extends HasSpanToken
+      final case class `)`(span: Dfa.Token.Span) extends HasSpanToken
     }
-    final case class _var(text: String, span: Dfa.Token.Span) extends Token
+    final case class _var(text: String, span: Dfa.Token.Span) extends HasSpanToken
+  }
+  object HasSpanToken {
+    def unapply(arg: HasSpanToken): Option[Dfa.Token.Span] = arg.span.some
   }
 
   sealed trait NonTerminal
@@ -228,162 +233,170 @@ object ExOutput extends App {
         ),
       )
 
-    Dfa(s0)
+    Dfa(s0, Token.EOF)
   }
 
-  val stateMachine: StateMachine[Token, NonTerminal, NonTerminal.List] = {
-    type State = StateMachine.State[Token, NonTerminal, NonTerminal.List]
+  val stateMachine: Builder[Token, NonTerminal, NonTerminal.List]#StateMachine =
+    Builder.builder[Token, NonTerminal, NonTerminal.List].build { builder =>
+      val elem: Matcher[builder.StackFrame.StackElement, builder.ElementT] = { element =>
+        builder.StackFrame.StackElement.unapply(element).map(_._3)
+      }
+      val stateElem: Matcher[builder.StackFrame.StackElement, (builder.State, builder.ElementT)] = { element =>
+        builder.StackFrame.StackElement.unapply(element).map { case (_1, _, _3) => (_1, _3) }
+      }
 
-    lazy val s0: State =
-      StateMachine.State(
-        id = 0,
-        acceptF = Some {
-          case \/-(_: NonTerminal.List) => s1
-          case -\/(_: Token.__.`(`) => s2
-        },
-        returnFs = Nil,
-        finalReturn = None, // TODO : ...
-      )
-
-    lazy val s1: State =
-      StateMachine.State(
-        id = 1,
-        acceptF = Some {
-          case -\/(Token.EOF) => s3
-        },
-        returnFs = Nil,
-        finalReturn = None,
-      )
-
-    lazy val s2: State =
-      StateMachine.State(
-        id = 2,
-        acceptF = Some {
-          case -\/(_: Token._var) => s4
-          case \/-(_: NonTerminal.AnonList1) => s5
-        },
-        returnFs = List(
-          {
-            case list @ ((s, _) :: _) =>
-              // AnonList1[2] : 
-              (s, NonTerminal.AnonList1._2.right) :: list
+      lazy val s0: builder.State =
+        builder.State(
+          id = 0,
+          acceptF = Some {
+            case \/-(_: NonTerminal.List) => s1
+            case -\/(_: Token.__.`(`) => s2
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s3: State =
-      StateMachine.State(
-        id = 3,
-        acceptF = None,
-        returnFs = List(
-          {
-            case list =>
-              // __Start[1] : NonTerminal(List), Terminal(EOF.type)
-              ???
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s1: builder.State =
+        builder.State(
+          id = 1,
+          acceptF = Some {
+            case -\/(Token.EOF) => s3
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s4: State =
-      StateMachine.State(
-        id = 4,
-        acceptF = Some {
-          case -\/(_: Token.__.`,`) => s6
-          case \/-(_: NonTerminal.AnonList1_2) => s7
-        },
-        returnFs = List(
-          {
-            case list @ ((s, _) :: _) =>
-              // AnonList1_2[2] : 
-              (s, NonTerminal.AnonList1_2._2.right) :: list
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s2: builder.State =
+        builder.State(
+          id = 2,
+          acceptF = Some {
+            case -\/(_: Token._var) => s4
+            case \/-(_: NonTerminal.AnonList1) => s5
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s5: State =
-      StateMachine.State(
-        id = 5,
-        acceptF = Some {
-          case -\/(_: Token.__.`)`) => s8
-        },
-        returnFs = Nil,
-        finalReturn = None,
-      )
-
-    lazy val s6: State =
-      StateMachine.State(
-        id = 6,
-        acceptF = Some {
-          case -\/(_: Token._var) => s9
-        },
-        returnFs = Nil,
-        finalReturn = None,
-      )
-
-    lazy val s7: State =
-      StateMachine.State(
-        id = 7,
-        acceptF = None,
-        returnFs = List(
-          {
-            case list =>
-              // AnonList1[1] : Terminal(_var), NonTerminal(AnonList1_2)
-              ???
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList1._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s3: builder.State =
+        builder.State(
+          id = 3,
+          acceptF = None,
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = Some {
+            case elem(\/-(rawTree: NonTerminal.List)) :: elem(-\/(Token.EOF)) :: Nil =>
+              rawTree
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s8: State =
-      StateMachine.State(
-        id = 8,
-        acceptF = None,
-        returnFs = List(
-          {
-            case list =>
-              // List[1] : Raw("("), NonTerminal(AnonList1), Raw(")")
-              ???
+        )
+      lazy val s4: builder.State =
+        builder.State(
+          id = 4,
+          acceptF = Some {
+            case -\/(_: Token.__.`,`) => s6
+            case \/-(_: NonTerminal.AnonList1_2) => s7
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s9: State =
-      StateMachine.State(
-        id = 9,
-        acceptF = Some {
-          case -\/(_: Token.__.`,`) => s6
-          case \/-(_: NonTerminal.AnonList1_2) => s10
-        },
-        returnFs = List(
-          {
-            case list @ ((s, _) :: _) =>
-              // AnonList1_2[2] : 
-              (s, NonTerminal.AnonList1_2._2.right) :: list
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList1_2._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s5: builder.State =
+        builder.State(
+          id = 5,
+          acceptF = Some {
+            case -\/(_: Token.__.`)`) => s8
           },
-        ),
-        finalReturn = None,
-      )
-
-    lazy val s10: State =
-      StateMachine.State(
-        id = 10,
-        acceptF = None,
-        returnFs = List(
-          {
-            case list =>
-              // AnonList1_2[1] : Raw(","), Terminal(_var), NonTerminal(AnonList1_2)
-              ???
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s6: builder.State =
+        builder.State(
+          id = 6,
+          acceptF = Some {
+            case -\/(_: Token._var) => s9
           },
-        ),
-        finalReturn = None,
-      )
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s7: builder.State =
+        builder.State(
+          id = 7,
+          acceptF = None,
+          returnFs = List(
+            {
+              case stateElem(state, \/-(_2: NonTerminal.AnonList1_2)) :: elem(-\/(_1: Token._var)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList1._1(_1, _2),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s8: builder.State =
+        builder.State(
+          id = 8,
+          acceptF = None,
+          returnFs = List(
+            {
+              case stateElem(state, -\/(_3: Token.__.`)`)) :: elem(\/-(_2: NonTerminal.AnonList1)) :: elem(-\/(_1: Token.__.`(`)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.List._1(_1, _2, _3),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s9: builder.State =
+        builder.State(
+          id = 9,
+          acceptF = Some {
+            case -\/(_: Token.__.`,`) => s6
+            case \/-(_: NonTerminal.AnonList1_2) => s10
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList1_2._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s10: builder.State =
+        builder.State(
+          id = 10,
+          acceptF = None,
+          returnFs = List(
+            {
+              case stateElem(state, \/-(_3: NonTerminal.AnonList1_2)) :: elem(-\/(_2: Token._var)) :: elem(-\/(_1: Token.__.`,`)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList1_2._1(_1, _2, _3),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
 
-    StateMachine(s0)
-  }
+      s0
+    } {
+      case (t1 @ HasSpanToken(s1), t2 @ HasSpanToken(s2)) =>
+        (s2.start.abs > s1.start.abs).fold(t2, t1)
+      case (eof @ Token.EOF, _) =>
+        eof
+      case (_, eof) =>
+        eof
+    }
 
   {
     val source = Source.fromFile("res-test/argList/samples/ex1.txt")

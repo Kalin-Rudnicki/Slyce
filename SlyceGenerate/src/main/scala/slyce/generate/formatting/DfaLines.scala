@@ -97,11 +97,13 @@ object DfaLines extends arch.DfaLines[Dfa] {
       )
     }
 
+    import slyce.generate.grammar.SimpleData.Identifier.EofName
+
     Group(
       "val dfa: Dfa[Token] = {",
       Indented(dfa.idxOf.toList.sortBy(_._2).map(p => stateStringLines(p._1))),
       Break,
-      Indented(s"Dfa(${stateName(dfa.initialState)})"),
+      Indented(s"Dfa(${stateName(dfa.initialState)}, Token.$EofName)"),
       "}",
     ).right
   }

@@ -3,11 +3,12 @@ package slyce.parse
 import scala.annotation.tailrec
 
 import scalaz.-\/
-import scalaz.Scalaz.ToBooleanOpsFromBoolean
-import scalaz.Scalaz.ToEitherOps
 import scalaz.\/
 import scalaz.\/-
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.ToEitherOps
 
+import slyce.common.helpers.CharOps
 import slyce.common.helpers.TraverseOps
 import slyce.parse.{architecture => arch}
 
@@ -15,7 +16,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
   // =====| Build |=====
 
-  def build(maxTokF: (Tok, Tok) => Tok)(f: this.type => State): StateMachine =
+  def build(f: this.type => State)(maxTokF: (Tok, Tok) => Tok): StateMachine =
     StateMachine(maxTokF, f(this))
 
   // =====| Helper types |=====
@@ -65,7 +66,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
     final case class StackElement private (
         state: State,
-        canSpontaneouslyGenerate: Boolean,
+        canReturn: Boolean,
         element: ElementT,
     )
 
@@ -94,6 +95,34 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
           frames: List[StackFrame],
       ): List[String] \/ RawTree = {
 
+        // TODO (KR) : =====| Debug |=====
+        import slyce.common.helpers.Idt
+        import Idt._
+
+        def stackFrameToIdt(sf: StackFrame): Idt = {
+          def elementToString(element: ElementT): String =
+            element match {
+              case -\/(o) =>
+                o.toString.map(_.unesc).mkString
+              case \/-(o) =>
+                s"${o.getClass.getName.split("\\.").last.split("\\$").toList.tail.tail.head} : $o"
+            }
+
+          Group(
+            // "queue =>",
+            Indented(
+              sf.queue.reverse.map(e => Str(elementToString(e))),
+            ),
+            "stack =>",
+            Indented(
+              sf.stack.map {
+                case StackFrame.StackElement(s, b, e) =>
+                  Str(s"(${s.id}, $b) => ${elementToString(e)}")
+              },
+            ),
+          )
+        }
+
         // Helpers
 
         def callAcceptF(
@@ -115,7 +144,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                   stack =
                     StackFrame.StackElement(
                       state = res,
-                      canSpontaneouslyGenerate = true,
+                      canReturn = true,
                       element = frameQueueH,
                     ) :: frameStackH :: frameStackT,
                 )
@@ -140,25 +169,28 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
         def callReturnFs(
             fs: List[ReturnF#T],
             frameQueue: QueueT,
-            frameStack: StackT,
+            frameStackH: StackFrame.StackElement,
+            frameStackT: StackT,
         ): List[String] \/ List[StackFrame] = {
+          val StackFrame.StackElement(_, _, elem) = frameStackH
+
           def createStackFrame(res: ReturnF#OutputT): StackFrame =
             res match {
               case (state, nt, frameStackR) =>
                 StackFrame(
-                  queue = frameQueue,
+                  queue = elem :: frameQueue,
                   stack =
                     StackFrame.StackElement(
                       state = state,
-                      canSpontaneouslyGenerate = true, // TODO (KR) : It is possible this should be false
+                      canReturn = false,
                       element = nt.right,
                     ) :: frameStackR,
                 )
             }
 
           fs.map {
-            case f if f.isDefinedAt(frameStack) =>
-              createStackFrame(f(frameStack)).right
+            case f if f.isDefinedAt(frameStackT) =>
+              createStackFrame(f(frameStackT)).right
             case _ =>
               frameworkError("Unable to call `returnF`")
           }.traverseErrs
@@ -178,7 +210,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
               stack =
                 StackFrame.StackElement(
                   state = state,
-                  canSpontaneouslyGenerate = false,
+                  canReturn = false,
                   element = nt.right,
                 ) :: frameStackT,
             )
@@ -195,6 +227,30 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
         // Loop
 
+        // TODO (KR) : Debug
+        print(
+          Group(
+            Break,
+            Break,
+            s"> (${frames.size}) : $maxTok",
+            Indented(
+              "frameH:",
+              Indented(
+                frames.headOption.map(stackFrameToIdt).toList,
+              ),
+              /*
+              frames.zipWithIndex.map {
+                case (sf, idx) =>
+                  Group(
+                    s"[$idx]:",
+                    Indented(stackFrameToIdt(sf)),
+                  )
+              },
+               */
+            ),
+          ).build("    "),
+        )
+
         frames match {
           case Nil =>
             userError(s"Unable to build parse-tree. MaxTok: $maxTok")
@@ -205,8 +261,8 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
               case (
                     stackH @ StackFrame.StackElement(
                       State(_, acceptF, returnFs, spontaneouslyGenerates, finalReturnF),
-                      canSpontaneouslyGenerate,
-                      element,
+                      canReturn,
+                      _,
                     )
                   ) :: stackT =>
                 finalReturnF match {
@@ -216,10 +272,52 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                     val newFrames: List[String] \/ List[StackFrame] =
                       for {
                         framesFromAccept <- callAcceptF(acceptF, queue, stackH, stackT)
-                        framesFromReturn <- callReturnFs(returnFs, queue, stack)
-                        framesFromSpontaneousGeneration = canSpontaneouslyGenerate.fold(
+                        framesFromReturn <- canReturn.fold(
+                          callReturnFs(returnFs, queue, stackH, stackT),
+                          Nil.right,
+                        )
+                        framesFromSpontaneousGeneration = canReturn.fold(
                           spontaneouslyGenerate(spontaneouslyGenerates, queue, stackH, stackT),
                           Nil,
+                        )
+                        _ = print(
+                          Group(
+                            Break,
+                            Break,
+                            s">>> (${framesFromAccept.size + framesFromReturn.size + framesFromSpontaneousGeneration.size})",
+                            Indented(
+                              s"framesFromAccept (${framesFromAccept.size}) =>",
+                              Indented(
+                                framesFromAccept.zipWithIndex.map {
+                                  case (sf, idx) =>
+                                    Group(
+                                      s"[$idx]:",
+                                      Indented(stackFrameToIdt(sf)),
+                                    )
+                                },
+                              ),
+                              s"framesFromReturn (${framesFromReturn.size}) =>",
+                              Indented(
+                                framesFromReturn.zipWithIndex.map {
+                                  case (sf, idx) =>
+                                    Group(
+                                      s"[$idx]:",
+                                      Indented(stackFrameToIdt(sf)),
+                                    )
+                                },
+                              ),
+                              s"framesFromSpontaneousGeneration (${framesFromSpontaneousGeneration.size}) =>",
+                              Indented(
+                                framesFromSpontaneousGeneration.zipWithIndex.map {
+                                  case (sf, idx) =>
+                                    Group(
+                                      s"[$idx]:",
+                                      Indented(stackFrameToIdt(sf)),
+                                    )
+                                },
+                              ),
+                            ),
+                          ).build("    "),
                         )
                       } yield List(
                         framesFromAccept,
@@ -262,7 +360,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                 stack =
                   StackFrame.StackElement(
                     state = augmentedStart,
-                    canSpontaneouslyGenerate = true, // TODO (KR) : It is possible this should be false
+                    canReturn = false,
                     element = toksH.left,
                   ) :: Nil,
               ) :: Nil,
