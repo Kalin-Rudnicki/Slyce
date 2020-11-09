@@ -35,15 +35,21 @@ object StateMachine {
           None
       }
 
-    def advance(nameMap: Map[SimpleData.Name, ReductionList]): Map[SimpleData.Identifier, ReductionList] =
+    def advance(
+        nameMap: Map[SimpleData.Name, ReductionList],
+        canPassThrough: Map[SimpleData.Name, Boolean],
+    ): Map[SimpleData.Identifier, ReductionList] =
       accepts
         .map {
           case (k, v) =>
-            k -> v.expand(nameMap)
+            k -> v.expand(nameMap, canPassThrough)
         }
 
-    def expand(nameMap: Map[SimpleData.Name, ReductionList]): ReductionList =
-      ReductionList.build(reductions, nameMap)
+    def expand(
+        nameMap: Map[SimpleData.Name, ReductionList],
+        canPassThrough: Map[SimpleData.Name, Boolean],
+    ): ReductionList =
+      ReductionList.build(reductions, nameMap, canPassThrough)
 
   }
 
@@ -55,14 +61,6 @@ object StateMachine {
         seen: List[SimpleData.Identifier],
         unseen: List[SimpleData.Identifier],
     ) {
-
-      def nextName: Option[SimpleData.Name] =
-        unseen match {
-          case SimpleData.Identifier.NonTerminal(name) :: _ =>
-            name.some
-          case _ =>
-            None
-        }
 
       def advance: Option[(SimpleData.Identifier, Reduction)] =
         unseen match {
@@ -88,34 +86,9 @@ object StateMachine {
     def build(
         reductions: Set[Reduction],
         nameMap: Map[SimpleData.Name, ReductionList],
-    ): ReductionList = {
-      @tailrec
-      def loop(
-          reductions: Set[Reduction],
-          seen: Set[SimpleData.Name],
-          todo: Set[SimpleData.Name],
-      ): ReductionList =
-        todo.toList match {
-          case Nil =>
-            ReductionList(reductions)
-          case head :: tail =>
-            val newSeen = seen + head
-            val fromName = nameMap(head)
-            val newReductions = reductions | fromName.reductions
-            val newNames = newReductions.flatMap(_.nextName)
-            loop(
-              newReductions,
-              newSeen,
-              (tail.toSet | newNames) &~ newSeen,
-            )
-        }
-
-      loop(
-        reductions,
-        Set.empty,
-        reductions.flatMap(_.nextName),
-      )
-    }
+        canPassThrough: Map[SimpleData.Name, Boolean],
+    ): ReductionList =
+      ???
 
   }
 
