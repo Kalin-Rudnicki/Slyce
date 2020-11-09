@@ -194,7 +194,7 @@ object ParseStateLines extends arch.ParseStateLines[StateMachine] {
                         case (_, _, ids) =>
                           val h :: t = ids
                           val patterns = patternName(h, "rawTree".some) :: t.map(patternName(_, None))
-                          val wholePattern = s"${patterns.map(p => s"elem($p)").mkString(" :: ")} :: Nil"
+                          val wholePattern = s"${patterns.reverse.map(p => s"elem($p)").mkString(" :: ")} :: Nil"
 
                           Group(
                             "finalReturnF = Some {",

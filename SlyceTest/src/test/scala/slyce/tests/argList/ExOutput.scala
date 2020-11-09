@@ -287,7 +287,7 @@ object ExOutput extends App {
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
           finalReturnF = Some {
-            case elem(\/-(rawTree: NonTerminal.List)) :: elem(-\/(Token.EOF)) :: Nil =>
+            case elem(-\/(Token.EOF)) :: elem(\/-(rawTree: NonTerminal.List)) :: Nil =>
               rawTree
           },
         )

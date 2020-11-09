@@ -94,7 +94,8 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
             if (waiting.isEmpty)
               known.right
             else
-              List(s"Un-handleable circular reference: ${waiting.map(_._1.str).mkString(", ")}").left
+              // List(s"Un-handleable circular reference: ${waiting.map(_._1.str).mkString(", ")}").left
+              (known ++ waiting.map(_._1 -> false)).right
           case (name, nexts) :: tail =>
             @tailrec
             def loop2(
@@ -192,7 +193,7 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
         },
         Nil,
       )
-    }.flatMap { canPassThrough =>
+    }.flatMap { canPassThrough => // TODO (KR) : No need for flatMap anymore?
       // TODO (KR) : Debug
       print(
         Idt.Indented(

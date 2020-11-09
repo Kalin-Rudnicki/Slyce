@@ -102,6 +102,8 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
         def stackFrameToIdt(sf: StackFrame): Idt = {
           def elementToString(element: ElementT): String =
             element match {
+              case null =>
+                "null" // TODO (KR) : Remove this
               case -\/(o) =>
                 o.toString.map(_.unesc).mkString
               case \/-(o) =>
@@ -151,7 +153,17 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
               frameQueue match {
                 case Nil =>
-                  frameworkError("No elements in queue to pop")
+                  // TODO (KR) : If this actually ends up working... FIX IT!!!
+                  // frameworkError("No elements in queue to pop")
+                  (
+                    (
+                      createStackFrame(
+                        f(arg),
+                        null, // TODO (KR) : Flagrant foul
+                        Nil,
+                      ) :: Nil
+                    ).right
+                  )
                 case fQH :: fQT =>
                   (
                     createStackFrame(
@@ -192,7 +204,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
             case f if f.isDefinedAt(frameStackT) =>
               createStackFrame(f(frameStackT)).right
             case _ =>
-              frameworkError("Unable to call `returnF`")
+              frameworkError("Failed to call `returnF`")
           }.traverseErrs
         }
 
@@ -267,7 +279,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                   ) :: stackT =>
                 finalReturnF match {
                   case Some(f) =>
-                    callFinalReturnF(f, stack)
+                    callFinalReturnF(f, stackT)
                   case None =>
                     val newFrames: List[String] \/ List[StackFrame] =
                       for {
