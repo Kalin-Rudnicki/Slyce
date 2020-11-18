@@ -156,14 +156,12 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                   // TODO (KR) : If this actually ends up working... FIX IT!!!
                   // frameworkError("No elements in queue to pop")
                   (
-                    (
-                      createStackFrame(
-                        f(arg),
-                        null, // TODO (KR) : Flagrant foul
-                        Nil,
-                      ) :: Nil
-                    ).right
-                  )
+                    createStackFrame(
+                      f(arg),
+                      null, // TODO (KR) : Flagrant foul
+                      Nil,
+                    ) :: Nil
+                  ).right
                 case fQH :: fQT =>
                   (
                     createStackFrame(
@@ -210,11 +208,11 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
         def spontaneouslyGenerate(
             nts: List[Nt],
-            // extras
             frameQueue: QueueT,
             frameStackH: StackFrame.StackElement,
             frameStackT: StackT,
-        ): List[StackFrame] =
+        ): List[StackFrame] = {
+          println(s"<~> : ${nts.mkString(", ")}")
           nts.map { nt =>
             val StackFrame.StackElement(state, _, element) = frameStackH
             StackFrame(
@@ -227,6 +225,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                 ) :: frameStackT,
             )
           }
+        }
 
         def callFinalReturnF(
             f: FinalReturnF#T,
@@ -372,7 +371,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                 stack =
                   StackFrame.StackElement(
                     state = augmentedStart,
-                    canReturn = false,
+                    canReturn = true,
                     element = toksH.left,
                   ) :: Nil,
               ) :: Nil,

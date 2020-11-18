@@ -43,7 +43,7 @@ object StateMachine {
 
     val returns: Set[(SimpleData.Name, Int, List[SimpleData.Identifier])] =
       reductions.flatMap {
-        case ReductionList.Reduction(name, idx, elements, Nil, true) =>
+        case ReductionList.Reduction(name, idx, elements, Nil) =>
           (name, idx, elements).some
         case _ =>
           None
@@ -51,19 +51,17 @@ object StateMachine {
 
     def advance(
         nameMap: Map[SimpleData.Name, ReductionList],
-        canPassThrough: Map[SimpleData.Name, Boolean],
     ): Map[SimpleData.Identifier, ReductionList] =
       accepts
         .map {
           case (k, v) =>
-            k -> v.expand(nameMap, canPassThrough)
+            k -> v.expand(nameMap)
         }
 
     def expand(
         nameMap: Map[SimpleData.Name, ReductionList],
-        canPassThrough: Map[SimpleData.Name, Boolean],
     ): ReductionList =
-      ReductionList.build(reductions, nameMap, canPassThrough)
+      ReductionList.build(reductions, nameMap)
 
   }
 
@@ -74,7 +72,6 @@ object StateMachine {
         idx: Int,
         seen: List[SimpleData.Identifier],
         unseen: List[SimpleData.Identifier],
-        canReturn: Boolean,
     ) {
 
       def advance: Option[(SimpleData.Identifier, Reduction)] =
@@ -89,9 +86,16 @@ object StateMachine {
                 idx,
                 seen :+ head,
                 tail,
-                true, // TODO (KR) : This could very likely be `canReturn`
               ),
             ).some
+        }
+
+      def nextName: Option[SimpleData.Name] =
+        unseen match {
+          case SimpleData.Identifier.NonTerminal(name) :: _ =>
+            name.some
+          case _ =>
+            None
         }
 
       def str: String =
@@ -102,34 +106,31 @@ object StateMachine {
     def build(
         reductions: Set[Reduction],
         nameMap: Map[SimpleData.Name, ReductionList],
-        canPassThrough: Map[SimpleData.Name, Boolean],
     ): ReductionList = {
       @tailrec
       def loop(
-          todo: Set[Reduction],
-          alreadySeen: Set[Reduction],
+          reductions: Set[Reduction],
+          seenReductions: Set[Reduction],
+          seenNames: Set[SimpleData.Name],
       ): ReductionList = {
-        val newRls = todo &~ alreadySeen
-        if (newRls.isEmpty)
-          ReductionList(alreadySeen)
+        val newReductions: Set[Reduction] = reductions &~ seenReductions
+        if (newReductions.isEmpty)
+          ReductionList(seenReductions)
         else {
-          // TODO (KR) : Need a way to say that you can not actually return on something you were passed
+          val newNames: Set[SimpleData.Name] = newReductions.flatMap(_.nextName)
+          val reductionsFromNewNames: Set[Reduction] = newNames.flatMap(nameMap(_).reductions)
+
           loop(
-            newRls.flatMap { r =>
-              r.advance match {
-                case Some((SimpleData.Identifier.NonTerminal(name), passed)) =>
-                  canPassThrough(name).option(passed.copy(canReturn = false)).toList ::: nameMap(name).reductions.toList
-                case _ =>
-                  Nil
-              }
-            },
-            todo | alreadySeen,
+            reductionsFromNewNames,
+            reductions | seenReductions,
+            seenNames | newNames,
           )
         }
       }
 
       loop(
         reductions,
+        Set.empty,
         Set.empty,
       )
     }
