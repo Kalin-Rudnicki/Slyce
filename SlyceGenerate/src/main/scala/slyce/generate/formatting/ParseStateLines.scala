@@ -14,6 +14,16 @@ import slyce.generate.architecture.{formatting => arch}
 import slyce.generate.grammar.SimpleData.Identifier
 import slyce.generate.grammar._
 
+/*
+    TODO : --- Suggested Fixes ---
+         : - Instead of having `finalReturnF` come from returns
+         : - have it come from accepts
+         : - Then, the weird "null" hack can be removed
+         : - If there is a token to accept, and that token is EOF, call finalReturnF
+         : - What to do if EOF and no finalReturnF
+         : - What to do if finalReturnF and no EOF
+ */
+
 object ParseStateLines extends arch.ParseStateLines[StateMachine] {
 
   override def apply(input: StateMachine): List[String] \/ Idt = {
