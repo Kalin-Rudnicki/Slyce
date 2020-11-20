@@ -49,7 +49,7 @@ object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
               None
           }
         }
-      }
+      }.distinct
 
     Group(
       "sealed trait Token extends Dfa.Token",
@@ -67,7 +67,7 @@ object TokenLines extends arch.TokenLines[Dfa, SimpleData] {
               Indented(
                 "str match {",
                 Indented(
-                  rawNames.map { n =>
+                  rawNames.distinct.map { n =>
                     Group(
                       f"case ${n.unesc} =>",
                       Indented(s"`${n.map(_.unesc).mkString}`(span)"),

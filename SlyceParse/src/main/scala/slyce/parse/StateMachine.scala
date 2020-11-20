@@ -211,8 +211,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
             frameQueue: QueueT,
             frameStackH: StackFrame.StackElement,
             frameStackT: StackT,
-        ): List[StackFrame] = {
-          println(s"<~> : ${nts.mkString(", ")}")
+        ): List[StackFrame] =
           nts.map { nt =>
             val StackFrame.StackElement(state, _, element) = frameStackH
             StackFrame(
@@ -225,7 +224,6 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                 ) :: frameStackT,
             )
           }
-        }
 
         def callFinalReturnF(
             f: FinalReturnF#T,

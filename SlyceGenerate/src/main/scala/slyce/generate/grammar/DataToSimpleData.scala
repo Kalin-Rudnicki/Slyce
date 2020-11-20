@@ -3,7 +3,7 @@ package slyce.generate.grammar
 import scala.annotation.tailrec
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToEitherOps
-import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 import scalaz.\/
 import slyce.generate.architecture.{grammar => arch}
 import slyce.generate.grammar.Data.NT
@@ -124,9 +124,10 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
               case NT.ListNT.+(before, after) =>
                 val (elems1, extras1) = elementList(before.toList)
                 val (elems2, extras2) =
-                  after.fold(
-                    (elems1, Nil: List[SimpleData.ReductionList]),
-                  )(a => elementList(a.toList))
+                  after.cata(
+                    a => elementList(a.toList),
+                    (elems1, Nil),
+                  )
 
                 val n1 = name
                 val id1 = SimpleData.Identifier.NonTerminal(n1)

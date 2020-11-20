@@ -183,13 +183,22 @@ object Generate extends App {
     import Data.{NonTerminal => NT}
     import Data.NT._
 
-    val nlList: Data.Element =
+    val anyNl: Data.Element =
       ListNT.*(
         before = IgnoredList()(
           Id.raw("\n"),
         )(),
         after = None,
       )
+    /*
+    val someNl: Data.Element =
+      ListNT.+(
+        before = IgnoredList()(
+          Id.raw("\n"),
+        )(),
+        after = None,
+      )
+     */
 
     Data(
       startNT = "Lines",
@@ -199,16 +208,16 @@ object Generate extends App {
           name = "Lines",
           nt = ListNT.*(
             before = IgnoredList(
-              nlList,
+              anyNl,
             )(
               Id("Line"),
             )(),
             after = IgnoredList(
-              nlList,
+              anyNl,
             )(
               Id("Line"),
             )(
-              nlList,
+              anyNl,
             ).some,
           ),
         ),
