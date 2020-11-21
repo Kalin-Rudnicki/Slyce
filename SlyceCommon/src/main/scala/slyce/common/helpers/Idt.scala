@@ -56,10 +56,30 @@ object Idt {
 
   }
 
-  implicit def stringToStr(str: String): Str =
-    Str(str)
+  sealed trait ToIdt[T] {
+    def toIdt(t: T): Idt
+  }
 
-  implicit def idtListToGroup(list: List[Idt]): Group =
-    new Group(list)
+  implicit def toIdt[T: ToIdt](t: T): Idt =
+    implicitly[ToIdt[T]].toIdt(t)
+
+  implicit val strToIdt: ToIdt[String] =
+    new ToIdt[String] {
+      override def toIdt(str: String): Idt =
+        Str(str)
+    }
+
+  implicit def idtToIdt[T <: Idt]: ToIdt[T] =
+    new ToIdt[T] {
+      override def toIdt(t: T): Idt = t
+    }
+
+  implicit def listToIdt[C: ToIdt]: ToIdt[List[C]] =
+    new ToIdt[List[C]] {
+      def toIdt(list: List[C]): Idt = {
+        val cToIdt = implicitly[ToIdt[C]]
+        Group(list.map(cToIdt.toIdt): _*)
+      }
+    }
 
 }

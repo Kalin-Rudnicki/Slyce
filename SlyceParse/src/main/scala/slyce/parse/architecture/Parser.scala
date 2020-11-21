@@ -2,15 +2,13 @@ package slyce.parse.architecture
 
 import slyce.common.architecture.Stage
 
-trait Parser[Src, Errs, SimpleTree] extends Stage[Src, Errs, SimpleTree]
+trait Parser[Src, Errs, RawTree] extends Stage[Src, Errs, RawTree]
 object Parser {
 
-  def apply[Errs, Src, Tok, RawTree, SimpleTree, Formatter](
+  def apply[Errs, Src, Tok, RawTree](
       lexer: Lexer[Src, Errs, Tok],
       grammar: Grammar[Tok, Errs, RawTree],
-      simplifier: Simplifier[RawTree, Errs, SimpleTree],
-      formatter: ErrorFormatter[Src, Errs],
-  ): Parser[Src, String, SimpleTree] =
-    (lexer >+> grammar >+> simplifier <<+< formatter)(_)
+  ): Parser[Src, Errs, RawTree] =
+    (lexer >+> grammar)(_)
 
 }
