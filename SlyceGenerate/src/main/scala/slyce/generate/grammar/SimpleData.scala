@@ -178,22 +178,40 @@ object SimpleData {
 
     final case class Simplifiers(
         optional: Option[Identifier],
-        // TODO (KR) : List
+        list: Option[Simplifiers.ListSimplifier],
         // TODO (KR) : Assoc
     ) {
 
       // TODO (KR) : Make sure to update this as new simplifiers are added
       def nonEmpty: Boolean = {
         println(this)
-        optional.nonEmpty
+        optional.nonEmpty || list.nonEmpty
       }
 
     }
     object Simplifiers {
+
+      final case class ListSimplifier(
+          `type`: Identifier,
+          _1CanBeEmpty: Boolean,
+          _1: ListSimplifier.Positions,
+          _2: Option[ListSimplifier.Positions],
+      )
+      object ListSimplifier {
+
+        final case class Positions(
+            lift: Int,
+            total: Int,
+        )
+
+      }
+
       def empty: Simplifiers =
         Simplifiers(
           optional = None,
+          list = None,
         )
+
     }
 
     final case class Reduction(
@@ -210,12 +228,14 @@ object SimpleData {
     def apply(
         name: Name,
         optional: Option[Identifier] = None,
+        list: Option[Simplifiers.ListSimplifier] = None,
     )(r0: Reduction, rN: Reduction*): ReductionList =
       ReductionList(
         name = name,
         reductions = NonEmptyList(r0, rN: _*),
         simplifiers = Simplifiers(
           optional = optional,
+          list = list,
         ),
       )
 

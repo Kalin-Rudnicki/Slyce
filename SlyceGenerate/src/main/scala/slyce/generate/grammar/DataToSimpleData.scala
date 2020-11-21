@@ -3,6 +3,7 @@ package slyce.generate.grammar
 import scala.annotation.tailrec
 
 import scalaz.NonEmptyList
+import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.Scalaz.ToOptionOpsFromOption
@@ -99,6 +100,14 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
             (SimpleData.Identifier.NonTerminal(optName), rl :: extras)
           case lnt: NT.ListNT =>
+            import SimpleData.ReductionList.Simplifiers.ListSimplifier
+
+            def makePositions(il: Data.NT.IgnoredList): ListSimplifier.Positions =
+              ListSimplifier.Positions(
+                il.before.size,
+                il.before.size + il.after.size,
+              )
+
             lnt match {
               case NT.ListNT.*(before, after) =>
                 after match {
@@ -108,7 +117,15 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                     val n1 = name
                     val id1 = SimpleData.Identifier.NonTerminal(n1)
 
-                    val rl1 = SimpleData.ReductionList(n1)(
+                    val rl1 = SimpleData.ReductionList(
+                      n1,
+                      list = ListSimplifier(
+                        `type` = elems1(before.before.size),
+                        _1CanBeEmpty = true,
+                        _1 = makePositions(before),
+                        _2 = None,
+                      ).some,
+                    )(
                       SimpleData.ReductionList.Reduction(1, elems1 ::: id1 :: Nil),
                       SimpleData.ReductionList.Reduction(2),
                     )
@@ -123,14 +140,28 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                     val n2 = n1.next
                     val id2 = SimpleData.Identifier.NonTerminal(n2)
 
-                    def rlFrom(n: SimpleData.Name, elems: List[SimpleData.Identifier]): SimpleData.ReductionList =
-                      SimpleData.ReductionList(n)(
+                    def rlFrom(
+                        n: SimpleData.Name,
+                        isFirst: Boolean,
+                        elems: List[SimpleData.Identifier],
+                    ): SimpleData.ReductionList =
+                      SimpleData.ReductionList(
+                        n,
+                        list = isFirst.option(
+                          ListSimplifier(
+                            `type` = elems1(before.before.size),
+                            _1CanBeEmpty = true,
+                            _1 = makePositions(before),
+                            _2 = makePositions(after).some,
+                          ),
+                        ),
+                      )(
                         SimpleData.ReductionList.Reduction(1, elems ::: id2 :: Nil),
                         SimpleData.ReductionList.Reduction(2),
                       )
 
-                    val rl1 = rlFrom(n1, elems1)
-                    val rl2 = rlFrom(n2, elems2)
+                    val rl1 = rlFrom(n1, true, elems1)
+                    val rl2 = rlFrom(n2, false, elems2)
 
                     (id1, rl1 :: rl2 :: extras1 ::: extras2)
                 }
@@ -147,7 +178,15 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 val n2 = n1.next
                 val id2 = SimpleData.Identifier.NonTerminal(n2)
 
-                val rl1 = SimpleData.ReductionList(n1)(
+                val rl1 = SimpleData.ReductionList(
+                  n1,
+                  list = ListSimplifier(
+                    `type` = elems1(before.before.size),
+                    _1CanBeEmpty = false,
+                    _1 = makePositions(before),
+                    _2 = makePositions(after.getOrElse(before)).some,
+                  ).some,
+                )(
                   SimpleData.ReductionList.Reduction(1, elems1 ::: id2 :: Nil),
                 )
                 val rl2 = SimpleData.ReductionList(n2)(

@@ -29,7 +29,7 @@ object Run extends App {
 
     val vars: List[Token._var] =
       rawTree match {
-        case NonTerminal.List._1(_, list, _, _) =>
+        case NonTerminal.ArgList._1(_, list, _, _) =>
           list match {
             case NonTerminal.AnonList1._1(_var, next) =>
               loop(
@@ -42,7 +42,7 @@ object Run extends App {
       }
     val optTail: Option[Token.__.`!`] =
       rawTree match {
-        case NonTerminal.List._1(_, _, _, tail) =>
+        case NonTerminal.ArgList._1(_, _, _, tail) =>
           tail.toOption
       }
 

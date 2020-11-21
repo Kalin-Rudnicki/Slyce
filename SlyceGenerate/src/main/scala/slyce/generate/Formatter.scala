@@ -105,10 +105,10 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
       )
     }
 
-    val ntLines: Idt = {
+    val (ntLines: Idt, ntLinesNeedsTailRec: Boolean) = {
       import gram.SimpleData.Identifier
 
-      def formatRL(list: gram.SimpleData.ReductionList): Idt = {
+      def formatRL(list: gram.SimpleData.ReductionList): (Idt, Boolean) = {
         val name = list.name.str
 
         def formatR(r: gram.SimpleData.ReductionList.Reduction): Idt =
@@ -167,39 +167,130 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
             )
           }
 
+          import gram.SimpleData.ReductionList.Simplifiers.ListSimplifier
+          def formatList(s: ListSimplifier): Idt = {
+            val toName =
+              s.`type` match {
+                case Identifier.Raw(text) =>
+                  s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                case Identifier.Terminal(name) =>
+                  s"Token.$name"
+                case Identifier.NonTerminal(name) =>
+                  s"NonTerminal.${name.str}"
+              }
+
+            def convertPositions(p: ListSimplifier.Positions): String = {
+              val nonTail = 0.to(p.total).toList.map {
+                case i if i == p.lift =>
+                  "n"
+                case _ =>
+                  "_"
+              }
+
+              s"${nonTail.mkString(", ")}, tail"
+            }
+
+            Group(
+              s"def toList: List[$toName] = {",
+              Indented(
+                s._2 match {
+                  case None =>
+                    Group(
+                      "@tailrec",
+                      s"def loop(unseen: $name, seen: List[$toName]): List[$toName] =",
+                      Indented(
+                        "unseen match {",
+                        Indented(
+                          s"case $name._1(${convertPositions(s._1)}) =>",
+                          Indented("loop(tail, n :: seen)"),
+                          s"case $name._2 =>",
+                          Indented("seen.reverse"),
+                        ),
+                        "}",
+                        Break,
+                        "loop(this, Nil)",
+                      ),
+                    )
+                  case Some(_2) =>
+                    val nextName = list.name.next.str
+                    Group(
+                      "@tailrec",
+                      s"def loop(unseen: $nextName, seen: List[$toName]): List[$toName] =",
+                      Indented(
+                        "unseen match {",
+                        Indented(
+                          s"case $nextName._1(${convertPositions(_2)}) =>",
+                          Indented("loop(tail, n :: seen)"),
+                          s"case $nextName._2 =>",
+                          Indented("seen.reverse"),
+                        ),
+                      ),
+                      "}",
+                      Break,
+                      Group(
+                        "this match {",
+                        Indented(
+                          s"case $name._1(${convertPositions(s._1)}) =>",
+                          Indented("loop(tail, n :: Nil)"),
+                          s._1CanBeEmpty.fold(
+                            Group(),
+                            Group(
+                              s"case $name._2 =>",
+                              Indented("Nil"),
+                            ),
+                          ),
+                        ),
+                        "}",
+                      ),
+                    )
+                },
+              ),
+              "}",
+            )
+          }
+
           List(
             simp.optional.map(formatOptional),
+            simp.list.map(formatList),
           ).flatten.flatMap(_ :: Break :: Nil)
         }
 
-        Group(
-          list.simplifiers.nonEmpty.fold(
-            Group(
-              s"sealed trait $name extends NonTerminal {",
-              Indented(
-                Break,
-                formatSimplifiers(list.simplifiers),
+        (
+          Group(
+            list.simplifiers.nonEmpty.fold(
+              Group(
+                s"sealed trait $name extends NonTerminal {",
+                Indented(
+                  Break,
+                  formatSimplifiers(list.simplifiers),
+                ),
+                "}",
               ),
-              "}",
+              Str(s"sealed trait $name extends NonTerminal"),
             ),
-            Str(s"sealed trait $name extends NonTerminal"),
+            s"object $name {",
+            Break,
+            list.reductions.list.toList.map(formatR),
+            "}",
+            Break,
           ),
-          s"object $name {",
-          Break,
-          list.reductions.list.toList.map(formatR),
-          "}",
-          Break,
+          list.simplifiers.list.nonEmpty,
         )
       }
 
-      Group(
-        "sealed trait NonTerminal",
-        "object NonTerminal {",
-        Indented(
-          Break,
-          simpleData.reductionLists.map(formatRL),
+      val mapped = simpleData.reductionLists.map(formatRL)
+
+      (
+        Group(
+          "sealed trait NonTerminal",
+          "object NonTerminal {",
+          Indented(
+            Break,
+            mapped.map(_._1),
+          ),
+          "}",
         ),
-        "}",
+        mapped.exists(_._2),
       )
     }
 
@@ -522,11 +613,20 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
       )
     }
 
+    val importTailRec = ntLinesNeedsTailRec
+
     Group(
       Group(
         s"// DO NOT EDIT : Automatically generated by Slyce @ ${DateTimeFormatter.ofPattern("MM/dd/yyyy").format(LocalDate.now())}",
         s"package ${settings.packageName.mkString(".")}",
         Break,
+        importTailRec.fold(
+          Group(
+            "import scala.annotation.tailrec",
+            Break,
+          ),
+          Group(),
+        ),
         "import scalaz.\\/",
         "import scalaz.-\\/",
         "import scalaz.\\/-",

@@ -65,11 +65,11 @@ object Generate extends App {
     import Data.NT._
 
     Data(
-      startNT = "List",
+      startNT = "ArgList",
       nts = List(
         // List
         NT(
-          name = "List",
+          name = "ArgList",
           nt = StandardNT.^(
             IgnoredList(
               Id.Raw("("),
