@@ -8,7 +8,7 @@ import scalaz.\/-
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 
-import slyce.common.helpers.CharOps
+import slyce.common.helpers._
 import slyce.common.helpers.TraverseOps
 import slyce.parse.{architecture => arch}
 
@@ -105,7 +105,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
               case null =>
                 "null" // TODO (KR) : Remove this
               case -\/(o) =>
-                o.toString.map(_.unesc).mkString
+                o.toString.unesc("").mkString
               case \/-(o) =>
                 s"${o.getClass.getName.split("\\.").last.split("\\$").toList.tail.tail.head} : $o"
             }

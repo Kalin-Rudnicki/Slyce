@@ -9,6 +9,7 @@ case class SimpleData(
     startNt: String,
     augmentedStart: SimpleData.ReductionList,
     reductionLists: List[SimpleData.ReductionList],
+    extendsOps: Map[SimpleData.Identifier, Set[SimpleData.Name]],
 )
 
 // TODO (KR) : Is this really the right name for this?
@@ -100,11 +101,11 @@ object SimpleData {
         case Name.Optional(id) =>
           id match {
             case Identifier.Raw(text) =>
-              s"`Optional${text.map(_.unesc).mkString}`"
+              text.unesc("`", f = s => s"Optional_$s")
             case Identifier.Terminal(name) =>
-              s"Optional$name"
+              s"Optional_$name"
             case Identifier.NonTerminal(name) =>
-              s"Optional${name.str}"
+              s"Optional_${name.str}"
           }
         case Name.Named(name, idx) =>
           s"$name${idxToS(idx)}"
@@ -179,18 +180,18 @@ object SimpleData {
     final case class Simplifiers(
         optional: Option[Identifier],
         list: Option[Simplifiers.ListSimplifier],
-        // TODO (KR) : Assoc
+        expr: Option[Simplifiers.ExprSimplifier],
     ) {
 
-      // TODO (KR) : Make sure to update this as new simplifiers are added
-      def nonEmpty: Boolean = {
-        println(this)
-        optional.nonEmpty || list.nonEmpty
-      }
+      def nonEmpty: Boolean =
+        optional.nonEmpty || list.nonEmpty || expr.nonEmpty
 
     }
     object Simplifiers {
 
+      // TODO (KR) : Uncomment
+      // sealed trait ListSimplifier
+      // TODO (KR) : Remove
       final case class ListSimplifier(
           `type`: Identifier,
           _1CanBeEmpty: Boolean,
@@ -199,6 +200,24 @@ object SimpleData {
       )
       object ListSimplifier {
 
+        // TODO (KR) : Remove
+        sealed trait ListSimplifier2
+
+        // TODO (KR) : Uncomment
+        /*
+        final case class _1(
+            `type`: Identifier,
+            positions: Positions,
+            canBeEmpty: Boolean,
+            _2: Option[_2],
+        ) extends ListSimplifier
+
+        final case class _2(
+            `type`: Identifier,
+            positions: Positions,
+        ) extends ListSimplifier
+         */
+
         final case class Positions(
             lift: Int,
             total: Int,
@@ -206,10 +225,17 @@ object SimpleData {
 
       }
 
+      final case class ExprSimplifier(
+          rootName: Name,
+          opId: Option[Identifier], // This being None signifies the baseRl
+          baseName: Name,
+      )
+
       def empty: Simplifiers =
         Simplifiers(
           optional = None,
           list = None,
+          expr = None,
         )
 
     }
@@ -229,6 +255,7 @@ object SimpleData {
         name: Name,
         optional: Option[Identifier] = None,
         list: Option[Simplifiers.ListSimplifier] = None,
+        expr: Option[Simplifiers.ExprSimplifier] = None,
     )(r0: Reduction, rN: Reduction*): ReductionList =
       ReductionList(
         name = name,
@@ -236,6 +263,7 @@ object SimpleData {
         simplifiers = Simplifiers(
           optional = optional,
           list = list,
+          expr = expr,
         ),
       )
 

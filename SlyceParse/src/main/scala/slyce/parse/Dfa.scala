@@ -101,7 +101,7 @@ final case class Dfa[+Tok <: Dfa.Token](
             case None =>
               yields match {
                 case None =>
-                  List(s"Unexpected ${c.unescape} @ ${currentPos.pos}").left
+                  List(s"Unexpected ${c.unesc} @ ${currentPos.pos}").left
                 case Some((pos, chars, Dfa.State.Yields(to, yields))) =>
                   calcToks(chars.reverse.mkString, yields) match {
                     case err @ -\/(_) =>

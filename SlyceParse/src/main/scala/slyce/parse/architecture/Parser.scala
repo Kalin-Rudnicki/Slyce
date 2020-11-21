@@ -9,6 +9,6 @@ object Parser {
       lexer: Lexer[Src, Errs, Tok],
       grammar: Grammar[Tok, Errs, RawTree],
   ): Parser[Src, Errs, RawTree] =
-    (lexer >+> grammar)(_)
+    (lexer.onO(_.foreach(println)) >+> grammar)(_)
 
 }

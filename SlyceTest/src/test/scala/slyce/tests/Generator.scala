@@ -47,7 +47,7 @@ object Generator {
         println("Success:")
         val writer = new BufferedWriter(new FileWriter(file))
         val src = formatter(settings)
-        println(src)
+        // println(src)
         writer.write(src)
         writer.close
     }

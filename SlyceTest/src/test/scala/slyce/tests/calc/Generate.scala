@@ -30,10 +30,9 @@ object Generate extends App {
                   2.some,
                 ),
                 Regex.Repeat * Exclusive('\n'),
-                Inclusive('\n'),
               ),
               yields = Yields(
-                yields = Nil,
+                yields = List(Yields.Yield.Terminal.std("comment")),
                 toMode = None,
               ),
             ),
@@ -43,10 +42,21 @@ object Generate extends App {
               regex = Regex.Sequence(
                 Inclusive('/'),
                 Inclusive('*'),
+                Regex.Repeat * Regex.Group(
+                  Regex.Sequence(
+                    Exclusive('*'),
+                  ),
+                  Regex.Sequence(
+                    Inclusive('*'),
+                    Exclusive('/'),
+                  ),
+                ),
+                Inclusive('*'),
+                Inclusive('/'),
               ),
               yields = Yields(
-                yields = Nil,
-                toMode = "MultiLineComment".some,
+                yields = List(Yields.Yield.Terminal.std("comment")),
+                toMode = None,
               ),
             ),
             //: [ \t]
@@ -139,33 +149,6 @@ object Generate extends App {
             ),
           ),
         ),
-        // =====| MultiLineComment |=====
-        Data.Mode(
-          name = "MultiLineComment",
-          lines = List(
-            //: \*/
-            Data.Mode.Line(
-              lineNo = 17,
-              regex = Regex.Sequence(
-                Inclusive('*'),
-                Inclusive('/'),
-              ),
-              yields = Yields(
-                yields = Nil,
-                toMode = "General".some,
-              ),
-            ),
-            //: .
-            Data.Mode.Line(
-              lineNo = 18,
-              regex = Exclusive(),
-              yields = Yields(
-                yields = Nil,
-                toMode = None,
-              ),
-            ),
-          ),
-        ),
       ),
     )
   }
@@ -225,6 +208,10 @@ object Generate extends App {
             // 2
             IgnoredList()(
               Id("Assign"),
+            )(),
+            // 3
+            IgnoredList()(
+              Id("comment"),
             )(),
           ),
         ),

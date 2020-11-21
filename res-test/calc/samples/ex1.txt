@@ -10,4 +10,7 @@ z + 10
    line
    comment */
 (x + y) * z
+x + (y * z)
+x + y * z
 xyz = x * y * z
+more = 0 + 1 ^ 2 ^ 3 ^ 4 * 5

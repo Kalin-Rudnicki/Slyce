@@ -18,7 +18,7 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
         reductionList: SimpleData.ReductionList,
     ): (SimpleData.Name, StateMachine.ReductionList) =
       reductionList match {
-        case SimpleData.ReductionList(name, reductions) =>
+        case SimpleData.ReductionList(name, reductions, _) =>
           name ->
             StateMachine.ReductionList(
               reductions.list.toList.map {

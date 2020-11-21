@@ -46,4 +46,16 @@ trait Stage[-I, +E, +O] {
     )
   }
 
+  def on(oF: O => Unit)(eF: E => Unit): Stage[I, E, O] = { input =>
+    val res = apply(input)
+    res.fold(eF, oF)
+    res
+  }
+
+  def onE(eF: E => Unit): Stage[I, E, O] =
+    on(_ => ())(eF)
+
+  def onO(oF: O => Unit): Stage[I, E, O] =
+    on(oF)(_ => ())
+
 }

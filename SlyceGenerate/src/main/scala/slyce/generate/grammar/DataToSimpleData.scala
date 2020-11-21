@@ -60,6 +60,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       def reductionList(
           name: SimpleData.Name,
           reduction: NonEmptyList[List[Data.Element]],
+          exprSimp: Option[SimpleData.ReductionList.Simplifiers.ExprSimplifier],
       ): List[SimpleData.ReductionList] = {
         val mapped =
           reduction
@@ -73,7 +74,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 case ((r, _), idx) =>
                   SimpleData.ReductionList.Reduction(idx + 1, r)
               },
-            simplifiers = SimpleData.ReductionList.Simplifiers.empty,
+            simplifiers = SimpleData.ReductionList.Simplifiers.empty.copy(expr = exprSimp),
           )
 
         val extras =
@@ -201,12 +202,13 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       def standardNT(
           name: SimpleData.Name,
           nt: Data.NT.StandardNT,
+          exprSimp: Option[SimpleData.ReductionList.Simplifiers.ExprSimplifier],
       ): List[SimpleData.ReductionList] =
         nt match {
           case NT.StandardNT.`:`(elements) =>
-            reductionList(name, elements.map(_.map(_._2)))
+            reductionList(name, elements.map(_.map(_._2)), exprSimp)
           case NT.StandardNT.^(elements) =>
-            reductionList(name, elements.map(_.toList))
+            reductionList(name, elements.map(_.toList), exprSimp)
         }
 
       todo match {
@@ -216,7 +218,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
           nt match {
             case nt: NT.StandardNT =>
               loop(
-                standardNT(SimpleData.Name.Named(name), nt) ::: reductionLists,
+                standardNT(SimpleData.Name.Named(name), nt, None) ::: reductionLists,
                 rest,
               )
             case nt: NT.ListNT =>
@@ -225,6 +227,25 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 rest,
               )
             case NT.AssocNT(assocElements, base) =>
+              val rootName = SimpleData.Name.Named(name)
+              val assocElementsList = assocElements.list.toList.reverse
+
+              val baseName: SimpleData.Name = {
+                @tailrec
+                def loop(
+                    currentName: SimpleData.Name,
+                    assoc: List[Data.NT.AssocNT.AssocElement],
+                ): SimpleData.Name =
+                  assoc match {
+                    case Nil =>
+                      currentName
+                    case _ :: tail =>
+                      loop(currentName.next, tail)
+                  }
+
+                loop(rootName, assocElementsList)
+              }
+
               @tailrec
               def loop2(
                   name: SimpleData.Name,
@@ -233,23 +254,47 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
               ): List[SimpleData.ReductionList] =
                 assoc match {
                   case Nil =>
-                    standardNT(name, base) ::: extras
+                    // TODO (KR) : Might need special treatment for `^`?
+                    standardNT(
+                      name,
+                      base,
+                      SimpleData.ReductionList.Simplifiers
+                        .ExprSimplifier(
+                          rootName = rootName,
+                          opId = None,
+                          baseName = baseName,
+                        )
+                        .some,
+                    ) ::: extras
                   case head :: tail =>
                     val nextName: SimpleData.Name = name.next
                     val myId = SimpleData.Identifier.NonTerminal(name)
                     val nextId = SimpleData.Identifier.NonTerminal(nextName)
 
+                    def simp(opId: SimpleData.Identifier): SimpleData.ReductionList.Simplifiers.ExprSimplifier =
+                      SimpleData.ReductionList.Simplifiers.ExprSimplifier(
+                        rootName = rootName,
+                        opId = opId.some,
+                        baseName = baseName,
+                      )
+
                     // TODO (KR) : Make sure associativity is correct
                     val moreExtras = head match {
                       case NT.AssocNT.AssocElement.<(element) =>
                         val (assocId, extras) = mapElement(anonGenerator(), element)
-                        SimpleData.ReductionList(name)(
+                        SimpleData.ReductionList(
+                          name,
+                          expr = simp(assocId).some,
+                        )(
                           SimpleData.ReductionList.Reduction(1, myId, assocId, nextId),
                           SimpleData.ReductionList.Reduction(2, nextId),
                         ) :: extras
                       case NT.AssocNT.AssocElement.>(element) =>
                         val (assocId, extras) = mapElement(anonGenerator(), element)
-                        SimpleData.ReductionList(name)(
+                        SimpleData.ReductionList(
+                          name,
+                          expr = simp(assocId).some,
+                        )(
                           SimpleData.ReductionList.Reduction(1, nextId, assocId, myId),
                           SimpleData.ReductionList.Reduction(2, nextId),
                         ) :: extras
@@ -263,7 +308,11 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 }
 
               loop(
-                loop2(SimpleData.Name.Named(name), assocElements.list.toList, Nil) ::: reductionLists,
+                loop2(
+                  rootName,
+                  assocElementsList,
+                  Nil,
+                ) ::: reductionLists,
                 rest,
               )
           }
@@ -353,6 +402,45 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
             )
         }
 
+    val allExprSimps = newRls.flatMap(_.simplifiers.expr)
+    val extendsOps: Map[SimpleData.Identifier, Set[SimpleData.Name]] =
+      allExprSimps
+        .flatMap(e => e.opId.map(_ -> e.rootName))
+        .groupMap(_._1)(_._2)
+        .map {
+          case (k, v) =>
+            k -> v.toSet
+        }
+
+    {
+      import slyce.common.helpers.Idt._
+
+      print(
+        Group(
+          "ExprSimps:",
+          Indented(
+            allExprSimps.map { s =>
+              Group(
+                ">",
+                Indented(
+                  s"rooName:  ${s.rootName.str}",
+                  s"opId:     ${s.opId}",
+                  s"baseName: ${s.baseName.str}",
+                ),
+              )
+            },
+          ),
+          "ExtendsOps:",
+          Indented(
+            extendsOps.toList.map {
+              case (k, v) =>
+                s"$k -> ${v.map(_.str)}"
+            },
+          ),
+        ).build("    "),
+      )
+    }
+
     val augmentedStart: SimpleData.ReductionList =
       SimpleData.ReductionList(SimpleData.Name.Start)(
         SimpleData.ReductionList.Reduction(
@@ -366,6 +454,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       input.startNT,
       augmentedStart,
       augmentedStart :: newRls,
+      extendsOps,
     ).right
   }
 

@@ -22,7 +22,7 @@ object Regex {
       }
 
     override def toString: String =
-      s"${this.getClass.getSimpleName}(${this.chars.toList.sorted.map(_.unescape).mkString(", ")})"
+      s"${this.getClass.getSimpleName}(${this.chars.toList.sorted.map(_.unesc).mkString(", ")})"
 
   }
 

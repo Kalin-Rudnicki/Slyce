@@ -14,6 +14,7 @@ import scalaz.\/
 import slyce.common.helpers._
 import slyce.generate.{architecture => arch}
 import slyce.generate.{grammar => gram}
+import gram.SimpleData
 import slyce.generate.{lexer => lex}
 
 object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMachine, List[String]] {
@@ -29,8 +30,16 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
       import gram.SimpleData.Identifier
       import lex.Yields.Yield
 
-      def tokString(text: Boolean, tokName: String): Idt =
-        s"final case class $tokName(${text.fold("text: String, ", "")}span: Dfa.Token.Span) extends HasSpanToken"
+      def tokString(text: Boolean, tokName: String, id: Identifier): Idt = {
+        val extendsOpsStr =
+          simpleData.extendsOps
+            .get(id)
+            .toSet
+            .flatten
+            .map(n => s" with NonTerminal.${n.str}.Operator")
+            .mkString
+        s"final case class $tokName(${text.fold("text: String, ", "")}span: Dfa.Token.Span) extends HasSpanToken$extendsOpsStr"
+      }
 
       val names: List[String] =
         dfa.idxOf.toList
@@ -47,12 +56,12 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
           .distinct
           .sorted
 
-      val rawNames: List[String] =
+      val rawNames: List[Identifier.Raw] =
         simpleData.reductionLists.flatMap {
           _.reductions.list.toList.flatMap {
             _.elements.flatMap {
-              case Identifier.Raw(text) =>
-                text.some
+              case raw: Identifier.Raw =>
+                raw.some
               case _ =>
                 None
             }
@@ -65,8 +74,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
         "object Token {",
         Indented(
           s"case object ${Identifier.EofName} extends Token",
-          rawNames.isEmpty.fold(
-            Group(),
+          rawNames.nonEmpty.option(
             Group(
               s"object ${Identifier.RawName} {",
               Break,
@@ -75,10 +83,11 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                 Indented(
                   "str match {",
                   Indented(
-                    rawNames.distinct.map { n =>
+                    rawNames.distinct.map { rn =>
+                      val n = rn.text
                       Group(
                         f"case ${n.unesc} =>",
-                        Indented(s"`${n.map(_.unesc).mkString}`.apply(span)"),
+                        Indented(s"${n.unesc("`")}.apply(span)"),
                       )
                     },
                     Group(
@@ -89,12 +98,12 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                   "}",
                 ),
                 Break,
-                rawNames.map(r => tokString(false, s"`${r.map(_.unesc).mkString}`")),
+                rawNames.map(rn => tokString(false, rn.text.unesc("`"), rn)),
               ),
               "}",
             ),
           ),
-          names.map(tokString(true, _)),
+          names.map(n => tokString(true, n, Identifier.Terminal(n))),
         ),
         "}",
         "object HasSpanToken {",
@@ -109,15 +118,17 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
       import gram.SimpleData.Identifier
 
       def formatRL(list: gram.SimpleData.ReductionList): (Idt, Boolean) = {
+        import gram.SimpleData.ReductionList.Simplifiers
+
         val name = list.name.str
 
         def formatR(r: gram.SimpleData.ReductionList.Reduction): Idt =
           r.elements.isEmpty.fold(
-            Indented(
+            Group(
               s"case object _${r.idx} extends $name",
               Break,
             ),
-            Indented(
+            Group(
               s"final case class _${r.idx}(",
               Indented(
                 r.elements.zipWithIndex.map {
@@ -125,7 +136,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                     val `type` =
                       e match {
                         case Identifier.Raw(text) =>
-                          s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                          s"Token.${Identifier.RawName}.${text.unesc("`")}"
                         case Identifier.Terminal(name) =>
                           s"Token.$name"
                         case Identifier.NonTerminal(name) =>
@@ -140,12 +151,12 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
             ),
           )
 
-        def formatSimplifiers(simp: gram.SimpleData.ReductionList.Simplifiers): Idt = {
+        def formatSimplifiers(simp: Simplifiers): Idt = {
           def formatOptional(s: Identifier): Idt = {
             val toName =
               s match {
                 case Identifier.Raw(text) =>
-                  s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                  s"Token.${Identifier.RawName}.${text.unesc("`")}"
                 case Identifier.Terminal(name) =>
                   s"Token.$name"
                 case Identifier.NonTerminal(name) =>
@@ -167,19 +178,18 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
             )
           }
 
-          import gram.SimpleData.ReductionList.Simplifiers.ListSimplifier
-          def formatList(s: ListSimplifier): Idt = {
+          def formatList(s: Simplifiers.ListSimplifier): Idt = {
             val toName =
               s.`type` match {
                 case Identifier.Raw(text) =>
-                  s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                  s"Token.${Identifier.RawName}.${text.unesc("`")}"
                 case Identifier.Terminal(name) =>
                   s"Token.$name"
                 case Identifier.NonTerminal(name) =>
                   s"NonTerminal.${name.str}"
               }
 
-            def convertPositions(p: ListSimplifier.Positions): String = {
+            def convertPositions(p: Simplifiers.ListSimplifier.Positions): String = {
               val nonTail = 0.to(p.total).toList.map {
                 case i if i == p.lift =>
                   "n"
@@ -232,8 +242,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                         Indented(
                           s"case $name._1(${convertPositions(s._1)}) =>",
                           Indented("loop(tail, n :: Nil)"),
-                          s._1CanBeEmpty.fold(
-                            Group(),
+                          s._1CanBeEmpty.option(
                             Group(
                               s"case $name._2 =>",
                               Indented("Nil"),
@@ -249,28 +258,67 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
             )
           }
 
+          def formatExpr(s: Simplifiers.ExprSimplifier): Idt =
+            Group(
+              s"def toExpr: Expression[${s.rootName.str}.Operand, ${s.rootName.str}.Operator] =",
+              Indented(
+                s.opId.nonEmpty.fold(
+                  Group(
+                    "this match {",
+                    Indented(
+                      s"case ${list.name.str}._1(left, op, right) =>",
+                      Indented("Expression(left.toExpr, op, right.toExpr)"),
+                      s"case ${list.name.str}._2(child) =>",
+                      Indented("child.toExpr"),
+                    ),
+                    "}",
+                  ),
+                  "Expression(this)",
+                ),
+              ),
+            )
+
           List(
             simp.optional.map(formatOptional),
             simp.list.map(formatList),
+            simp.expr.map(formatExpr),
           ).flatten.flatMap(_ :: Break :: Nil)
         }
+
+        val extendsOpsStr =
+          simpleData.extendsOps
+            .get(SimpleData.Identifier.NonTerminal(list.name))
+            .toSet
+            .flatten
+            .map(n => s" with ${n.str}.Operator")
+            .mkString
+        val traitSig = s"sealed trait $name extends NonTerminal$extendsOpsStr"
 
         (
           Group(
             list.simplifiers.nonEmpty.fold(
               Group(
-                s"sealed trait $name extends NonTerminal {",
+                s"$traitSig {",
                 Indented(
                   Break,
                   formatSimplifiers(list.simplifiers),
                 ),
                 "}",
               ),
-              Str(s"sealed trait $name extends NonTerminal"),
+              traitSig,
             ),
             s"object $name {",
-            Break,
-            list.reductions.list.toList.map(formatR),
+            Indented(
+              list.simplifiers.expr.filter(_.rootName == list.name).map { s =>
+                Group(
+                  Break,
+                  s"sealed trait Operator",
+                  s"type Operand = ${s.baseName.str}",
+                )
+              },
+              Break,
+              list.reductions.list.toList.map(formatR),
+            ),
             "}",
             Break,
           ),
@@ -305,17 +353,6 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
         def lazyName(state: lex.Dfa.State): String =
           s"Lazy(${stateName(state)})"
 
-        // TODO (KR) : Is this unused?
-        def yieldsStr(yields: lex.Dfa.State.Yields): String = {
-          val lambdaParam: String = "s"
-
-          def yStr(y: Yield): String =
-            s"Token.${y.name}($lambdaParam)"
-
-          s"Dfa.State.Yield(${stateName(yields.toMode)})(${yields.yields.nonEmpty
-            .fold(lambdaParam, "_")} => ${yields.yields.map(yStr)})"
-        }
-
         Group(
           s"lazy val ${stateName(state)}: Dfa.State[Token] =",
           Indented(
@@ -339,7 +376,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                     .map {
                       case (c, s) =>
                         // Seems like the safest way to avoid all sorts of weird character escapes
-                        Str(s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unescape}")
+                        Str(s"0x${c.toInt.toHexString.toUpperCase}.toChar -> ${s.map(lazyName)}, // ${c.unesc}")
                     },
                 ),
                 "),",
@@ -416,7 +453,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
       }
 
       def rawName(text: String): String =
-        s"Token.$RawName.`${text.map(_.unesc).mkString}`"
+        s"Token.$RawName.${text.unesc("`")}"
 
       def matcher(name: String, matchOn: (String, Int)*): Idt = {
         val (
@@ -617,15 +654,14 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
 
     Group(
       Group(
-        s"// DO NOT EDIT : Automatically generated by Slyce @ ${DateTimeFormatter.ofPattern("MM/dd/yyyy").format(LocalDate.now())}",
+        s"// DO NOT EDIT : Automatically generated by Slyce v${slyce.Version} @ ${DateTimeFormatter.ofPattern("MM/dd/yyyy").format(LocalDate.now())}",
         s"package ${settings.packageName.mkString(".")}",
         Break,
-        importTailRec.fold(
+        importTailRec.option(
           Group(
             "import scala.annotation.tailrec",
             Break,
           ),
-          Group(),
         ),
         "import scalaz.\\/",
         "import scalaz.-\\/",

@@ -1,6 +1,7 @@
 package slyce.common.helpers
 
 import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 sealed trait Idt {
 
@@ -72,6 +73,15 @@ object Idt {
   implicit def idtToIdt[T <: Idt]: ToIdt[T] =
     new ToIdt[T] {
       override def toIdt(t: T): Idt = t
+    }
+
+  implicit def optionToIdt[C: ToIdt]: ToIdt[Option[C]] =
+    new ToIdt[Option[C]] {
+      def toIdt(option: Option[C]): Idt =
+        option.cata(
+          implicitly[ToIdt[C]].toIdt,
+          Group(),
+        )
     }
 
   implicit def listToIdt[C: ToIdt]: ToIdt[List[C]] =
