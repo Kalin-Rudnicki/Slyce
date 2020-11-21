@@ -8,6 +8,7 @@ import scala.annotation.tailrec
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 import scalaz.\/
 
 import slyce.common.helpers._
@@ -107,51 +108,96 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
     val ntLines: Idt = {
       import gram.SimpleData.Identifier
 
+      def formatRL(list: gram.SimpleData.ReductionList): Idt = {
+        val name = list.name.str
+
+        def formatR(r: gram.SimpleData.ReductionList.Reduction): Idt =
+          r.elements.isEmpty.fold(
+            Indented(
+              s"case object _${r.idx} extends $name",
+              Break,
+            ),
+            Indented(
+              s"final case class _${r.idx}(",
+              Indented(
+                r.elements.zipWithIndex.map {
+                  case (e, i) =>
+                    val `type` =
+                      e match {
+                        case Identifier.Raw(text) =>
+                          s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                        case Identifier.Terminal(name) =>
+                          s"Token.$name"
+                        case Identifier.NonTerminal(name) =>
+                          s"NonTerminal.${name.str}"
+                      }
+
+                    Str(s"_${i + 1}: ${`type`},")
+                },
+              ),
+              s") extends $name",
+              Break,
+            ),
+          )
+
+        def formatSimplifiers(simp: gram.SimpleData.ReductionList.Simplifiers): Idt = {
+          def formatOptional(s: Identifier): Idt = {
+            val toName =
+              s match {
+                case Identifier.Raw(text) =>
+                  s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
+                case Identifier.Terminal(name) =>
+                  s"Token.$name"
+                case Identifier.NonTerminal(name) =>
+                  s"NonTerminal.${name.str}"
+              }
+
+            Group(
+              s"def toOption: Option[$toName] =",
+              Indented(
+                "this match {",
+                Indented(
+                  s"case $name._1(n) =>",
+                  Indented("n.some"),
+                  s"case $name._2 =>",
+                  Indented("None"),
+                ),
+                "}",
+              ),
+            )
+          }
+
+          List(
+            simp.optional.map(formatOptional),
+          ).flatten.flatMap(_ :: Break :: Nil)
+        }
+
+        Group(
+          list.simplifiers.nonEmpty.fold(
+            Group(
+              s"sealed trait $name extends NonTerminal {",
+              Indented(
+                Break,
+                formatSimplifiers(list.simplifiers),
+              ),
+              "}",
+            ),
+            Str(s"sealed trait $name extends NonTerminal"),
+          ),
+          s"object $name {",
+          Break,
+          list.reductions.list.toList.map(formatR),
+          "}",
+          Break,
+        )
+      }
+
       Group(
         "sealed trait NonTerminal",
         "object NonTerminal {",
-        Break,
         Indented(
-          simpleData.reductionLists.map { list =>
-            val name = list.name.str
-            Group(
-              s"sealed trait $name extends NonTerminal",
-              s"object $name {",
-              Break,
-              list.reductions.list.toList.map {
-                r =>
-                  r.elements.isEmpty.fold(
-                    Indented(
-                      s"case object _${r.idx} extends $name",
-                      Break,
-                    ),
-                    Indented(
-                      s"final case class _${r.idx}(",
-                      Indented(
-                        r.elements.zipWithIndex.map {
-                          case (e, i) =>
-                            val `type` =
-                              e match {
-                                case Identifier.Raw(text) =>
-                                  s"Token.${Identifier.RawName}.`${text.map(_.unesc).mkString}`"
-                                case Identifier.Terminal(name) =>
-                                  s"Token.$name"
-                                case Identifier.NonTerminal(name) =>
-                                  s"NonTerminal.${name.str}"
-                              }
-
-                            Str(s"_${i + 1}: ${`type`},")
-                        },
-                      ),
-                      s") extends $name",
-                      Break,
-                    ),
-                  )
-              },
-              "}",
-              Break,
-            )
-          },
+          Break,
+          simpleData.reductionLists.map(formatRL),
         ),
         "}",
       )

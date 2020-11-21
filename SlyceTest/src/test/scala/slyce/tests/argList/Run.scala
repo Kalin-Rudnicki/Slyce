@@ -43,12 +43,7 @@ object Run extends App {
     val optTail: Option[Token.__.`!`] =
       rawTree match {
         case NonTerminal.List._1(_, _, _, tail) =>
-          tail match {
-            case NonTerminal.`Optional!`._1(tail) =>
-              tail.some
-            case NonTerminal.`Optional!`._2 =>
-              None
-          }
+          tail.toOption
       }
 
     println(s"(${vars.map(_.text).mkString(", ")})")

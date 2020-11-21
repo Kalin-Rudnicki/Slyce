@@ -300,7 +300,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       (namedRls ::: anonRls)
         .sortBy(_.name.str)
         .map {
-          case SimpleData.ReductionList(name, reductions, _) => // TODO (KR) : Optional
+          case SimpleData.ReductionList(name, reductions, simps) =>
             SimpleData.ReductionList(
               name = reduceName(name),
               reductions = reductions.map {
@@ -310,7 +310,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                     elements.map(reduceId),
                   )
               },
-              simplifiers = SimpleData.ReductionList.Simplifiers.empty,
+              simplifiers = simps,
             )
         }
 

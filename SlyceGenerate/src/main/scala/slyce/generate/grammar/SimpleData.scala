@@ -180,7 +180,15 @@ object SimpleData {
         optional: Option[Identifier],
         // TODO (KR) : List
         // TODO (KR) : Assoc
-    )
+    ) {
+
+      // TODO (KR) : Make sure to update this as new simplifiers are added
+      def nonEmpty: Boolean = {
+        println(this)
+        optional.nonEmpty
+      }
+
+    }
     object Simplifiers {
       def empty: Simplifiers =
         Simplifiers(
