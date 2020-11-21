@@ -29,7 +29,7 @@ object Generate extends App {
             ),
             Data.Mode.Line(
               lineNo = 2,
-              regex = Inclusive('(', ')', ','),
+              regex = Inclusive('(', ')', ',', '!'),
               yields = Yields(
                 yields = List(Yields.Yield.Text.std),
                 toMode = None,
@@ -61,6 +61,7 @@ object Generate extends App {
     import gram._
     import Data.{Identifier => Id}
     import Data.{NonTerminal => NT}
+    import Data.{Optional => Opt}
     import Data.NT._
 
     Data(
@@ -85,6 +86,7 @@ object Generate extends App {
               ),
             )(
               Id.Raw(")"),
+              Opt(Id.Raw("!")),
             ),
           ),
         ),

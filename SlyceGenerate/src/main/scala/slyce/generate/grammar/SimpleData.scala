@@ -67,6 +67,7 @@ object SimpleData {
 
   }
 
+  sealed trait NonOptionalName
   sealed trait Name {
 
     def next: Name =
@@ -75,7 +76,11 @@ object SimpleData {
           Name.AnonList(num = num, idx = idx + 1)
         case Name.Named(name, idx) =>
           Name.Named(name, idx + 1)
+        case _ =>
+          // TODO (KR) : This should never happen?
+          this
       }
+
     // This serves the purpose of trying to resolve duplicates
     def standardize(parent: Name): Name =
       (parent, this) match {
@@ -85,13 +90,26 @@ object SimpleData {
           this
       }
 
-    def str: String =
+    def str: String = {
+      def idxToS(i: Int): String =
+        (i == 0).fold("", s"_${i + 1}")
+
       this match {
         case Name.AnonList(num, idx) =>
-          s"AnonList$num${(idx == 0).fold("", s"_${idx + 1}")}"
+          s"AnonList$num${idxToS(idx)}"
+        case Name.Optional(id) =>
+          id match {
+            case Identifier.Raw(text) =>
+              s"`Optional${text.map(_.unesc).mkString}`"
+            case Identifier.Terminal(name) =>
+              s"Optional$name"
+            case Identifier.NonTerminal(name) =>
+              s"Optional${name.str}"
+          }
         case Name.Named(name, idx) =>
-          s"$name${(idx == 0).fold("", s"_${idx + 1}")}"
+          s"$name${idxToS(idx)}"
       }
+    }
 
   }
 
@@ -99,7 +117,7 @@ object SimpleData {
 
     val Start: Name = Named("__Start")
 
-    final case class AnonList private (num: Int, idx: Int) extends Name
+    final case class AnonList private (num: Int, idx: Int) extends Name with NonOptionalName
     object AnonList {
 
       final class Generator private[AnonList] {
@@ -117,7 +135,9 @@ object SimpleData {
 
     }
 
-    final case class Named private (name: String, idx: Int) extends Name
+    final case class Optional(id: Identifier) extends Name
+
+    final case class Named private (name: String, idx: Int) extends Name with NonOptionalName
     object Named {
 
       def apply(name: String): Named =
@@ -130,9 +150,7 @@ object SimpleData {
   final case class ReductionList(
       name: Name,
       reductions: NonEmptyList[ReductionList.Reduction],
-      // TODO (KR) : Ignored
-      // TODO (KR) : List
-      // TODO (KR) : Assoc
+      simplifiers: ReductionList.Simplifiers,
   ) {
 
     def standardized: Option[(Name.AnonList, ReductionList, List[List[Identifier]])] =
@@ -158,6 +176,18 @@ object SimpleData {
 
   object ReductionList {
 
+    final case class Simplifiers(
+        optional: Option[Identifier],
+        // TODO (KR) : List
+        // TODO (KR) : Assoc
+    )
+    object Simplifiers {
+      def empty: Simplifiers =
+        Simplifiers(
+          optional = None,
+        )
+    }
+
     final case class Reduction(
         idx: Int,
         elements: List[Identifier],
@@ -169,10 +199,16 @@ object SimpleData {
 
     }
 
-    def apply(name: Name)(r0: Reduction, rN: Reduction*): ReductionList =
+    def apply(
+        name: Name,
+        optional: Option[Identifier] = None,
+    )(r0: Reduction, rN: Reduction*): ReductionList =
       ReductionList(
-        name,
-        NonEmptyList(r0, rN: _*),
+        name = name,
+        reductions = NonEmptyList(r0, rN: _*),
+        simplifiers = Simplifiers(
+          optional = optional,
+        ),
       )
 
   }

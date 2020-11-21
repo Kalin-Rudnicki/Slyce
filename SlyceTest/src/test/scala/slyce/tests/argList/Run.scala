@@ -1,5 +1,7 @@
 package slyce.tests.argList
 
+import scalaz.Scalaz.ToOptionIdOps
+
 import slyce.tests.Runner
 
 object Run extends App {
@@ -27,7 +29,7 @@ object Run extends App {
 
     val vars: List[Token._var] =
       rawTree match {
-        case NonTerminal.List._1(_, list, _) =>
+        case NonTerminal.List._1(_, list, _, _) =>
           list match {
             case NonTerminal.AnonList1._1(_var, next) =>
               loop(
@@ -38,8 +40,19 @@ object Run extends App {
               Nil
           }
       }
+    val optTail: Option[Token.__.`!`] =
+      rawTree match {
+        case NonTerminal.List._1(_, _, _, tail) =>
+          tail match {
+            case NonTerminal.`Optional!`._1(tail) =>
+              tail.some
+            case NonTerminal.`Optional!`._2 =>
+              None
+          }
+      }
 
     println(s"(${vars.map(_.text).mkString(", ")})")
+    println(optTail)
   }
 
 }

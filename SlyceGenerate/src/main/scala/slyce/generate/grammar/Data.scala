@@ -22,6 +22,8 @@ object Data {
 
   sealed trait Element
 
+  final case class Optional(id: Identifier) extends Element
+
   sealed trait Identifier extends Element
   object Identifier {
     final case class Terminal private[Identifier] (name: String) extends Identifier

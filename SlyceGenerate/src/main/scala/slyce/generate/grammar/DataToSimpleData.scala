@@ -1,10 +1,13 @@
 package slyce.generate.grammar
 
 import scala.annotation.tailrec
+
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToEitherOps
+import scalaz.Scalaz.ToOptionIdOps
 import scalaz.Scalaz.ToOptionOpsFromOption
 import scalaz.\/
+
 import slyce.generate.architecture.{grammar => arch}
 import slyce.generate.grammar.Data.NT
 import slyce.generate.grammar.SimpleData.{Identifier, Name}
@@ -63,12 +66,13 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
         val added =
           SimpleData.ReductionList(
-            name,
-            mapped.zipWithIndex
+            name = name,
+            reductions = mapped.zipWithIndex
               .map {
                 case ((r, _), idx) =>
                   SimpleData.ReductionList.Reduction(idx + 1, r)
               },
+            simplifiers = SimpleData.ReductionList.Simplifiers.empty,
           )
 
         val extras =
@@ -85,6 +89,15 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         element match {
           case id: Data.Identifier =>
             (SimpleData.Identifier(id), Nil)
+          case Data.Optional(id) =>
+            val optName = SimpleData.Name.Optional(SimpleData.Identifier(id))
+            val (elems, extras) = elementList(id :: Nil)
+            val rl = SimpleData.ReductionList(optName, optional = SimpleData.Identifier(id).some)(
+              SimpleData.ReductionList.Reduction(1, elems),
+              SimpleData.ReductionList.Reduction(2),
+            )
+
+            (SimpleData.Identifier.NonTerminal(optName), rl :: extras)
           case lnt: NT.ListNT =>
             lnt match {
               case NT.ListNT.*(before, after) =>
@@ -241,6 +254,9 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
             case Some(std) =>
               (named, std :: anon)
           }
+      } match {
+        case (_1, _2) =>
+          (_1.distinct, _2)
       }
 
     val (
@@ -284,16 +300,17 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       (namedRls ::: anonRls)
         .sortBy(_.name.str)
         .map {
-          case SimpleData.ReductionList(name, reductions) =>
+          case SimpleData.ReductionList(name, reductions, _) => // TODO (KR) : Optional
             SimpleData.ReductionList(
-              reduceName(name),
-              reductions.map {
+              name = reduceName(name),
+              reductions = reductions.map {
                 case SimpleData.ReductionList.Reduction(idx, elements) =>
                   SimpleData.ReductionList.Reduction(
                     idx,
                     elements.map(reduceId),
                   )
               },
+              simplifiers = SimpleData.ReductionList.Simplifiers.empty,
             )
         }
 
