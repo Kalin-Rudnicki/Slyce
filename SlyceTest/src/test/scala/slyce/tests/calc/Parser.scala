@@ -92,6 +92,91 @@ object Data {
 
     }
 
+    sealed trait AnonList2 extends NonTerminal {
+
+      def toList: List[Token.__.`\n`] = {
+        @tailrec
+        def loop(unseen: AnonList2_2, seen: List[Token.__.`\n`]): List[Token.__.`\n`] =
+          unseen match {
+            case AnonList2_2._1(n, tail) =>
+              loop(tail, n :: seen)
+            case AnonList2_2._2 =>
+              seen.reverse
+        }
+
+        this match {
+          case AnonList2._1(n, tail) =>
+            loop(tail, n :: Nil)
+        }
+      }
+
+    }
+    object AnonList2 {
+
+      final case class _1(
+        _1: Token.__.`\n`,
+        _2: NonTerminal.AnonList2_2,
+      ) extends AnonList2
+
+    }
+
+    sealed trait AnonList2_2 extends NonTerminal
+    object AnonList2_2 {
+
+      final case class _1(
+        _1: Token.__.`\n`,
+        _2: NonTerminal.AnonList2_2,
+      ) extends AnonList2_2
+
+      case object _2 extends AnonList2_2
+
+    }
+
+    sealed trait AnonList3 extends NonTerminal {
+
+      def toList: List[NonTerminal.Line] = {
+        @tailrec
+        def loop(unseen: AnonList3_2, seen: List[NonTerminal.Line]): List[NonTerminal.Line] =
+          unseen match {
+            case AnonList3_2._1(_, n, tail) =>
+              loop(tail, n :: seen)
+            case AnonList3_2._2 =>
+              seen.reverse
+        }
+
+        this match {
+          case AnonList3._1(n, tail) =>
+            loop(tail, n :: Nil)
+          case AnonList3._2 =>
+            Nil
+        }
+      }
+
+    }
+    object AnonList3 {
+
+      final case class _1(
+        _1: NonTerminal.Line,
+        _2: NonTerminal.AnonList3_2,
+      ) extends AnonList3
+
+      case object _2 extends AnonList3
+
+    }
+
+    sealed trait AnonList3_2 extends NonTerminal
+    object AnonList3_2 {
+
+      final case class _1(
+        _1: NonTerminal.AnonList2,
+        _2: NonTerminal.Line,
+        _3: NonTerminal.AnonList3_2,
+      ) extends AnonList3_2
+
+      case object _2 extends AnonList3_2
+
+    }
+
     sealed trait Assign extends NonTerminal
     object Assign {
 
@@ -226,50 +311,14 @@ object Data {
 
     }
 
-    sealed trait Lines extends NonTerminal {
-
-      def toList: List[NonTerminal.Line] = {
-        @tailrec
-        def loop(unseen: Lines_2, seen: List[NonTerminal.Line]): List[NonTerminal.Line] =
-          unseen match {
-            case Lines_2._1(_, n, _, tail) =>
-              loop(tail, n :: seen)
-            case Lines_2._2 =>
-              seen.reverse
-        }
-
-        this match {
-          case Lines._1(_, n, tail) =>
-            loop(tail, n :: Nil)
-          case Lines._2 =>
-            Nil
-        }
-      }
-
-    }
+    sealed trait Lines extends NonTerminal
     object Lines {
 
       final case class _1(
         _1: NonTerminal.AnonList1,
-        _2: NonTerminal.Line,
-        _3: NonTerminal.Lines_2,
-      ) extends Lines
-
-      case object _2 extends Lines
-
-    }
-
-    sealed trait Lines_2 extends NonTerminal
-    object Lines_2 {
-
-      final case class _1(
-        _1: NonTerminal.AnonList1,
-        _2: NonTerminal.Line,
+        _2: NonTerminal.AnonList3,
         _3: NonTerminal.AnonList1,
-        _4: NonTerminal.Lines_2,
-      ) extends Lines_2
-
-      case object _2 extends Lines_2
+      ) extends Lines
 
     }
 
@@ -285,15 +334,15 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
       Dfa.State(
         id = 0,
         transitions = Map(
-          0x9.toChar -> Some(Lazy(s11)), // '\t'
-          0xA.toChar -> Some(Lazy(s7)), // '\n'
-          0x20.toChar -> Some(Lazy(s11)), // ' '
-          0x28.toChar -> Some(Lazy(s7)), // '('
-          0x29.toChar -> Some(Lazy(s7)), // ')'
-          0x2A.toChar -> Some(Lazy(s12)), // '*'
-          0x2B.toChar -> Some(Lazy(s8)), // '+'
-          0x2D.toChar -> Some(Lazy(s6)), // '-'
-          0x2F.toChar -> Some(Lazy(s9)), // '/'
+          0x9.toChar -> Some(Lazy(s3)), // '\t'
+          0xA.toChar -> Some(Lazy(s5)), // '\n'
+          0x20.toChar -> Some(Lazy(s3)), // ' '
+          0x28.toChar -> Some(Lazy(s5)), // '('
+          0x29.toChar -> Some(Lazy(s5)), // ')'
+          0x2A.toChar -> Some(Lazy(s6)), // '*'
+          0x2B.toChar -> Some(Lazy(s2)), // '+'
+          0x2D.toChar -> Some(Lazy(s12)), // '-'
+          0x2F.toChar -> Some(Lazy(s15)), // '/'
           0x30.toChar -> Some(Lazy(s4)), // '0'
           0x31.toChar -> Some(Lazy(s4)), // '1'
           0x32.toChar -> Some(Lazy(s4)), // '2'
@@ -304,35 +353,35 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           0x37.toChar -> Some(Lazy(s4)), // '7'
           0x38.toChar -> Some(Lazy(s4)), // '8'
           0x39.toChar -> Some(Lazy(s4)), // '9'
-          0x3D.toChar -> Some(Lazy(s7)), // '='
-          0x5E.toChar -> Some(Lazy(s15)), // '^'
-          0x5F.toChar -> Some(Lazy(s3)), // '_'
-          0x61.toChar -> Some(Lazy(s3)), // 'a'
-          0x62.toChar -> Some(Lazy(s3)), // 'b'
-          0x63.toChar -> Some(Lazy(s3)), // 'c'
-          0x64.toChar -> Some(Lazy(s3)), // 'd'
-          0x65.toChar -> Some(Lazy(s3)), // 'e'
-          0x66.toChar -> Some(Lazy(s3)), // 'f'
-          0x67.toChar -> Some(Lazy(s3)), // 'g'
-          0x68.toChar -> Some(Lazy(s3)), // 'h'
-          0x69.toChar -> Some(Lazy(s3)), // 'i'
-          0x6A.toChar -> Some(Lazy(s3)), // 'j'
-          0x6B.toChar -> Some(Lazy(s3)), // 'k'
-          0x6C.toChar -> Some(Lazy(s3)), // 'l'
-          0x6D.toChar -> Some(Lazy(s3)), // 'm'
-          0x6E.toChar -> Some(Lazy(s3)), // 'n'
-          0x6F.toChar -> Some(Lazy(s3)), // 'o'
-          0x70.toChar -> Some(Lazy(s3)), // 'p'
-          0x71.toChar -> Some(Lazy(s3)), // 'q'
-          0x72.toChar -> Some(Lazy(s3)), // 'r'
-          0x73.toChar -> Some(Lazy(s3)), // 's'
-          0x74.toChar -> Some(Lazy(s3)), // 't'
-          0x75.toChar -> Some(Lazy(s3)), // 'u'
-          0x76.toChar -> Some(Lazy(s3)), // 'v'
-          0x77.toChar -> Some(Lazy(s3)), // 'w'
-          0x78.toChar -> Some(Lazy(s3)), // 'x'
-          0x79.toChar -> Some(Lazy(s3)), // 'y'
-          0x7A.toChar -> Some(Lazy(s3)), // 'z'
+          0x3D.toChar -> Some(Lazy(s5)), // '='
+          0x5E.toChar -> Some(Lazy(s13)), // '^'
+          0x5F.toChar -> Some(Lazy(s8)), // '_'
+          0x61.toChar -> Some(Lazy(s8)), // 'a'
+          0x62.toChar -> Some(Lazy(s8)), // 'b'
+          0x63.toChar -> Some(Lazy(s8)), // 'c'
+          0x64.toChar -> Some(Lazy(s8)), // 'd'
+          0x65.toChar -> Some(Lazy(s8)), // 'e'
+          0x66.toChar -> Some(Lazy(s8)), // 'f'
+          0x67.toChar -> Some(Lazy(s8)), // 'g'
+          0x68.toChar -> Some(Lazy(s8)), // 'h'
+          0x69.toChar -> Some(Lazy(s8)), // 'i'
+          0x6A.toChar -> Some(Lazy(s8)), // 'j'
+          0x6B.toChar -> Some(Lazy(s8)), // 'k'
+          0x6C.toChar -> Some(Lazy(s8)), // 'l'
+          0x6D.toChar -> Some(Lazy(s8)), // 'm'
+          0x6E.toChar -> Some(Lazy(s8)), // 'n'
+          0x6F.toChar -> Some(Lazy(s8)), // 'o'
+          0x70.toChar -> Some(Lazy(s8)), // 'p'
+          0x71.toChar -> Some(Lazy(s8)), // 'q'
+          0x72.toChar -> Some(Lazy(s8)), // 'r'
+          0x73.toChar -> Some(Lazy(s8)), // 's'
+          0x74.toChar -> Some(Lazy(s8)), // 't'
+          0x75.toChar -> Some(Lazy(s8)), // 'u'
+          0x76.toChar -> Some(Lazy(s8)), // 'v'
+          0x77.toChar -> Some(Lazy(s8)), // 'w'
+          0x78.toChar -> Some(Lazy(s8)), // 'x'
+          0x79.toChar -> Some(Lazy(s8)), // 'y'
+          0x7A.toChar -> Some(Lazy(s8)), // 'z'
         ),
         elseTransition = None,
         yields = None,
@@ -340,109 +389,38 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s1: Dfa.State[Token] =
       Dfa.State(
         id = 1,
+        transitions = Map(
+          0x2F.toChar -> Some(Lazy(s7)), // '/'
+        ),
+        elseTransition = Some(Lazy(s14)),
+        yields = None,
+      )
+    lazy val s2: Dfa.State[Token] =
+      Dfa.State(
+        id = 2,
         transitions = Map.empty,
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
+              tokF = Token.addOp.apply,
               spanRange = (0,-1),
             ),
           ),
         ),
-      )
-    lazy val s2: Dfa.State[Token] =
-      Dfa.State(
-        id = 2,
-        transitions = Map(
-          0x2F.toChar -> Some(Lazy(s1)), // '/'
-        ),
-        elseTransition = Some(Lazy(s13)),
-        yields = None,
       )
     lazy val s3: Dfa.State[Token] =
       Dfa.State(
         id = 3,
-        transitions = Map(
-          0x30.toChar -> Some(Lazy(s3)), // '0'
-          0x31.toChar -> Some(Lazy(s3)), // '1'
-          0x32.toChar -> Some(Lazy(s3)), // '2'
-          0x33.toChar -> Some(Lazy(s3)), // '3'
-          0x34.toChar -> Some(Lazy(s3)), // '4'
-          0x35.toChar -> Some(Lazy(s3)), // '5'
-          0x36.toChar -> Some(Lazy(s3)), // '6'
-          0x37.toChar -> Some(Lazy(s3)), // '7'
-          0x38.toChar -> Some(Lazy(s3)), // '8'
-          0x39.toChar -> Some(Lazy(s3)), // '9'
-          0x41.toChar -> Some(Lazy(s3)), // 'A'
-          0x42.toChar -> Some(Lazy(s3)), // 'B'
-          0x43.toChar -> Some(Lazy(s3)), // 'C'
-          0x44.toChar -> Some(Lazy(s3)), // 'D'
-          0x45.toChar -> Some(Lazy(s3)), // 'E'
-          0x46.toChar -> Some(Lazy(s3)), // 'F'
-          0x47.toChar -> Some(Lazy(s3)), // 'G'
-          0x48.toChar -> Some(Lazy(s3)), // 'H'
-          0x49.toChar -> Some(Lazy(s3)), // 'I'
-          0x4A.toChar -> Some(Lazy(s3)), // 'J'
-          0x4B.toChar -> Some(Lazy(s3)), // 'K'
-          0x4C.toChar -> Some(Lazy(s3)), // 'L'
-          0x4D.toChar -> Some(Lazy(s3)), // 'M'
-          0x4E.toChar -> Some(Lazy(s3)), // 'N'
-          0x4F.toChar -> Some(Lazy(s3)), // 'O'
-          0x50.toChar -> Some(Lazy(s3)), // 'P'
-          0x51.toChar -> Some(Lazy(s3)), // 'Q'
-          0x52.toChar -> Some(Lazy(s3)), // 'R'
-          0x53.toChar -> Some(Lazy(s3)), // 'S'
-          0x54.toChar -> Some(Lazy(s3)), // 'T'
-          0x55.toChar -> Some(Lazy(s3)), // 'U'
-          0x56.toChar -> Some(Lazy(s3)), // 'V'
-          0x57.toChar -> Some(Lazy(s3)), // 'W'
-          0x58.toChar -> Some(Lazy(s3)), // 'X'
-          0x59.toChar -> Some(Lazy(s3)), // 'Y'
-          0x5A.toChar -> Some(Lazy(s3)), // 'Z'
-          0x5F.toChar -> Some(Lazy(s3)), // '_'
-          0x61.toChar -> Some(Lazy(s3)), // 'a'
-          0x62.toChar -> Some(Lazy(s3)), // 'b'
-          0x63.toChar -> Some(Lazy(s3)), // 'c'
-          0x64.toChar -> Some(Lazy(s3)), // 'd'
-          0x65.toChar -> Some(Lazy(s3)), // 'e'
-          0x66.toChar -> Some(Lazy(s3)), // 'f'
-          0x67.toChar -> Some(Lazy(s3)), // 'g'
-          0x68.toChar -> Some(Lazy(s3)), // 'h'
-          0x69.toChar -> Some(Lazy(s3)), // 'i'
-          0x6A.toChar -> Some(Lazy(s3)), // 'j'
-          0x6B.toChar -> Some(Lazy(s3)), // 'k'
-          0x6C.toChar -> Some(Lazy(s3)), // 'l'
-          0x6D.toChar -> Some(Lazy(s3)), // 'm'
-          0x6E.toChar -> Some(Lazy(s3)), // 'n'
-          0x6F.toChar -> Some(Lazy(s3)), // 'o'
-          0x70.toChar -> Some(Lazy(s3)), // 'p'
-          0x71.toChar -> Some(Lazy(s3)), // 'q'
-          0x72.toChar -> Some(Lazy(s3)), // 'r'
-          0x73.toChar -> Some(Lazy(s3)), // 's'
-          0x74.toChar -> Some(Lazy(s3)), // 't'
-          0x75.toChar -> Some(Lazy(s3)), // 'u'
-          0x76.toChar -> Some(Lazy(s3)), // 'v'
-          0x77.toChar -> Some(Lazy(s3)), // 'w'
-          0x78.toChar -> Some(Lazy(s3)), // 'x'
-          0x79.toChar -> Some(Lazy(s3)), // 'y'
-          0x7A.toChar -> Some(Lazy(s3)), // 'z'
-        ),
+        transitions = Map.empty,
         elseTransition = None,
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token._var.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
+        yields = Some(Dfa.State.Yields(s0)()),
       )
     lazy val s4: Dfa.State[Token] =
       Dfa.State(
         id = 4,
         transitions = Map(
-          0x2E.toChar -> Some(Lazy(s5)), // '.'
+          0x2E.toChar -> Some(Lazy(s11)), // '.'
           0x30.toChar -> Some(Lazy(s4)), // '0'
           0x31.toChar -> Some(Lazy(s4)), // '1'
           0x32.toChar -> Some(Lazy(s4)), // '2'
@@ -467,41 +445,26 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s5: Dfa.State[Token] =
       Dfa.State(
         id = 5,
-        transitions = Map(
-          0x30.toChar -> Some(Lazy(s10)), // '0'
-          0x31.toChar -> Some(Lazy(s10)), // '1'
-          0x32.toChar -> Some(Lazy(s10)), // '2'
-          0x33.toChar -> Some(Lazy(s10)), // '3'
-          0x34.toChar -> Some(Lazy(s10)), // '4'
-          0x35.toChar -> Some(Lazy(s10)), // '5'
-          0x36.toChar -> Some(Lazy(s10)), // '6'
-          0x37.toChar -> Some(Lazy(s10)), // '7'
-          0x38.toChar -> Some(Lazy(s10)), // '8'
-          0x39.toChar -> Some(Lazy(s10)), // '9'
-        ),
-        elseTransition = None,
-        yields = None,
-      )
-    lazy val s6: Dfa.State[Token] =
-      Dfa.State(
-        id = 6,
-        transitions = Map(
-          0x30.toChar -> Some(Lazy(s4)), // '0'
-          0x31.toChar -> Some(Lazy(s4)), // '1'
-          0x32.toChar -> Some(Lazy(s4)), // '2'
-          0x33.toChar -> Some(Lazy(s4)), // '3'
-          0x34.toChar -> Some(Lazy(s4)), // '4'
-          0x35.toChar -> Some(Lazy(s4)), // '5'
-          0x36.toChar -> Some(Lazy(s4)), // '6'
-          0x37.toChar -> Some(Lazy(s4)), // '7'
-          0x38.toChar -> Some(Lazy(s4)), // '8'
-          0x39.toChar -> Some(Lazy(s4)), // '9'
-        ),
+        transitions = Map.empty,
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.addOp.apply,
+              tokF = Token.__.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
+      )
+    lazy val s6: Dfa.State[Token] =
+      Dfa.State(
+        id = 6,
+        transitions = Map.empty,
+        elseTransition = None,
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token.multOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -515,7 +478,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.__.apply,
+              tokF = Token.comment.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -524,12 +487,76 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s8: Dfa.State[Token] =
       Dfa.State(
         id = 8,
-        transitions = Map.empty,
+        transitions = Map(
+          0x30.toChar -> Some(Lazy(s8)), // '0'
+          0x31.toChar -> Some(Lazy(s8)), // '1'
+          0x32.toChar -> Some(Lazy(s8)), // '2'
+          0x33.toChar -> Some(Lazy(s8)), // '3'
+          0x34.toChar -> Some(Lazy(s8)), // '4'
+          0x35.toChar -> Some(Lazy(s8)), // '5'
+          0x36.toChar -> Some(Lazy(s8)), // '6'
+          0x37.toChar -> Some(Lazy(s8)), // '7'
+          0x38.toChar -> Some(Lazy(s8)), // '8'
+          0x39.toChar -> Some(Lazy(s8)), // '9'
+          0x41.toChar -> Some(Lazy(s8)), // 'A'
+          0x42.toChar -> Some(Lazy(s8)), // 'B'
+          0x43.toChar -> Some(Lazy(s8)), // 'C'
+          0x44.toChar -> Some(Lazy(s8)), // 'D'
+          0x45.toChar -> Some(Lazy(s8)), // 'E'
+          0x46.toChar -> Some(Lazy(s8)), // 'F'
+          0x47.toChar -> Some(Lazy(s8)), // 'G'
+          0x48.toChar -> Some(Lazy(s8)), // 'H'
+          0x49.toChar -> Some(Lazy(s8)), // 'I'
+          0x4A.toChar -> Some(Lazy(s8)), // 'J'
+          0x4B.toChar -> Some(Lazy(s8)), // 'K'
+          0x4C.toChar -> Some(Lazy(s8)), // 'L'
+          0x4D.toChar -> Some(Lazy(s8)), // 'M'
+          0x4E.toChar -> Some(Lazy(s8)), // 'N'
+          0x4F.toChar -> Some(Lazy(s8)), // 'O'
+          0x50.toChar -> Some(Lazy(s8)), // 'P'
+          0x51.toChar -> Some(Lazy(s8)), // 'Q'
+          0x52.toChar -> Some(Lazy(s8)), // 'R'
+          0x53.toChar -> Some(Lazy(s8)), // 'S'
+          0x54.toChar -> Some(Lazy(s8)), // 'T'
+          0x55.toChar -> Some(Lazy(s8)), // 'U'
+          0x56.toChar -> Some(Lazy(s8)), // 'V'
+          0x57.toChar -> Some(Lazy(s8)), // 'W'
+          0x58.toChar -> Some(Lazy(s8)), // 'X'
+          0x59.toChar -> Some(Lazy(s8)), // 'Y'
+          0x5A.toChar -> Some(Lazy(s8)), // 'Z'
+          0x5F.toChar -> Some(Lazy(s8)), // '_'
+          0x61.toChar -> Some(Lazy(s8)), // 'a'
+          0x62.toChar -> Some(Lazy(s8)), // 'b'
+          0x63.toChar -> Some(Lazy(s8)), // 'c'
+          0x64.toChar -> Some(Lazy(s8)), // 'd'
+          0x65.toChar -> Some(Lazy(s8)), // 'e'
+          0x66.toChar -> Some(Lazy(s8)), // 'f'
+          0x67.toChar -> Some(Lazy(s8)), // 'g'
+          0x68.toChar -> Some(Lazy(s8)), // 'h'
+          0x69.toChar -> Some(Lazy(s8)), // 'i'
+          0x6A.toChar -> Some(Lazy(s8)), // 'j'
+          0x6B.toChar -> Some(Lazy(s8)), // 'k'
+          0x6C.toChar -> Some(Lazy(s8)), // 'l'
+          0x6D.toChar -> Some(Lazy(s8)), // 'm'
+          0x6E.toChar -> Some(Lazy(s8)), // 'n'
+          0x6F.toChar -> Some(Lazy(s8)), // 'o'
+          0x70.toChar -> Some(Lazy(s8)), // 'p'
+          0x71.toChar -> Some(Lazy(s8)), // 'q'
+          0x72.toChar -> Some(Lazy(s8)), // 'r'
+          0x73.toChar -> Some(Lazy(s8)), // 's'
+          0x74.toChar -> Some(Lazy(s8)), // 't'
+          0x75.toChar -> Some(Lazy(s8)), // 'u'
+          0x76.toChar -> Some(Lazy(s8)), // 'v'
+          0x77.toChar -> Some(Lazy(s8)), // 'w'
+          0x78.toChar -> Some(Lazy(s8)), // 'x'
+          0x79.toChar -> Some(Lazy(s8)), // 'y'
+          0x7A.toChar -> Some(Lazy(s8)), // 'z'
+        ),
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.addOp.apply,
+              tokF = Token._var.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -539,14 +566,13 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
       Dfa.State(
         id = 9,
         transitions = Map(
-          0x2A.toChar -> Some(Lazy(s13)), // '*'
-          0x2F.toChar -> Some(Lazy(s14)), // '/'
+          0xA.toChar -> None, // '\n'
         ),
-        elseTransition = None,
+        elseTransition = Some(Lazy(s9)),
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.multOp.apply,
+              tokF = Token.comment.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -580,19 +606,41 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s11: Dfa.State[Token] =
       Dfa.State(
         id = 11,
-        transitions = Map.empty,
+        transitions = Map(
+          0x30.toChar -> Some(Lazy(s10)), // '0'
+          0x31.toChar -> Some(Lazy(s10)), // '1'
+          0x32.toChar -> Some(Lazy(s10)), // '2'
+          0x33.toChar -> Some(Lazy(s10)), // '3'
+          0x34.toChar -> Some(Lazy(s10)), // '4'
+          0x35.toChar -> Some(Lazy(s10)), // '5'
+          0x36.toChar -> Some(Lazy(s10)), // '6'
+          0x37.toChar -> Some(Lazy(s10)), // '7'
+          0x38.toChar -> Some(Lazy(s10)), // '8'
+          0x39.toChar -> Some(Lazy(s10)), // '9'
+        ),
         elseTransition = None,
-        yields = Some(Dfa.State.Yields(s0)()),
+        yields = None,
       )
     lazy val s12: Dfa.State[Token] =
       Dfa.State(
         id = 12,
-        transitions = Map.empty,
+        transitions = Map(
+          0x30.toChar -> Some(Lazy(s4)), // '0'
+          0x31.toChar -> Some(Lazy(s4)), // '1'
+          0x32.toChar -> Some(Lazy(s4)), // '2'
+          0x33.toChar -> Some(Lazy(s4)), // '3'
+          0x34.toChar -> Some(Lazy(s4)), // '4'
+          0x35.toChar -> Some(Lazy(s4)), // '5'
+          0x36.toChar -> Some(Lazy(s4)), // '6'
+          0x37.toChar -> Some(Lazy(s4)), // '7'
+          0x38.toChar -> Some(Lazy(s4)), // '8'
+          0x39.toChar -> Some(Lazy(s4)), // '9'
+        ),
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.multOp.apply,
+              tokF = Token.addOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -601,37 +649,38 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s13: Dfa.State[Token] =
       Dfa.State(
         id = 13,
-        transitions = Map(
-          0x2A.toChar -> Some(Lazy(s2)), // '*'
-        ),
-        elseTransition = Some(Lazy(s13)),
-        yields = None,
-      )
-    lazy val s14: Dfa.State[Token] =
-      Dfa.State(
-        id = 14,
-        transitions = Map(
-          0xA.toChar -> None, // '\n'
-        ),
-        elseTransition = Some(Lazy(s14)),
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
-    lazy val s15: Dfa.State[Token] =
-      Dfa.State(
-        id = 15,
         transitions = Map.empty,
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
               tokF = Token.powOp.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
+      )
+    lazy val s14: Dfa.State[Token] =
+      Dfa.State(
+        id = 14,
+        transitions = Map(
+          0x2A.toChar -> Some(Lazy(s1)), // '*'
+        ),
+        elseTransition = Some(Lazy(s14)),
+        yields = None,
+      )
+    lazy val s15: Dfa.State[Token] =
+      Dfa.State(
+        id = 15,
+        transitions = Map(
+          0x2A.toChar -> Some(Lazy(s14)), // '*'
+          0x2F.toChar -> Some(Lazy(s9)), // '/'
+        ),
+        elseTransition = None,
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token.multOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -656,12 +705,11 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           acceptF = Some {
             case \/-(_: NonTerminal.Lines) => s1
             case \/-(_: NonTerminal.AnonList1) => s2
-            case -\/(_: Token.__.`\n`) => s6
+            case -\/(_: Token.__.`\n`) => s18
           },
           returnFs = Nil,
           spontaneouslyGenerates = List(
             NonTerminal.AnonList1._2,
-            NonTerminal.Lines._2,
           ),
           finalReturnF = None,
         )
@@ -669,7 +717,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         builder.State(
           id = 1,
           acceptF = Some {
-            case -\/(Token.EOF) => s14
+            case -\/(Token.EOF) => s22
           },
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
@@ -679,27 +727,30 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         builder.State(
           id = 2,
           acceptF = Some {
-            case \/-(_: NonTerminal.Assign) => s20
-            case \/-(_: NonTerminal.Expr_3) => s28
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case -\/(_: Token.comment) => s19
-            case \/-(_: NonTerminal.Expr) => s7
-            case -\/(_: Token.float) => s21
+            case \/-(_: NonTerminal.Assign) => s25
+            case \/-(_: NonTerminal.Expr_3) => s31
+            case \/-(_: NonTerminal.AnonList3) => s19
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case -\/(_: Token.comment) => s24
+            case \/-(_: NonTerminal.Expr) => s6
+            case -\/(_: Token.float) => s29
             case \/-(_: NonTerminal.Expr_2) => s4
             case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s22
-            case \/-(_: NonTerminal.Line) => s15
+            case -\/(_: Token._var) => s30
+            case \/-(_: NonTerminal.Line) => s10
           },
           returnFs = Nil,
-          spontaneouslyGenerates = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList3._2,
+          ),
           finalReturnF = None,
         )
       lazy val s3: builder.State =
         builder.State(
           id = 3,
           acceptF = Some {
-            case -\/(_: Token.powOp) => s12
+            case -\/(_: Token.powOp) => s16
           },
           returnFs = List(
             {
@@ -737,12 +788,12 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         builder.State(
           id = 5,
           acceptF = Some {
-            case \/-(_: NonTerminal.Expr_3) => s9
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case -\/(_: Token.float) => s21
+            case \/-(_: NonTerminal.Expr_3) => s8
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case -\/(_: Token.float) => s29
             case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s17
+            case -\/(_: Token._var) => s23
           },
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
@@ -752,20 +803,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         builder.State(
           id = 6,
           acceptF = Some {
-            case \/-(_: NonTerminal.AnonList1) => s11
-            case -\/(_: Token.__.`\n`) => s6
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = List(
-            NonTerminal.AnonList1._2,
-          ),
-          finalReturnF = None,
-        )
-      lazy val s7: builder.State =
-        builder.State(
-          id = 7,
-          acceptF = Some {
-            case -\/(_: Token.addOp) => s8
+            case -\/(_: Token.addOp) => s7
           },
           returnFs = List(
             {
@@ -780,25 +818,25 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s8: builder.State =
+      lazy val s7: builder.State =
         builder.State(
-          id = 8,
+          id = 7,
           acceptF = Some {
-            case \/-(_: NonTerminal.Expr_3) => s28
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case -\/(_: Token.float) => s21
-            case \/-(_: NonTerminal.Expr_2) => s29
+            case \/-(_: NonTerminal.Expr_3) => s31
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case -\/(_: Token.float) => s29
+            case \/-(_: NonTerminal.Expr_2) => s32
             case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s17
+            case -\/(_: Token._var) => s23
           },
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s9: builder.State =
+      lazy val s8: builder.State =
         builder.State(
-          id = 9,
+          id = 8,
           acceptF = None,
           returnFs = List(
             {
@@ -813,9 +851,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s10: builder.State =
+      lazy val s9: builder.State =
         builder.State(
-          id = 10,
+          id = 9,
           acceptF = None,
           returnFs = List(
             {
@@ -830,20 +868,37 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
+      lazy val s10: builder.State =
+        builder.State(
+          id = 10,
+          acceptF = Some {
+            case \/-(_: NonTerminal.AnonList3_2) => s28
+            case \/-(_: NonTerminal.AnonList2) => s11
+            case -\/(_: Token.__.`\n`) => s13
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList3_2._2,
+          ),
+          finalReturnF = None,
+        )
       lazy val s11: builder.State =
         builder.State(
           id = 11,
-          acceptF = None,
-          returnFs = List(
-            {
-              case elem(\/-(_2: NonTerminal.AnonList1)) :: stateElem(state, -\/(_1: Token.__.`\n`)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.AnonList1._1(_1, _2),
-                  stackT,
-                )
-            },
-          ),
+          acceptF = Some {
+            case \/-(_: NonTerminal.Assign) => s25
+            case \/-(_: NonTerminal.Expr_3) => s31
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case -\/(_: Token.comment) => s24
+            case \/-(_: NonTerminal.Expr) => s6
+            case -\/(_: Token.float) => s29
+            case \/-(_: NonTerminal.Expr_2) => s4
+            case \/-(_: NonTerminal.Expr_4) => s3
+            case -\/(_: Token._var) => s30
+            case \/-(_: NonTerminal.Line) => s12
+          },
+          returnFs = Nil,
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
@@ -851,20 +906,77 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         builder.State(
           id = 12,
           acceptF = Some {
-            case \/-(_: NonTerminal.Expr_3) => s13
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case -\/(_: Token.float) => s21
-            case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s17
+            case \/-(_: NonTerminal.AnonList3_2) => s15
+            case \/-(_: NonTerminal.AnonList2) => s11
+            case -\/(_: Token.__.`\n`) => s13
           },
           returnFs = Nil,
-          spontaneouslyGenerates = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList3_2._2,
+          ),
           finalReturnF = None,
         )
       lazy val s13: builder.State =
         builder.State(
           id = 13,
+          acceptF = Some {
+            case \/-(_: NonTerminal.AnonList2_2) => s26
+            case -\/(_: Token.__.`\n`) => s14
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList2_2._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s14: builder.State =
+        builder.State(
+          id = 14,
+          acceptF = Some {
+            case \/-(_: NonTerminal.AnonList2_2) => s27
+            case -\/(_: Token.__.`\n`) => s14
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList2_2._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s15: builder.State =
+        builder.State(
+          id = 15,
+          acceptF = None,
+          returnFs = List(
+            {
+              case elem(\/-(_3: NonTerminal.AnonList3_2)) :: elem(\/-(_2: NonTerminal.Line)) :: stateElem(state, \/-(_1: NonTerminal.AnonList2)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList3_2._1(_1, _2, _3),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s16: builder.State =
+        builder.State(
+          id = 16,
+          acceptF = Some {
+            case \/-(_: NonTerminal.Expr_3) => s17
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case -\/(_: Token.float) => s29
+            case \/-(_: NonTerminal.Expr_4) => s3
+            case -\/(_: Token._var) => s23
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s17: builder.State =
+        builder.State(
+          id = 17,
           acceptF = None,
           returnFs = List(
             {
@@ -879,39 +991,39 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s14: builder.State =
+      lazy val s18: builder.State =
         builder.State(
-          id = 14,
-          acceptF = None,
-          returnFs = Nil,
-          spontaneouslyGenerates = Nil,
-          finalReturnF = Some {
-            case elem(-\/(Token.EOF)) :: elem(\/-(rawTree: NonTerminal.Lines)) :: Nil =>
-              rawTree
-          },
-        )
-      lazy val s15: builder.State =
-        builder.State(
-          id = 15,
+          id = 18,
           acceptF = Some {
-            case \/-(_: NonTerminal.Lines_2) => s16
-            case \/-(_: NonTerminal.AnonList1) => s18
-            case -\/(_: Token.__.`\n`) => s6
+            case \/-(_: NonTerminal.AnonList1) => s21
+            case -\/(_: Token.__.`\n`) => s18
           },
           returnFs = Nil,
           spontaneouslyGenerates = List(
-            NonTerminal.Lines_2._2,
             NonTerminal.AnonList1._2,
           ),
           finalReturnF = None,
         )
-      lazy val s16: builder.State =
+      lazy val s19: builder.State =
         builder.State(
-          id = 16,
+          id = 19,
+          acceptF = Some {
+            case \/-(_: NonTerminal.AnonList1) => s20
+            case -\/(_: Token.__.`\n`) => s18
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = List(
+            NonTerminal.AnonList1._2,
+          ),
+          finalReturnF = None,
+        )
+      lazy val s20: builder.State =
+        builder.State(
+          id = 20,
           acceptF = None,
           returnFs = List(
             {
-              case elem(\/-(_3: NonTerminal.Lines_2)) :: elem(\/-(_2: NonTerminal.Line)) :: stateElem(state, \/-(_1: NonTerminal.AnonList1)) :: stackT =>
+              case elem(\/-(_3: NonTerminal.AnonList1)) :: elem(\/-(_2: NonTerminal.AnonList3)) :: stateElem(state, \/-(_1: NonTerminal.AnonList1)) :: stackT =>
                 (
                   state,
                   NonTerminal.Lines._1(_1, _2, _3),
@@ -922,9 +1034,37 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s17: builder.State =
+      lazy val s21: builder.State =
         builder.State(
-          id = 17,
+          id = 21,
+          acceptF = None,
+          returnFs = List(
+            {
+              case elem(\/-(_2: NonTerminal.AnonList1)) :: stateElem(state, -\/(_1: Token.__.`\n`)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList1._1(_1, _2),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s22: builder.State =
+        builder.State(
+          id = 22,
+          acceptF = None,
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = Some {
+            case elem(-\/(Token.EOF)) :: elem(\/-(rawTree: NonTerminal.Lines)) :: Nil =>
+              rawTree
+          },
+        )
+      lazy val s23: builder.State =
+        builder.State(
+          id = 23,
           acceptF = None,
           returnFs = List(
             {
@@ -939,29 +1079,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s18: builder.State =
+      lazy val s24: builder.State =
         builder.State(
-          id = 18,
-          acceptF = Some {
-            case \/-(_: NonTerminal.Assign) => s20
-            case \/-(_: NonTerminal.Expr_3) => s28
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case -\/(_: Token.comment) => s19
-            case \/-(_: NonTerminal.Expr) => s7
-            case -\/(_: Token.float) => s21
-            case \/-(_: NonTerminal.Expr_2) => s4
-            case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s22
-            case \/-(_: NonTerminal.Line) => s25
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s19: builder.State =
-        builder.State(
-          id = 19,
+          id = 24,
           acceptF = None,
           returnFs = List(
             {
@@ -976,9 +1096,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s20: builder.State =
+      lazy val s25: builder.State =
         builder.State(
-          id = 20,
+          id = 25,
           acceptF = None,
           returnFs = List(
             {
@@ -993,9 +1113,60 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s21: builder.State =
+      lazy val s26: builder.State =
         builder.State(
-          id = 21,
+          id = 26,
+          acceptF = None,
+          returnFs = List(
+            {
+              case elem(\/-(_2: NonTerminal.AnonList2_2)) :: stateElem(state, -\/(_1: Token.__.`\n`)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList2._1(_1, _2),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s27: builder.State =
+        builder.State(
+          id = 27,
+          acceptF = None,
+          returnFs = List(
+            {
+              case elem(\/-(_2: NonTerminal.AnonList2_2)) :: stateElem(state, -\/(_1: Token.__.`\n`)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList2_2._1(_1, _2),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s28: builder.State =
+        builder.State(
+          id = 28,
+          acceptF = None,
+          returnFs = List(
+            {
+              case elem(\/-(_2: NonTerminal.AnonList3_2)) :: stateElem(state, \/-(_1: NonTerminal.Line)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.AnonList3._1(_1, _2),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s29: builder.State =
+        builder.State(
+          id = 29,
           acceptF = None,
           returnFs = List(
             {
@@ -1010,11 +1181,11 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s22: builder.State =
+      lazy val s30: builder.State =
         builder.State(
-          id = 22,
+          id = 30,
           acceptF = Some {
-            case -\/(_: Token.__.`=`) => s23
+            case -\/(_: Token.__.`=`) => s35
           },
           returnFs = List(
             {
@@ -1029,90 +1200,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s23: builder.State =
+      lazy val s31: builder.State =
         builder.State(
-          id = 23,
-          acceptF = Some {
-            case \/-(_: NonTerminal.Expr_3) => s28
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case \/-(_: NonTerminal.Expr) => s24
-            case -\/(_: Token.float) => s21
-            case \/-(_: NonTerminal.Expr_2) => s4
-            case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s17
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s24: builder.State =
-        builder.State(
-          id = 24,
-          acceptF = Some {
-            case -\/(_: Token.addOp) => s8
-          },
-          returnFs = List(
-            {
-              case elem(\/-(_3: NonTerminal.Expr)) :: elem(-\/(_2: Token.__.`=`)) :: stateElem(state, -\/(_1: Token._var)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.Assign._1(_1, _2, _3),
-                  stackT,
-                )
-            },
-          ),
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s25: builder.State =
-        builder.State(
-          id = 25,
-          acceptF = Some {
-            case \/-(_: NonTerminal.AnonList1) => s26
-            case -\/(_: Token.__.`\n`) => s6
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = List(
-            NonTerminal.AnonList1._2,
-          ),
-          finalReturnF = None,
-        )
-      lazy val s26: builder.State =
-        builder.State(
-          id = 26,
-          acceptF = Some {
-            case \/-(_: NonTerminal.Lines_2) => s27
-            case \/-(_: NonTerminal.AnonList1) => s18
-            case -\/(_: Token.__.`\n`) => s6
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = List(
-            NonTerminal.Lines_2._2,
-            NonTerminal.AnonList1._2,
-          ),
-          finalReturnF = None,
-        )
-      lazy val s27: builder.State =
-        builder.State(
-          id = 27,
-          acceptF = None,
-          returnFs = List(
-            {
-              case elem(\/-(_4: NonTerminal.Lines_2)) :: elem(\/-(_3: NonTerminal.AnonList1)) :: elem(\/-(_2: NonTerminal.Line)) :: stateElem(state, \/-(_1: NonTerminal.AnonList1)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.Lines_2._1(_1, _2, _3, _4),
-                  stackT,
-                )
-            },
-          ),
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s28: builder.State =
-        builder.State(
-          id = 28,
+          id = 31,
           acceptF = None,
           returnFs = List(
             {
@@ -1127,9 +1217,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s29: builder.State =
+      lazy val s32: builder.State =
         builder.State(
-          id = 29,
+          id = 32,
           acceptF = Some {
             case -\/(_: Token.multOp) => s5
           },
@@ -1146,37 +1236,73 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s30: builder.State =
+      lazy val s33: builder.State =
         builder.State(
-          id = 30,
+          id = 33,
           acceptF = Some {
-            case \/-(_: NonTerminal.Expr_3) => s28
-            case -\/(_: Token.int) => s10
-            case -\/(_: Token.__.`(`) => s30
-            case \/-(_: NonTerminal.Expr) => s31
-            case -\/(_: Token.float) => s21
+            case \/-(_: NonTerminal.Expr_3) => s31
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case \/-(_: NonTerminal.Expr) => s34
+            case -\/(_: Token.float) => s29
             case \/-(_: NonTerminal.Expr_2) => s4
             case \/-(_: NonTerminal.Expr_4) => s3
-            case -\/(_: Token._var) => s17
+            case -\/(_: Token._var) => s23
           },
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s31: builder.State =
+      lazy val s34: builder.State =
         builder.State(
-          id = 31,
+          id = 34,
           acceptF = Some {
-            case -\/(_: Token.addOp) => s8
-            case -\/(_: Token.__.`)`) => s32
+            case -\/(_: Token.addOp) => s7
+            case -\/(_: Token.__.`)`) => s37
           },
           returnFs = Nil,
           spontaneouslyGenerates = Nil,
           finalReturnF = None,
         )
-      lazy val s32: builder.State =
+      lazy val s35: builder.State =
         builder.State(
-          id = 32,
+          id = 35,
+          acceptF = Some {
+            case \/-(_: NonTerminal.Expr_3) => s31
+            case -\/(_: Token.int) => s9
+            case -\/(_: Token.__.`(`) => s33
+            case \/-(_: NonTerminal.Expr) => s36
+            case -\/(_: Token.float) => s29
+            case \/-(_: NonTerminal.Expr_2) => s4
+            case \/-(_: NonTerminal.Expr_4) => s3
+            case -\/(_: Token._var) => s23
+          },
+          returnFs = Nil,
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s36: builder.State =
+        builder.State(
+          id = 36,
+          acceptF = Some {
+            case -\/(_: Token.addOp) => s7
+          },
+          returnFs = List(
+            {
+              case elem(\/-(_3: NonTerminal.Expr)) :: elem(-\/(_2: Token.__.`=`)) :: stateElem(state, -\/(_1: Token._var)) :: stackT =>
+                (
+                  state,
+                  NonTerminal.Assign._1(_1, _2, _3),
+                  stackT,
+                )
+            },
+          ),
+          spontaneouslyGenerates = Nil,
+          finalReturnF = None,
+        )
+      lazy val s37: builder.State =
+        builder.State(
+          id = 37,
           acceptF = None,
           returnFs = List(
             {

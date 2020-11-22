@@ -2,6 +2,7 @@ package slyce.generate.grammar
 
 import scala.annotation.tailrec
 
+import scalaz.Disjunction
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
@@ -325,6 +326,40 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         input.nts,
       )
 
+    {
+      // DEBUG : (Start) ==================================================
+      import klib.ColorString.syntax._
+      import auto._
+      import klib.Idt._
+      import klib.Logger.GlobalLogger
+
+      implicit val flags: Set[String] = Set()
+
+      GlobalLogger.break
+      GlobalLogger.debug("=====| Even More... |=====")
+      GlobalLogger.debug(
+        Group(
+          rls.map { rl =>
+            Group(
+              rl.name.str,
+              Indented(
+                rl.reductions.list.toList.map { r =>
+                  Group(
+                    ">",
+                    Indented(
+                      r.elements.map(_.str),
+                    ),
+                  )
+                },
+              ),
+            )
+          },
+        ),
+      )
+
+      // DEBUG : (End) ==================================================
+    }
+
     val (
       namedRls: List[SimpleData.ReductionList],
       anon: List[(Name.AnonList, SimpleData.ReductionList, List[List[Identifier]])],
@@ -349,6 +384,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
 
     val (
       anonRls: List[SimpleData.ReductionList],
+      nameReMap: Map[SimpleData.Name.AnonList, SimpleData.Name.AnonList],
       toReduce: List[Int],
     ) =
       anon
@@ -358,21 +394,82 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
         .foldLeft(
           (
             Nil: List[SimpleData.ReductionList],
+            Map.empty: Map[SimpleData.Name.AnonList, SimpleData.Name.AnonList],
             Nil: List[Int],
           ),
         ) {
-          case (prev @ (aRls, tIgn), grouped) =>
+          case (prev @ (aRls, map, tIgn), grouped) =>
             grouped.sortBy(_._1.num) match {
               case Nil =>
                 prev
               case head :: tail =>
-                (head._2 :: aRls, tail.map(_._1.num) ::: tIgn)
+                {
+                  // DEBUG : (Start) ==================================================
+                  import klib.ColorString.syntax._
+                  import auto._
+                  import klib.Idt._
+                  import klib.Logger.GlobalLogger
+
+                  implicit val flags: Set[String] = Set()
+
+                  GlobalLogger.break
+                  GlobalLogger.debug("=====| More stuff |=====")
+                  GlobalLogger.debug(tail)
+
+                  // DEBUG : (End) ==================================================
+                }
+
+                (
+                  head._2 :: aRls,
+                  map ++ tail.map(_._1 -> head._1),
+                  tail.map(_._1.num) ::: tIgn,
+                )
             }
         }
 
+    {
+      // DEBUG : (Start) ==================================================
+      import klib.ColorString.syntax._
+      import auto._
+      import klib.Idt._
+      import klib.Logger.GlobalLogger
+
+      implicit val flags: Set[String] = Set()
+
+      GlobalLogger.break
+      GlobalLogger.debug("=====| AnonRls |=====")
+      GlobalLogger.debug(anonRls.mkString("\n"))
+      GlobalLogger.debug(toReduce.mkString("\n"))
+
+      // DEBUG : (End) ==================================================
+    }
+
     val reduceName: SimpleData.Name => SimpleData.Name = {
       case name: SimpleData.Name.AnonList =>
-        name.copy(num = name.num - toReduce.count(_ <= name.num))
+        val res = nameReMap.getOrElse(name, name)
+
+        {
+          // DEBUG : (Start) ==================================================
+          import klib.ColorString.syntax._
+          import auto._
+          import klib.Idt._
+          import klib.Logger.GlobalLogger
+
+          implicit val flags: Set[String] = Set()
+
+          GlobalLogger.break
+          GlobalLogger.debug("=====| So much debugging... |=====")
+          GlobalLogger.debug(
+            Group(
+              name.str,
+              res.str,
+            ),
+          )
+
+          // DEBUG : (End) ==================================================
+        }
+
+        res.copy(num = res.num - toReduce.count(_ <= res.num))
       case name =>
         name
     }

@@ -166,7 +166,6 @@ object Generate extends App {
         )(),
         after = None,
       )
-    /*
     val someNl: Data.Element =
       ListNT.+(
         before = IgnoredList()(
@@ -174,7 +173,6 @@ object Generate extends App {
         )(),
         after = None,
       )
-     */
 
     Data(
       startNT = "Lines",
@@ -182,19 +180,23 @@ object Generate extends App {
         // Lines
         NT(
           name = "Lines",
-          nt = ListNT.*(
-            before = IgnoredList(
+          nt = StandardNT.^(
+            IgnoredList(
               anyNl,
             )(
-              Id("Line"),
-            )(),
-            after = IgnoredList(
-              anyNl,
+              ListNT.*(
+                before = IgnoredList()(
+                  Id("Line"),
+                )(),
+                after = IgnoredList(
+                  someNl,
+                )(
+                  Id("Line"),
+                )().some,
+              ),
             )(
-              Id("Line"),
-            )(
               anyNl,
-            ).some,
+            ),
           ),
         ),
         // Line
