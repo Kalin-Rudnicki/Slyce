@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 import slyce.common.helpers._
 import scalaz.\/
@@ -72,73 +73,6 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
             s"#$idx$memAddr$nonTrivial$canEpsilon"
           }
 
-          GlobalLogger.debug(
-            Group(
-              "modes:",
-              Indented(
-                nfa.modes.toList.map {
-                  case m -> s =>
-                    s"$m => #${allStates(s)}"
-                },
-              ),
-              "states:",
-              Indented(
-                allStates.toList.sortBy(_._2).map {
-                  case s -> i =>
-                    Group(
-                      s"${stateName(s)} =>",
-                      Indented(
-                        s"isTrivial => ${s.isTrivial}",
-                        s"allCanEpsilonTrivial => ${s.nonTrivial.isEmpty}",
-                        "joinedTransitions =>",
-                        Indented(
-                          s.nonTrivial.toList.map { s2 =>
-                            Group(
-                              s"${stateName(s2)}:",
-                              Indented(
-                                s2.transitions.map {
-                                  case c -> t =>
-                                    s"$c => ${stateName(t)}"
-                                },
-                              ),
-                            )
-                          },
-                        ),
-                        "joinedEnds =>",
-                        Indented(
-                          s.nonTrivial.toList.map { s2 =>
-                            Group(
-                              s"${stateName(s2)}:",
-                              Indented(
-                                s2.`end`.map(_.toString),
-                              ),
-                            )
-                          },
-                        ),
-                        /*
-                        "transitions =>",
-                        Indented(
-                          s.transitions.map {
-                            case c -> t =>
-                              s"$c => #${allStates(t)}"
-                          },
-                        ),
-                         */
-                        /*
-                        "epsilonTransitions =>",
-                        Indented(
-                          s.epsilonTransitions.map { e =>
-                            s"#${allStates(e)}"
-                          },
-                        ),
-                         */
-                      ),
-                    )
-                },
-              ),
-            ),
-          )
-          GlobalLogger.break
           import scala.collection.mutable.{Map => MMap}
           import scala.collection.mutable.{Set => MSet}
 
@@ -149,21 +83,22 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
 
           def recBuild(
               state: Nfa.State,
-              map: MMap[Nfa.State, MSet[List[Int]]],
-              prevPath: List[Int],
+              map: MMap[Nfa.State, MSet[List[(Option[Regex.CharClass], Int)]]],
+              prevPath: List[(Option[Regex.CharClass], Int)],
           ): Option[Idt] = {
             val mSet = map.getOrElseUpdate(state, MSet())
             val isNew = mSet.isEmpty
             mSet.add(prevPath.reverse)
 
-            isNew.option {
-              val currentPath = allStates(state) :: prevPath
+            val idx = allStates(state)
 
-              Indented(
-                "{",
+            isNew.option {
+              val epPath = (None, idx) :: prevPath
+
+              Group(
                 Indented(
                   state.epsilonTransitions.map { s =>
-                    val c = recBuild(s, map, currentPath)
+                    val c = recBuild(s, map, epPath)
                     Group(
                       s"_ ${"=>".cyan.toString} ${sName(s, c.nonEmpty)}",
                       c,
@@ -171,7 +106,7 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                   },
                   state.transitions.map {
                     case (cc, s) =>
-                      val c = recBuild(s, map, currentPath)
+                      val c = recBuild(s, map, (cc.some, idx) :: prevPath)
                       Group(
                         s"$cc ${"=>".blue.toString} ${sName(s, c.nonEmpty)}",
                         c,
@@ -179,12 +114,11 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                   },
                   state.`end`.map(e => s"${"<=".yellow.toString} $e"),
                 ),
-                "}",
               )
             }
           }
 
-          val mMap: MMap[Nfa.State, MSet[List[Int]]] = MMap()
+          val mMap: MMap[Nfa.State, MSet[List[(Option[Regex.CharClass], Int)]]] = MMap()
           val idt = Group(
             nfa.modes.toList.map {
               case name -> s =>
@@ -198,16 +132,37 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
           GlobalLogger.debug(idt.build("|   ".green.toString))
           GlobalLogger.debug(
             Group(
-              mMap.toList.map {
-                case k -> v =>
-                  Group(
-                    Break,
-                    s"${stateName(k)}:",
-                    Indented(
-                      v.toList.map(p => p.map(p2 => s"#$p2").mkString(" => ")),
-                    ),
-                  )
-              },
+              mMap.toList
+                .sortBy {
+                  case _1 -> _ =>
+                    (_1.nonTrivial.nonEmpty, _1.`end`.isEmpty)
+                }
+                .map {
+                  case k -> v =>
+                    Group(
+                      Break,
+                      s"${stateName(k)}:",
+                      Indented(
+                        v.toList.map { list =>
+                          Group(
+                            ">".blue.toString,
+                            Indented(
+                              list.map {
+                                case (cc, p) =>
+                                  s"#$p => ${cc.cata(_.toString, "_")} => "
+                              },
+                            ),
+                          )
+                        },
+                        k.`end`.map { e =>
+                          Group(
+                            "<".magenta.toString,
+                            Indented(e.toString),
+                          )
+                        },
+                      ),
+                    )
+                },
             ).build("|   ".green.toString),
           )
 

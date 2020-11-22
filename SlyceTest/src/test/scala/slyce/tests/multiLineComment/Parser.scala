@@ -91,10 +91,10 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Comment
       Dfa.State(
         id = 0,
         transitions = Map(
-          0x9.toChar -> Some(Lazy(s1)), // '\t'
-          0xA.toChar -> Some(Lazy(s1)), // '\n'
-          0x20.toChar -> Some(Lazy(s1)), // ' '
-          0x2F.toChar -> Some(Lazy(s6)), // '/'
+          0x9.toChar -> Some(Lazy(s6)), // '\t'
+          0xA.toChar -> Some(Lazy(s6)), // '\n'
+          0x20.toChar -> Some(Lazy(s6)), // ' '
+          0x2F.toChar -> Some(Lazy(s5)), // '/'
         ),
         elseTransition = None,
         yields = None,
@@ -102,22 +102,40 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Comment
     lazy val s1: Dfa.State[Token] =
       Dfa.State(
         id = 1,
-        transitions = Map.empty,
-        elseTransition = None,
-        yields = Some(Dfa.State.Yields(s0)()),
+        transitions = Map(
+          0xA.toChar -> None, // '\n'
+        ),
+        elseTransition = Some(Lazy(s1)),
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token.comment.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
       )
     lazy val s2: Dfa.State[Token] =
       Dfa.State(
         id = 2,
         transitions = Map(
-          0x2A.toChar -> Some(Lazy(s5)), // '*'
+          0x2A.toChar -> Some(Lazy(s3)), // '*'
         ),
-        elseTransition = None,
+        elseTransition = Some(Lazy(s2)),
         yields = None,
       )
     lazy val s3: Dfa.State[Token] =
       Dfa.State(
         id = 3,
+        transitions = Map(
+          0x2F.toChar -> Some(Lazy(s4)), // '/'
+        ),
+        elseTransition = Some(Lazy(s2)),
+        yields = None,
+      )
+    lazy val s4: Dfa.State[Token] =
+      Dfa.State(
+        id = 4,
         transitions = Map.empty,
         elseTransition = None,
         yields = Some(
@@ -129,27 +147,12 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Comment
           ),
         ),
       )
-    lazy val s4: Dfa.State[Token] =
-      Dfa.State(
-        id = 4,
-        transitions = Map(
-          0xA.toChar -> None, // '\n'
-        ),
-        elseTransition = Some(Lazy(s4)),
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
     lazy val s5: Dfa.State[Token] =
       Dfa.State(
         id = 5,
         transitions = Map(
-          0x2F.toChar -> Some(Lazy(s3)), // '/'
+          0x2A.toChar -> Some(Lazy(s2)), // '*'
+          0x2F.toChar -> Some(Lazy(s1)), // '/'
         ),
         elseTransition = None,
         yields = None,
@@ -157,12 +160,9 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Comment
     lazy val s6: Dfa.State[Token] =
       Dfa.State(
         id = 6,
-        transitions = Map(
-          0x2A.toChar -> Some(Lazy(s2)), // '*'
-          0x2F.toChar -> Some(Lazy(s4)), // '/'
-        ),
+        transitions = Map.empty,
         elseTransition = None,
-        yields = None,
+        yields = Some(Dfa.State.Yields(s0)()),
       )
 
     Dfa(s0, Token.EOF)

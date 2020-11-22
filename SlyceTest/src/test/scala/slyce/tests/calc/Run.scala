@@ -47,7 +47,8 @@ object Run extends App {
 
     rawTree.toList.foreach {
       case NonTerminal.Line._3(comment) =>
-        println(comment)
+        println("comment:")
+        println(comment.text)
       case NonTerminal.Line._2(NonTerminal.Assign._1(_var, _, expr)) =>
         println(s"${_var.text} = ${exprRoot(expr.toExpr)}")
       case NonTerminal.Line._1(expr) =>

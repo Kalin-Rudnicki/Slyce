@@ -60,7 +60,29 @@ object Nfa {
           seqs.list.toList
             .map(this.on)
             .traverseErrs
-            .map(State.mergeInto)
+            .map { ss =>
+              {
+                // DEBUG : (Start) ==================================================
+                import klib.ColorString.syntax._
+                import auto._
+                import klib.Idt._
+                import klib.Logger.GlobalLogger
+
+                implicit val flags: Set[String] = Set()
+
+                val merged = State.mergeInto(ss)
+
+                GlobalLogger.break
+                GlobalLogger.debug("=====| Regex.Group |=====")
+                GlobalLogger.debug(ss.map(_.toString.split("\\$").last).mkString(", "))
+                GlobalLogger.debug(merged.toString.split("\\$").last)
+                GlobalLogger.break
+
+                // DEBUG : (End) ==================================================
+
+                merged
+              }
+            }
         case Regex.Repeat(_, min, _) if min < 0 =>
           List(s"min ($min) < 0").left
         case Regex.Repeat(_, min, Some(max)) if max < min =>
@@ -178,7 +200,7 @@ object Nfa {
     // states -> newState
     def mergeInto(states: List[State]): State = {
       val state = new State
-      states.foreach(_.epsilonTransitions.appended(state))
+      states.foreach(_._epsilonTransitions.append(state))
       state
     }
 

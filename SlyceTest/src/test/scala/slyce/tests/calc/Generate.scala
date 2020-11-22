@@ -42,7 +42,7 @@ object Generate extends App {
               regex = Regex.Sequence(
                 Inclusive('/'),
                 Inclusive('*'),
-                Regex.Group( // TODO (KR) :
+                Regex.Repeat * Regex.Group(
                   Regex.Sequence(
                     Exclusive('*'),
                   ),
