@@ -2,7 +2,8 @@ package slyce.generate.grammar
 
 import scalaz.IList
 import scalaz.NonEmptyList
-import slyce.common.helpers._
+
+import klib.CharStringOps._
 
 import scala.annotation.tailrec
 

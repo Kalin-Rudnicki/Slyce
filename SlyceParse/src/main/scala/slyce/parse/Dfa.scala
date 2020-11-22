@@ -10,6 +10,7 @@ import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 
+import klib.CharStringOps._
 import slyce.common.helpers._
 import slyce.parse.Dfa.Token.Pos.InLineStart
 import slyce.parse.{architecture => arch}

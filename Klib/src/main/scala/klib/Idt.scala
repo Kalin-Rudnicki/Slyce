@@ -27,9 +27,13 @@ sealed trait Idt {
     builder.toString
   }
 
+  override def toString: String = build("    ")
+
 }
 
 object Idt {
+
+  type Idt = klib.Idt
 
   case object Break extends Idt
 

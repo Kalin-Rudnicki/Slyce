@@ -3,7 +3,8 @@ package slyce.generate.grammar
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToOptionIdOps
-import slyce.common.helpers._
+
+import klib.CharStringOps._
 
 case class SimpleData(
     startNt: String,

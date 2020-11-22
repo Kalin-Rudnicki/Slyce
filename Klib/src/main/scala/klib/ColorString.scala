@@ -2,6 +2,7 @@ package klib
 
 import scala.annotation.tailrec
 
+import scalaz.Disjunction
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToOptionIdOps
@@ -307,8 +308,35 @@ object ColorString {
     implicit class ColorStringInterpolator(sc: StringContext) {
 
       def color(args: ColorString*): ColorString = {
-        // TODO (KR) :
-        ???
+        def nonEmptyString(str: String): Option[String] =
+          str.nonEmpty ? str.some | None
+
+        @tailrec
+        def loop(
+            sQueue: List[String],
+            csQueue: List[ColorString],
+            stack: List[(Option[String], ColorString)],
+        ): (List[(Option[String], ColorString)], Option[String]) =
+          (sQueue, csQueue) match {
+            case (sH :: sT, csH :: csT) =>
+              loop(
+                sT,
+                csT,
+                (nonEmptyString(sH), csH) :: stack,
+              )
+            case (_, Nil) =>
+              (stack.reverse, nonEmptyString(sQueue.mkString))
+            case (Nil, csH :: csT) => // This should not be possible...
+              loop(
+                Nil,
+                csT,
+                (None, csH) :: stack,
+              )
+          }
+
+        val (pairs, tail) = loop(sc.parts.toList, args.toList, Nil)
+
+        ColorString.Complex(Color.Empty, pairs, tail)
       }
 
     }

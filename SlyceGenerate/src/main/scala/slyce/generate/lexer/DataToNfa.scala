@@ -18,6 +18,21 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
       .map(m => makeMode(m).map((m, _)))
       .traverseErrs
       .map { m1 =>
+        {
+          // DEBUG : (Start) ==================================================
+          import klib.ColorString.syntax._
+          import auto._
+          import klib.Idt._
+          import klib.Logger.GlobalLogger
+
+          implicit val flags: Set[String] = Set("DataToNfa")
+
+          GlobalLogger.break
+          GlobalLogger.debug("=====| DataToNfa |=====")
+
+          // DEBUG : (End) ==================================================
+        }
+
         Nfa(
           input.startMode,
           m1.map {

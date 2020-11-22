@@ -28,19 +28,6 @@ object StateMachine {
             k -> ReductionList(v)
         }
 
-    accepts
-      .exists {
-        case (SimpleData.Identifier.Terminal(name), _) if name.contains(SimpleData.Identifier.EofName) =>
-          true
-        case _ =>
-          false
-      }
-      .option(())
-      .foreach { _ =>
-        println
-        accepts.foreach(println)
-      }
-
     val returns: Set[(SimpleData.Name, Int, List[SimpleData.Identifier])] =
       reductions.flatMap {
         case ReductionList.Reduction(name, idx, elements, Nil) =>

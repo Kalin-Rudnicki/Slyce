@@ -3,7 +3,7 @@ package slyce.generate.lexer
 import scalaz.NonEmptyList
 import scalaz.Scalaz.ToOptionIdOps
 
-import slyce.common.helpers._
+import klib.CharStringOps._
 
 sealed trait Regex
 

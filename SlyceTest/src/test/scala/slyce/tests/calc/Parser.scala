@@ -285,15 +285,15 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
       Dfa.State(
         id = 0,
         transitions = Map(
-          0x9.toChar -> Some(Lazy(s2)), // '\t'
-          0xA.toChar -> Some(Lazy(s3)), // '\n'
-          0x20.toChar -> Some(Lazy(s2)), // ' '
-          0x28.toChar -> Some(Lazy(s3)), // '('
-          0x29.toChar -> Some(Lazy(s3)), // ')'
-          0x2A.toChar -> Some(Lazy(s12)), // '*'
-          0x2B.toChar -> Some(Lazy(s5)), // '+'
-          0x2D.toChar -> Some(Lazy(s8)), // '-'
-          0x2F.toChar -> Some(Lazy(s10)), // '/'
+          0x9.toChar -> Some(Lazy(s8)), // '\t'
+          0xA.toChar -> Some(Lazy(s4)), // '\n'
+          0x20.toChar -> Some(Lazy(s8)), // ' '
+          0x28.toChar -> Some(Lazy(s4)), // '('
+          0x29.toChar -> Some(Lazy(s4)), // ')'
+          0x2A.toChar -> Some(Lazy(s3)), // '*'
+          0x2B.toChar -> Some(Lazy(s6)), // '+'
+          0x2D.toChar -> Some(Lazy(s13)), // '-'
+          0x2F.toChar -> Some(Lazy(s14)), // '/'
           0x30.toChar -> Some(Lazy(s15)), // '0'
           0x31.toChar -> Some(Lazy(s15)), // '1'
           0x32.toChar -> Some(Lazy(s15)), // '2'
@@ -304,35 +304,35 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
           0x37.toChar -> Some(Lazy(s15)), // '7'
           0x38.toChar -> Some(Lazy(s15)), // '8'
           0x39.toChar -> Some(Lazy(s15)), // '9'
-          0x3D.toChar -> Some(Lazy(s3)), // '='
-          0x5E.toChar -> Some(Lazy(s4)), // '^'
-          0x5F.toChar -> Some(Lazy(s6)), // '_'
-          0x61.toChar -> Some(Lazy(s6)), // 'a'
-          0x62.toChar -> Some(Lazy(s6)), // 'b'
-          0x63.toChar -> Some(Lazy(s6)), // 'c'
-          0x64.toChar -> Some(Lazy(s6)), // 'd'
-          0x65.toChar -> Some(Lazy(s6)), // 'e'
-          0x66.toChar -> Some(Lazy(s6)), // 'f'
-          0x67.toChar -> Some(Lazy(s6)), // 'g'
-          0x68.toChar -> Some(Lazy(s6)), // 'h'
-          0x69.toChar -> Some(Lazy(s6)), // 'i'
-          0x6A.toChar -> Some(Lazy(s6)), // 'j'
-          0x6B.toChar -> Some(Lazy(s6)), // 'k'
-          0x6C.toChar -> Some(Lazy(s6)), // 'l'
-          0x6D.toChar -> Some(Lazy(s6)), // 'm'
-          0x6E.toChar -> Some(Lazy(s6)), // 'n'
-          0x6F.toChar -> Some(Lazy(s6)), // 'o'
-          0x70.toChar -> Some(Lazy(s6)), // 'p'
-          0x71.toChar -> Some(Lazy(s6)), // 'q'
-          0x72.toChar -> Some(Lazy(s6)), // 'r'
-          0x73.toChar -> Some(Lazy(s6)), // 's'
-          0x74.toChar -> Some(Lazy(s6)), // 't'
-          0x75.toChar -> Some(Lazy(s6)), // 'u'
-          0x76.toChar -> Some(Lazy(s6)), // 'v'
-          0x77.toChar -> Some(Lazy(s6)), // 'w'
-          0x78.toChar -> Some(Lazy(s6)), // 'x'
-          0x79.toChar -> Some(Lazy(s6)), // 'y'
-          0x7A.toChar -> Some(Lazy(s6)), // 'z'
+          0x3D.toChar -> Some(Lazy(s4)), // '='
+          0x5E.toChar -> Some(Lazy(s5)), // '^'
+          0x5F.toChar -> Some(Lazy(s11)), // '_'
+          0x61.toChar -> Some(Lazy(s11)), // 'a'
+          0x62.toChar -> Some(Lazy(s11)), // 'b'
+          0x63.toChar -> Some(Lazy(s11)), // 'c'
+          0x64.toChar -> Some(Lazy(s11)), // 'd'
+          0x65.toChar -> Some(Lazy(s11)), // 'e'
+          0x66.toChar -> Some(Lazy(s11)), // 'f'
+          0x67.toChar -> Some(Lazy(s11)), // 'g'
+          0x68.toChar -> Some(Lazy(s11)), // 'h'
+          0x69.toChar -> Some(Lazy(s11)), // 'i'
+          0x6A.toChar -> Some(Lazy(s11)), // 'j'
+          0x6B.toChar -> Some(Lazy(s11)), // 'k'
+          0x6C.toChar -> Some(Lazy(s11)), // 'l'
+          0x6D.toChar -> Some(Lazy(s11)), // 'm'
+          0x6E.toChar -> Some(Lazy(s11)), // 'n'
+          0x6F.toChar -> Some(Lazy(s11)), // 'o'
+          0x70.toChar -> Some(Lazy(s11)), // 'p'
+          0x71.toChar -> Some(Lazy(s11)), // 'q'
+          0x72.toChar -> Some(Lazy(s11)), // 'r'
+          0x73.toChar -> Some(Lazy(s11)), // 's'
+          0x74.toChar -> Some(Lazy(s11)), // 't'
+          0x75.toChar -> Some(Lazy(s11)), // 'u'
+          0x76.toChar -> Some(Lazy(s11)), // 'v'
+          0x77.toChar -> Some(Lazy(s11)), // 'w'
+          0x78.toChar -> Some(Lazy(s11)), // 'x'
+          0x79.toChar -> Some(Lazy(s11)), // 'y'
+          0x7A.toChar -> Some(Lazy(s11)), // 'z'
         ),
         elseTransition = None,
         yields = None,
@@ -341,7 +341,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
       Dfa.State(
         id = 1,
         transitions = Map(
-          0x2F.toChar -> Some(Lazy(s7)), // '/'
+          0x2A.toChar -> Some(Lazy(s7)), // '*'
         ),
         elseTransition = None,
         yields = None,
@@ -351,7 +351,14 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         id = 2,
         transitions = Map.empty,
         elseTransition = None,
-        yields = Some(Dfa.State.Yields(s0)()),
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token.comment.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
       )
     lazy val s3: Dfa.State[Token] =
       Dfa.State(
@@ -361,7 +368,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.__.apply,
+              tokF = Token.multOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -375,7 +382,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.powOp.apply,
+              tokF = Token.__.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -389,7 +396,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.addOp.apply,
+              tokF = Token.powOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -398,110 +405,7 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s6: Dfa.State[Token] =
       Dfa.State(
         id = 6,
-        transitions = Map(
-          0x30.toChar -> Some(Lazy(s6)), // '0'
-          0x31.toChar -> Some(Lazy(s6)), // '1'
-          0x32.toChar -> Some(Lazy(s6)), // '2'
-          0x33.toChar -> Some(Lazy(s6)), // '3'
-          0x34.toChar -> Some(Lazy(s6)), // '4'
-          0x35.toChar -> Some(Lazy(s6)), // '5'
-          0x36.toChar -> Some(Lazy(s6)), // '6'
-          0x37.toChar -> Some(Lazy(s6)), // '7'
-          0x38.toChar -> Some(Lazy(s6)), // '8'
-          0x39.toChar -> Some(Lazy(s6)), // '9'
-          0x41.toChar -> Some(Lazy(s6)), // 'A'
-          0x42.toChar -> Some(Lazy(s6)), // 'B'
-          0x43.toChar -> Some(Lazy(s6)), // 'C'
-          0x44.toChar -> Some(Lazy(s6)), // 'D'
-          0x45.toChar -> Some(Lazy(s6)), // 'E'
-          0x46.toChar -> Some(Lazy(s6)), // 'F'
-          0x47.toChar -> Some(Lazy(s6)), // 'G'
-          0x48.toChar -> Some(Lazy(s6)), // 'H'
-          0x49.toChar -> Some(Lazy(s6)), // 'I'
-          0x4A.toChar -> Some(Lazy(s6)), // 'J'
-          0x4B.toChar -> Some(Lazy(s6)), // 'K'
-          0x4C.toChar -> Some(Lazy(s6)), // 'L'
-          0x4D.toChar -> Some(Lazy(s6)), // 'M'
-          0x4E.toChar -> Some(Lazy(s6)), // 'N'
-          0x4F.toChar -> Some(Lazy(s6)), // 'O'
-          0x50.toChar -> Some(Lazy(s6)), // 'P'
-          0x51.toChar -> Some(Lazy(s6)), // 'Q'
-          0x52.toChar -> Some(Lazy(s6)), // 'R'
-          0x53.toChar -> Some(Lazy(s6)), // 'S'
-          0x54.toChar -> Some(Lazy(s6)), // 'T'
-          0x55.toChar -> Some(Lazy(s6)), // 'U'
-          0x56.toChar -> Some(Lazy(s6)), // 'V'
-          0x57.toChar -> Some(Lazy(s6)), // 'W'
-          0x58.toChar -> Some(Lazy(s6)), // 'X'
-          0x59.toChar -> Some(Lazy(s6)), // 'Y'
-          0x5A.toChar -> Some(Lazy(s6)), // 'Z'
-          0x5F.toChar -> Some(Lazy(s6)), // '_'
-          0x61.toChar -> Some(Lazy(s6)), // 'a'
-          0x62.toChar -> Some(Lazy(s6)), // 'b'
-          0x63.toChar -> Some(Lazy(s6)), // 'c'
-          0x64.toChar -> Some(Lazy(s6)), // 'd'
-          0x65.toChar -> Some(Lazy(s6)), // 'e'
-          0x66.toChar -> Some(Lazy(s6)), // 'f'
-          0x67.toChar -> Some(Lazy(s6)), // 'g'
-          0x68.toChar -> Some(Lazy(s6)), // 'h'
-          0x69.toChar -> Some(Lazy(s6)), // 'i'
-          0x6A.toChar -> Some(Lazy(s6)), // 'j'
-          0x6B.toChar -> Some(Lazy(s6)), // 'k'
-          0x6C.toChar -> Some(Lazy(s6)), // 'l'
-          0x6D.toChar -> Some(Lazy(s6)), // 'm'
-          0x6E.toChar -> Some(Lazy(s6)), // 'n'
-          0x6F.toChar -> Some(Lazy(s6)), // 'o'
-          0x70.toChar -> Some(Lazy(s6)), // 'p'
-          0x71.toChar -> Some(Lazy(s6)), // 'q'
-          0x72.toChar -> Some(Lazy(s6)), // 'r'
-          0x73.toChar -> Some(Lazy(s6)), // 's'
-          0x74.toChar -> Some(Lazy(s6)), // 't'
-          0x75.toChar -> Some(Lazy(s6)), // 'u'
-          0x76.toChar -> Some(Lazy(s6)), // 'v'
-          0x77.toChar -> Some(Lazy(s6)), // 'w'
-          0x78.toChar -> Some(Lazy(s6)), // 'x'
-          0x79.toChar -> Some(Lazy(s6)), // 'y'
-          0x7A.toChar -> Some(Lazy(s6)), // 'z'
-        ),
-        elseTransition = None,
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token._var.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
-    lazy val s7: Dfa.State[Token] =
-      Dfa.State(
-        id = 7,
         transitions = Map.empty,
-        elseTransition = None,
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
-    lazy val s8: Dfa.State[Token] =
-      Dfa.State(
-        id = 8,
-        transitions = Map(
-          0x30.toChar -> Some(Lazy(s15)), // '0'
-          0x31.toChar -> Some(Lazy(s15)), // '1'
-          0x32.toChar -> Some(Lazy(s15)), // '2'
-          0x33.toChar -> Some(Lazy(s15)), // '3'
-          0x34.toChar -> Some(Lazy(s15)), // '4'
-          0x35.toChar -> Some(Lazy(s15)), // '5'
-          0x36.toChar -> Some(Lazy(s15)), // '6'
-          0x37.toChar -> Some(Lazy(s15)), // '7'
-          0x38.toChar -> Some(Lazy(s15)), // '8'
-          0x39.toChar -> Some(Lazy(s15)), // '9'
-        ),
         elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
@@ -511,6 +415,22 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
             ),
           ),
         ),
+      )
+    lazy val s7: Dfa.State[Token] =
+      Dfa.State(
+        id = 7,
+        transitions = Map(
+          0x2F.toChar -> Some(Lazy(s2)), // '/'
+        ),
+        elseTransition = None,
+        yields = None,
+      )
+    lazy val s8: Dfa.State[Token] =
+      Dfa.State(
+        id = 8,
+        transitions = Map.empty,
+        elseTransition = None,
+        yields = Some(Dfa.State.Yields(s0)()),
       )
     lazy val s9: Dfa.State[Token] =
       Dfa.State(
@@ -541,14 +461,13 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
       Dfa.State(
         id = 10,
         transitions = Map(
-          0x2A.toChar -> Some(Lazy(s14)), // '*'
-          0x2F.toChar -> Some(Lazy(s13)), // '/'
+          0xA.toChar -> None, // '\n'
         ),
-        elseTransition = None,
+        elseTransition = Some(Lazy(s10)),
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.multOp.apply,
+              tokF = Token.comment.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -557,6 +476,84 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
     lazy val s11: Dfa.State[Token] =
       Dfa.State(
         id = 11,
+        transitions = Map(
+          0x30.toChar -> Some(Lazy(s11)), // '0'
+          0x31.toChar -> Some(Lazy(s11)), // '1'
+          0x32.toChar -> Some(Lazy(s11)), // '2'
+          0x33.toChar -> Some(Lazy(s11)), // '3'
+          0x34.toChar -> Some(Lazy(s11)), // '4'
+          0x35.toChar -> Some(Lazy(s11)), // '5'
+          0x36.toChar -> Some(Lazy(s11)), // '6'
+          0x37.toChar -> Some(Lazy(s11)), // '7'
+          0x38.toChar -> Some(Lazy(s11)), // '8'
+          0x39.toChar -> Some(Lazy(s11)), // '9'
+          0x41.toChar -> Some(Lazy(s11)), // 'A'
+          0x42.toChar -> Some(Lazy(s11)), // 'B'
+          0x43.toChar -> Some(Lazy(s11)), // 'C'
+          0x44.toChar -> Some(Lazy(s11)), // 'D'
+          0x45.toChar -> Some(Lazy(s11)), // 'E'
+          0x46.toChar -> Some(Lazy(s11)), // 'F'
+          0x47.toChar -> Some(Lazy(s11)), // 'G'
+          0x48.toChar -> Some(Lazy(s11)), // 'H'
+          0x49.toChar -> Some(Lazy(s11)), // 'I'
+          0x4A.toChar -> Some(Lazy(s11)), // 'J'
+          0x4B.toChar -> Some(Lazy(s11)), // 'K'
+          0x4C.toChar -> Some(Lazy(s11)), // 'L'
+          0x4D.toChar -> Some(Lazy(s11)), // 'M'
+          0x4E.toChar -> Some(Lazy(s11)), // 'N'
+          0x4F.toChar -> Some(Lazy(s11)), // 'O'
+          0x50.toChar -> Some(Lazy(s11)), // 'P'
+          0x51.toChar -> Some(Lazy(s11)), // 'Q'
+          0x52.toChar -> Some(Lazy(s11)), // 'R'
+          0x53.toChar -> Some(Lazy(s11)), // 'S'
+          0x54.toChar -> Some(Lazy(s11)), // 'T'
+          0x55.toChar -> Some(Lazy(s11)), // 'U'
+          0x56.toChar -> Some(Lazy(s11)), // 'V'
+          0x57.toChar -> Some(Lazy(s11)), // 'W'
+          0x58.toChar -> Some(Lazy(s11)), // 'X'
+          0x59.toChar -> Some(Lazy(s11)), // 'Y'
+          0x5A.toChar -> Some(Lazy(s11)), // 'Z'
+          0x5F.toChar -> Some(Lazy(s11)), // '_'
+          0x61.toChar -> Some(Lazy(s11)), // 'a'
+          0x62.toChar -> Some(Lazy(s11)), // 'b'
+          0x63.toChar -> Some(Lazy(s11)), // 'c'
+          0x64.toChar -> Some(Lazy(s11)), // 'd'
+          0x65.toChar -> Some(Lazy(s11)), // 'e'
+          0x66.toChar -> Some(Lazy(s11)), // 'f'
+          0x67.toChar -> Some(Lazy(s11)), // 'g'
+          0x68.toChar -> Some(Lazy(s11)), // 'h'
+          0x69.toChar -> Some(Lazy(s11)), // 'i'
+          0x6A.toChar -> Some(Lazy(s11)), // 'j'
+          0x6B.toChar -> Some(Lazy(s11)), // 'k'
+          0x6C.toChar -> Some(Lazy(s11)), // 'l'
+          0x6D.toChar -> Some(Lazy(s11)), // 'm'
+          0x6E.toChar -> Some(Lazy(s11)), // 'n'
+          0x6F.toChar -> Some(Lazy(s11)), // 'o'
+          0x70.toChar -> Some(Lazy(s11)), // 'p'
+          0x71.toChar -> Some(Lazy(s11)), // 'q'
+          0x72.toChar -> Some(Lazy(s11)), // 'r'
+          0x73.toChar -> Some(Lazy(s11)), // 's'
+          0x74.toChar -> Some(Lazy(s11)), // 't'
+          0x75.toChar -> Some(Lazy(s11)), // 'u'
+          0x76.toChar -> Some(Lazy(s11)), // 'v'
+          0x77.toChar -> Some(Lazy(s11)), // 'w'
+          0x78.toChar -> Some(Lazy(s11)), // 'x'
+          0x79.toChar -> Some(Lazy(s11)), // 'y'
+          0x7A.toChar -> Some(Lazy(s11)), // 'z'
+        ),
+        elseTransition = None,
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token._var.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
+      )
+    lazy val s12: Dfa.State[Token] =
+      Dfa.State(
+        id = 12,
         transitions = Map(
           0x30.toChar -> Some(Lazy(s9)), // '0'
           0x31.toChar -> Some(Lazy(s9)), // '1'
@@ -572,31 +569,26 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         elseTransition = None,
         yields = None,
       )
-    lazy val s12: Dfa.State[Token] =
-      Dfa.State(
-        id = 12,
-        transitions = Map.empty,
-        elseTransition = None,
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.multOp.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
     lazy val s13: Dfa.State[Token] =
       Dfa.State(
         id = 13,
         transitions = Map(
-          0xA.toChar -> None, // '\n'
+          0x30.toChar -> Some(Lazy(s15)), // '0'
+          0x31.toChar -> Some(Lazy(s15)), // '1'
+          0x32.toChar -> Some(Lazy(s15)), // '2'
+          0x33.toChar -> Some(Lazy(s15)), // '3'
+          0x34.toChar -> Some(Lazy(s15)), // '4'
+          0x35.toChar -> Some(Lazy(s15)), // '5'
+          0x36.toChar -> Some(Lazy(s15)), // '6'
+          0x37.toChar -> Some(Lazy(s15)), // '7'
+          0x38.toChar -> Some(Lazy(s15)), // '8'
+          0x39.toChar -> Some(Lazy(s15)), // '9'
         ),
-        elseTransition = Some(Lazy(s13)),
+        elseTransition = None,
         yields = Some(
           Dfa.State.Yields(s0)(
             Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
+              tokF = Token.addOp.apply,
               spanRange = (0,-1),
             ),
           ),
@@ -607,15 +599,23 @@ object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Lines] 
         id = 14,
         transitions = Map(
           0x2A.toChar -> Some(Lazy(s1)), // '*'
+          0x2F.toChar -> Some(Lazy(s10)), // '/'
         ),
         elseTransition = None,
-        yields = None,
+        yields = Some(
+          Dfa.State.Yields(s0)(
+            Dfa.State.Yields.Yield(
+              tokF = Token.multOp.apply,
+              spanRange = (0,-1),
+            ),
+          ),
+        ),
       )
     lazy val s15: Dfa.State[Token] =
       Dfa.State(
         id = 15,
         transitions = Map(
-          0x2E.toChar -> Some(Lazy(s11)), // '.'
+          0x2E.toChar -> Some(Lazy(s12)), // '.'
           0x30.toChar -> Some(Lazy(s15)), // '0'
           0x31.toChar -> Some(Lazy(s15)), // '1'
           0x32.toChar -> Some(Lazy(s15)), // '2'

@@ -20,6 +20,17 @@ object Generator {
       grammarData: gram.Data,
       subPkg: String,
   ): Unit = {
+    import klib.ColorString.syntax._
+    import auto._
+    import klib.Idt._
+    import klib.Logger.GlobalLogger
+    import klib.Logger.{LogLevel => LL}
+
+    GlobalLogger.sources.stdOut(LL.Debug)
+    GlobalLogger.flags.add("Generator")
+
+    implicit val flags: Set[String] = Set("Generator")
+
     val formatter = for {
       dfa <- lex.Lexer(lexerData)
       simpleData <- gram.DataToSimpleData(grammarData)
@@ -28,10 +39,12 @@ object Generator {
       fmtr <- Formatter(dfa, simpleData, stateMachine)
     } yield fmtr
 
+    GlobalLogger.break
+    GlobalLogger.debug("=====| Generator |=====")
     formatter match {
       case -\/(errs) =>
-        println("Errors:")
-        errs.foreach(println)
+        GlobalLogger.fatal("Failure")
+        errs.foreach(GlobalLogger.error(_))
         System.exit(1)
       case \/-(formatter) =>
         import slyce.generate.architecture.Formatter.Settings
@@ -44,10 +57,10 @@ object Generator {
 
         val file = new File(s"$srcRoot/${settings.packageName.mkString("/")}/${settings.className}.scala")
 
-        println("Success:")
+        GlobalLogger.important("Success!")
         val writer = new BufferedWriter(new FileWriter(file))
         val src = formatter(settings)
-        // println(src)
+        GlobalLogger.debug(src, Set("Generator:src"))
         writer.write(src)
         writer.close
     }

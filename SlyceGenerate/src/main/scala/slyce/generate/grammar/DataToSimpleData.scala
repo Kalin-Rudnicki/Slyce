@@ -412,35 +412,6 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
             k -> v.toSet
         }
 
-    {
-      import slyce.common.helpers.Idt._
-
-      print(
-        Group(
-          "ExprSimps:",
-          Indented(
-            allExprSimps.map { s =>
-              Group(
-                ">",
-                Indented(
-                  s"rooName:  ${s.rootName.str}",
-                  s"opId:     ${s.opId}",
-                  s"baseName: ${s.baseName.str}",
-                ),
-              )
-            },
-          ),
-          "ExtendsOps:",
-          Indented(
-            extendsOps.toList.map {
-              case (k, v) =>
-                s"$k -> ${v.map(_.str)}"
-            },
-          ),
-        ).build("    "),
-      )
-    }
-
     val augmentedStart: SimpleData.ReductionList =
       SimpleData.ReductionList(SimpleData.Name.Start)(
         SimpleData.ReductionList.Reduction(

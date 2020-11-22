@@ -1,6 +1,7 @@
 package slyce.generate.grammar
 
 import scala.annotation.tailrec
+import scala.tools.nsc.backend.jvm.BackendReporting
 
 import scalaz.-\/
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
@@ -60,44 +61,56 @@ object SimpleDataToStateMachine extends arch.SimpleDataToStateMachine[SimpleData
 
     val map = loop(Map(), Set(augmentedStart))
 
-    // TODO (KR) : Debug
-    val idt = Idt.Group(
-      map.toList
-        .map(_._2)
-        .sortBy(_.id)
-        .map {
-          case StateMachine.State(id, rl) =>
-            Idt.Group(
-              s"${id.toString} =>",
-              Idt.Indented(
-                "reductions:",
-                Idt.Indented(
-                  rl.reductions.toList.map { r =>
-                    Idt.Str(r.str)
-                  },
-                ),
-                "accepts:",
-                Idt.Indented(
-                  rl.accepts.toList.map {
-                    case (id, to) =>
-                      Idt.Str(s"${id.str} => ${map(to).id}")
-                  },
-                ),
-                "returns:",
-                Idt.Indented(
-                  rl.returns.toList.map {
-                    case (name, idx, elements) =>
-                      Idt.Str(s"${name.str}[$idx] (${elements.map(_.str).mkString(", ")})")
-                  },
-                ),
-              ),
-              Idt.Break,
-            )
-        },
-    )
+    {
+      // DEBUG : (Start) ==================================================
+      import klib.ColorString.syntax._
+      import auto._
+      import klib.Idt._
+      import klib.Logger.GlobalLogger
 
-    println
-    println(idt.build("|   "))
+      implicit val flags: Set[String] = Set("SimpleDataToStateMachine")
+
+      GlobalLogger.break
+      GlobalLogger.debug("=====| SimpleDataToStateMachine |=====")
+      GlobalLogger.debug(
+        Group(
+          map.toList
+            .map(_._2)
+            .sortBy(_.id)
+            .map {
+              case StateMachine.State(id, rl) =>
+                Group(
+                  s"${id.toString} =>",
+                  Indented(
+                    "reductions:",
+                    Indented(
+                      rl.reductions.toList.map { r =>
+                        Str(r.str)
+                      },
+                    ),
+                    "accepts:",
+                    Indented(
+                      rl.accepts.toList.map {
+                        case (id, to) =>
+                          Str(s"${id.str} => ${map(to).id}")
+                      },
+                    ),
+                    "returns:",
+                    Indented(
+                      rl.returns.toList.map {
+                        case (name, idx, elements) =>
+                          Str(s"${name.str}[$idx] (${elements.map(_.str).mkString(", ")})")
+                      },
+                    ),
+                  ),
+                  Break,
+                )
+            },
+        ),
+      )
+
+      // DEBUG : (End) ==================================================
+    }
 
     StateMachine(input.startNt, map).right
   }

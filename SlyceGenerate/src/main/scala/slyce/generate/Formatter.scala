@@ -8,10 +8,11 @@ import scala.annotation.tailrec
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
-import scalaz.Scalaz.ToOptionOpsFromOption
 import scalaz.\/
 
-import slyce.common.helpers._
+import klib.Idt
+import klib.Idt._
+import klib.CharStringOps._
 import slyce.generate.{architecture => arch}
 import slyce.generate.{grammar => gram}
 import gram.SimpleData
@@ -22,8 +23,6 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
   override def apply(
       input: (lex.Dfa, grammar.SimpleData, grammar.StateMachine),
   ): List[String] \/ (arch.Formatter.Settings => String) = { (settings: arch.Formatter.Settings) =>
-    import Idt._
-
     val (dfa, simpleData, stateMachine) = input
 
     val tokenLines: Idt = {
@@ -362,7 +361,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
             ),
             state.transitions.isEmpty.fold(
               Indented(
-                "transitions = Map(),",
+                "transitions = Map.empty,",
               ),
               Indented(
                 "transitions = Map(",

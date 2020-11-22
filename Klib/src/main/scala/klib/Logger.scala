@@ -6,6 +6,7 @@ import scalaz.Scalaz.ToOptionIdOps
 
 import klib.ColorString.{Color => ColorPair}
 import klib.ColorString.syntax._
+import klib.Logger.LogTolerance
 
 class Logger private (
     initialSources: Map[PrintStream, Logger.LogLevel],
@@ -30,6 +31,9 @@ class Logger private (
   // =====| Sources |=====
 
   object sources {
+
+    def stdOut(logTolerance: LogTolerance): Unit =
+      setToleranceFor(logTolerance, System.out)
 
     def setToleranceFor(logTolerance: Logger.LogTolerance, src0: PrintStream, srcN: PrintStream*): Unit =
       _sources = nonEmptySet(src0, srcN).foldLeft(_sources) {
@@ -81,7 +85,36 @@ class Logger private (
 
   }
 
-  // =====|  |=====
+  // =====| Logging |=====
+
+  def break: Unit =
+    events.run(Logger.LogEvent.Break :: Nil)
+
+  def log(logLevel: Logger.LogLevel, content: ColorString, extraFlags: Set[String] = Set.empty)(implicit
+      areaFlags: Set[String],
+  ): Unit =
+    events.run(Logger.LogEvent.Log(logLevel, content, extraFlags | areaFlags) :: Nil)
+
+  def never(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Never, content, extraFlags)
+  def debug(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Debug, content, extraFlags)
+  def detailed(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Detailed, content, extraFlags)
+  def info(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Info, content, extraFlags)
+  def print(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Print, content, extraFlags)
+  def important(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Important, content, extraFlags)
+  def warning(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Warning, content, extraFlags)
+  def error(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Error, content, extraFlags)
+  def fatal(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Fatal, content, extraFlags)
+  def always(content: ColorString, extraFlags: Set[String] = Set.empty)(implicit areaFlags: Set[String]): Unit =
+    log(Logger.LogLevel.Always, content, extraFlags)
 
 }
 object Logger {
@@ -102,6 +135,8 @@ object Logger {
       },
       initialFlags = flags,
     )
+
+  val GlobalLogger: Logger = Logger()
 
   // =====| ... |=====
 
@@ -128,8 +163,8 @@ object Logger {
             import auto._
             val marginSpace = "  " // TODO (KR) : Move elsewhere?
             val displayName = level.displayName.padTo(LogLevel.MaxDisplayLength, ' ')
-            val label = color"[$displayName]".overwrite(level.labelColor)
-            val idt = s"${" " * label.length}|"
+            val label = color"[$displayName]:".overwrite(level.labelColor)
+            val idt = s"\n${" " * (label.length - 1)}|"
             val split = content.split("\n").map(_.underwrite(level.messageColor))
             val tryGrabFirst =
               split match {
@@ -207,10 +242,7 @@ object Logger {
             fg = Color.Named.Black.some,
             bg = Color.Named.White.some,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Debug
@@ -222,10 +254,7 @@ object Logger {
             fg = Color(0x00, 0xb0, 0xff).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Detailed
@@ -237,10 +266,7 @@ object Logger {
             fg = Color(0x00, 0xbf, 0xa5).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Info
@@ -252,10 +278,7 @@ object Logger {
             fg = Color(0x64, 0xdd, 0x17).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Print
@@ -267,10 +290,7 @@ object Logger {
             fg = None,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Important
@@ -282,10 +302,7 @@ object Logger {
             fg = Color.RGB(0xff, 0xd6, 0x00).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Warning
@@ -297,10 +314,7 @@ object Logger {
             fg = Color(0xff, 0x91, 0x00).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Error
@@ -312,10 +326,7 @@ object Logger {
             fg = Color(0xdd, 0x2c, 0x00).some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Fatal
@@ -327,10 +338,7 @@ object Logger {
             fg = Color.Named.Red.some,
             bg = None,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     case object Always
@@ -342,10 +350,7 @@ object Logger {
             fg = Color.Named.White.some,
             bg = Color.Named.Black.some,
           ),
-          messageColor = ColorPair(
-            fg = None,
-            bg = None,
-          ),
+          messageColor = ColorPair.Default,
         )
 
     private[Logger] val MaxDisplayLength =
