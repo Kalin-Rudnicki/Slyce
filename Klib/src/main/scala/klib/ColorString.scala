@@ -7,11 +7,15 @@ import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToOptionIdOps
 import scalaz.Scalaz.ToOptionOpsFromOption
 
-import klib.ColorString.ansiEscape
-
 sealed trait ColorString {
 
   def copy(cpF: ColorString.Color => ColorString.Color): ColorString
+
+  def overwrite(color: ColorString.Color): ColorString =
+    this.copy(_.overwrite(color))
+
+  def underwrite(color: ColorString.Color): ColorString =
+    this.copy(_.underwrite(color))
 
   // =====| Foreground |=====
 
@@ -88,6 +92,22 @@ sealed trait ColorString {
   def toColorString: ColorString =
     this
 
+  def +(other: ColorString): ColorString =
+    this match {
+      case ColorString.Simple(color, str) =>
+        ColorString.Complex(color, (str.some, other) :: Nil, None)
+      case ColorString.Complex(color, pairs, tail) =>
+        ColorString.Complex(color, pairs :+ (tail, other), None)
+    }
+
+  def +(otherStr: String): ColorString =
+    this match {
+      case ColorString.Simple(color, str) =>
+        ColorString.Simple(color, str + otherStr)
+      case ColorString.Complex(color, pairs, tail) =>
+        ColorString.Complex(color, pairs, tail.cata(_ + otherStr, otherStr).some)
+    }
+
   def split(splitStr: String): List[ColorString] =
     this match {
       case ColorString.Simple(color, str) =>
@@ -107,6 +127,17 @@ sealed trait ColorString {
             _.split(splitStr).map(ColorString.Simple(color, _))
           },
         ).flatten
+    }
+
+  def length: Int =
+    this match {
+      case ColorString.Simple(_, str) =>
+        str.length
+      case ColorString.Complex(_, pairs, tail) =>
+        pairs.map {
+          case (oStr, cStr) =>
+            oStr.cata(_.length, 0) + cStr.length
+        }.sum + tail.cata(_.length, 0)
     }
 
   override def toString: String = {
@@ -180,6 +211,18 @@ object ColorString {
       fg: Option[RawColor],
       bg: Option[RawColor],
   ) {
+
+    def overwrite(other: Color): Color =
+      Color(
+        fg = other.fg.orElse(fg),
+        bg = other.bg.orElse(bg),
+      )
+
+    def underwrite(other: Color): Color =
+      Color(
+        fg = fg.orElse(other.fg),
+        bg = bg.orElse(other.bg),
+      )
 
     // Does a diff, to make sure any coloring is needed
     def diffWithState(colorState: ColorState): Option[(String, ColorState)] =
@@ -307,24 +350,10 @@ object ColorString {
 
     }
 
-    /*
-      TODO (KR) : Make sure the scoping on this behaves how I would hope
-                :
-                : // Without auto
-                : import klib.ColorString.syntax._
-                : val tmp1: ColorString = obj.toColorString // yes
-                : val tmp2: ColorString = obj               // no
-                :
-                : // With auto
-                : import klib.ColorString.syntax._
-                : import klib.ColorString.syntax.auto._
-                : val tmp3: ColorString = obj.toColorString // yes
-                : val tmp4: ColorString = obj               // yes
-     */
     object auto {
 
       implicit def toSimpleColorString(obj: Any): ColorString =
-        obj.toColorString
+        ToColorStringOps(obj).toColorString
 
     }
 

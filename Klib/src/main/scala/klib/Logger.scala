@@ -5,6 +5,7 @@ import java.io.PrintStream
 import scalaz.Scalaz.ToOptionIdOps
 
 import klib.ColorString.{Color => ColorPair}
+import klib.ColorString.syntax._
 
 class Logger private (
     initialSources: Map[PrintStream, Logger.LogLevel],
@@ -109,10 +110,8 @@ object Logger {
       private var logTolerance: LogTolerance,
   ) {
 
-    // TODO (KR) : Decide whether or not this should be the case
-    private var breakState: Boolean = true
+    private var breakState: Source.BreakState = Source.BreakState.None
 
-    // TODO (KR) : Possible place for improvement
     def setLogTolerance(logTolerance: LogTolerance): this.type = {
       this.logTolerance = logTolerance
       this
@@ -126,16 +125,42 @@ object Logger {
       logEvent match {
         case LogEvent.Log(level, content, flags) =>
           if (level.exceedsTolerance(logTolerance) && flags.forall(loggerFlags.contains)) {
-            // TODO (KR) : ...
-            val str = content.toString
+            import auto._
+            val marginSpace = "  " // TODO (KR) : Move elsewhere?
+            val displayName = level.displayName.padTo(LogLevel.MaxDisplayLength, ' ')
+            val label = color"[$displayName]".overwrite(level.labelColor)
+            val idt = s"${" " * label.length}|"
+            val split = content.split("\n").map(_.underwrite(level.messageColor))
+            val tryGrabFirst =
+              split match {
+                case Nil =>
+                  label :: Nil
+                case head :: tail =>
+                  label + marginSpace + head :: tail
+              }
+            val joined = tryGrabFirst.csMkString(idt + marginSpace, level.labelColor)
 
+            breakState match {
+              case Source.BreakState.BreakOnLog =>
+                // TODO (KR) : Should this be displayed differently?
+                printStream.append("\n")
+                breakState = Source.BreakState.None
+              case Source.BreakState.None => // Do nothing
+            }
+            printStream.println(joined.toString)
           }
         case LogEvent.Break =>
-          if (!breakState) {
-            printStream.append('\n')
-            breakState = false
-          }
+          breakState = Source.BreakState.BreakOnLog
       }
+
+  }
+  object Source {
+
+    sealed trait BreakState
+    object BreakState {
+      case object BreakOnLog extends BreakState
+      case object None extends BreakState
+    }
 
   }
 
