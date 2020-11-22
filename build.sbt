@@ -1,14 +1,16 @@
 import sbt.Keys.version
 
 // Make sure when this is updated, it is also updated in SlyceCommon/slyce.package.scala
-val Version = "0.1.0"
+val SlyceVersion = "0.1.0"
 
-lazy val SlyceCommon =
+val KlibVersion = "0.1.0"
+
+lazy val Klib =
   project
-    .in(file("SlyceCommon"))
+    .in(file("Klib"))
     .settings(
-      name := "SlyceCommon",
-      version := Version,
+      name := "Klib",
+      version := KlibVersion,
       scalaVersion := "2.13.2",
       libraryDependencies ++=
         List(
@@ -20,12 +22,22 @@ lazy val SlyceCommon =
         ),
     )
 
+lazy val SlyceCommon =
+  project
+    .in(file("SlyceCommon"))
+    .settings(
+      name := "SlyceCommon",
+      version := SlyceVersion,
+      scalaVersion := "2.13.2",
+    )
+    .dependsOn(Klib)
+
 lazy val SlyceParse =
   project
     .in(file("SlyceParse"))
     .settings(
       name := "SlyceParse",
-      version := Version,
+      version := SlyceVersion,
       scalaVersion := "2.13.2",
     )
     .dependsOn(SlyceCommon)
@@ -35,7 +47,7 @@ lazy val SlyceGenerate =
     .in(file("SlyceGenerate"))
     .settings(
       name := "SlyceGenerate",
-      version := Version,
+      version := SlyceVersion,
       scalaVersion := "2.13.2",
     )
     .dependsOn(SlyceCommon)
@@ -45,7 +57,7 @@ lazy val SlyceTest =
     .in(file("SlyceTest"))
     .settings(
       name := "SlyceTest",
-      version := Version,
+      version := SlyceVersion,
       scalaVersion := "2.13.2",
     )
     .dependsOn(SlyceGenerate, SlyceParse)

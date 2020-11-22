@@ -262,6 +262,10 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
         frames match {
           case Nil =>
+            // TODO (KR) : Debug
+            println
+            input.foreach(t => println(t.toString.unesc("")))
+            println
             userError(s"Unable to build parse-tree. MaxTok: $maxTok")
           case StackFrame(queue, stack) :: framesT =>
             stack match {

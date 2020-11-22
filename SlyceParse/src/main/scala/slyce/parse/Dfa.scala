@@ -11,6 +11,7 @@ import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.common.helpers._
+import slyce.parse.Dfa.Token.Pos.InLineStart
 import slyce.parse.{architecture => arch}
 
 final case class Dfa[+Tok <: Dfa.Token](
@@ -188,19 +189,31 @@ object Dfa {
       def onChar(c: Char): Pos =
         c match {
           case '\n' =>
-            Pos(abs + 1, line + 1, 0)
+            Pos(abs + 1, line + 1, InLineStart)
           case _ =>
             Pos(abs + 1, line, inLine + 1)
         }
 
+      def displayLine: Int = line + 1
+      def displayInLine: Int = inLine + 1
+
+      def info: String =
+        s"Pos(abs=$abs, pos=$pos)"
+
       def pos: String =
-        s"$line:$inLine"
+        s"$displayLine:$displayInLine"
+
+      override def toString: String =
+        info
 
     }
 
     object Pos {
 
-      val _0: Pos = Pos(0, 0, 0)
+      private val LineStart = 0
+      private val InLineStart = 0
+
+      val _0: Pos = Pos(0, LineStart, InLineStart)
 
     }
 
