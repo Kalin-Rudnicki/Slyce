@@ -5,7 +5,28 @@ import scalaz.Scalaz.ToOptionIdOps
 
 import klib.CharStringOps._
 
-sealed trait Regex
+sealed trait Regex {
+
+  def canPassThrough: Boolean =
+    this match {
+      case _: Regex.CharClass =>
+        false
+      case Regex.Sequence(seq) =>
+        seq.foldLeft(true) {
+          case (true, r) =>
+            r.canPassThrough
+          case _ =>
+            false
+        }
+      case Regex.Group(seqs) =>
+        seqs.list.toList.exists(_.canPassThrough)
+      case Regex.Repeat(_, 0, _) =>
+        true
+      case Regex.Repeat(reg, _, _) =>
+        reg.canPassThrough
+    }
+
+}
 
 object Regex {
 

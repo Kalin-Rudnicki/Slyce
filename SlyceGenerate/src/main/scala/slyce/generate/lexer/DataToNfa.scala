@@ -12,12 +12,20 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
       mode.lines
         .map(Nfa.State.fromLine)
         .traverseErrs
-        .map(Nfa.State.join)
+        .map(Nfa.State.collect)
 
     input.modes
       .map(m => makeMode(m).map((m, _)))
       .traverseErrs
       .map { m1 =>
+        val nfa = Nfa(
+          input.startMode,
+          m1.map {
+            case (m2, s) =>
+              m2.name -> s
+          }.toMap,
+        )
+
         {
           // DEBUG : (Start) ==================================================
           import klib.ColorString.syntax._
@@ -29,17 +37,58 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
 
           GlobalLogger.break
           GlobalLogger.debug("=====| DataToNfa |=====")
+          val allStates = nfa.modes.toSet
+            .flatMap { (t: (String, Nfa.State)) =>
+              t._2.findAll
+            }
+            .toList
+            .zipWithIndex
+            .toMap
+          GlobalLogger.debug(
+            Group(
+              "modes:",
+              Indented(
+                nfa.modes.toList.map {
+                  case m -> s =>
+                    s"$m => #${allStates(s)}"
+                },
+              ),
+              "states:",
+              Indented(
+                allStates.toList.sortBy(_._2).map {
+                  case s -> i =>
+                    Group(
+                      s"#$i =>",
+                      Indented(
+                        s"isTrivial => ${s.isTrivial}",
+                        "transitions =>",
+                        Indented(
+                          s.transitions.map {
+                            case c -> t =>
+                              s"#${allStates(t)}: $c"
+                          },
+                        ),
+                        "epsilonTransitions =>",
+                        Indented(
+                          s.epsilonTransitions.map { e =>
+                            s"#${allStates(e)}"
+                          },
+                        ),
+                        "end =>",
+                        Indented(
+                          s.`end`.map(_.toString),
+                        ),
+                      ),
+                    )
+                },
+              ),
+            ),
+          )
 
           // DEBUG : (End) ==================================================
         }
 
-        Nfa(
-          input.startMode,
-          m1.map {
-            case (m2, s) =>
-              m2.name -> s
-          }.toMap,
-        )
+        nfa
       }
   }
 

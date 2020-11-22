@@ -6,8 +6,7 @@ z = x + y
 z
 // comment
 z + 10
-/* multi
-   line
+/* multi~line
    comment */
 (x + y) * z
 x + (y * z)

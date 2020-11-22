@@ -29,6 +29,43 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
       val transitionPairs = nonTrivialStates.toList.flatMap(_.transitions)
 
       val specifiedChars: Set[Char] = transitionPairs.flatMap(_._1.chars).toSet
+      val (inclusiveChars, exclusiveChars) =
+        transitionPairs.map(_._1).partitionMap {
+          case Regex.CharClass.Inclusive(chars) =>
+            chars.left.toEither
+          case Regex.CharClass.Exclusive(chars) =>
+            chars.right.toEither
+        } match {
+          case (i, e) =>
+            val inc = i.toSet.flatten
+            val exc = e.toSet.flatten
+            (inc, exc)
+        }
+      val exclusiveNonInclusiveChars = exclusiveChars &~ inclusiveChars
+
+      {
+        // DEBUG : (Start) ==================================================
+        import klib.ColorString.syntax._
+        import auto._
+        import klib.CharStringOps._
+        import klib.Idt._
+        import klib.Logger.GlobalLogger
+
+        implicit val flags: Set[String] = Set("NfaToDfa")
+
+        GlobalLogger.break
+        GlobalLogger.debug("=====| NfaToDfa |=====")
+        GlobalLogger.debug(
+          Group(
+            inclusiveChars.map(_.unesc).toString,
+            exclusiveChars.map(_.unesc).toString,
+            exclusiveNonInclusiveChars.map(_.unesc).toString,
+          ),
+        )
+
+        // DEBUG : (End) ==================================================
+      }
+
       val transitions: Map[Set[Char], Option[Set[Nfa.State]]] =
         specifiedChars.toList
           .map { c =>
@@ -43,15 +80,10 @@ object NfaToDfa extends arch.NfaToDfa[Nfa, Err, Dfa] {
           .toMap
       val elseTransition: Option[Set[Nfa.State]] = {
         val s = Nfa.State.nonTrivial(
-          transitionPairs
-            .filter {
-              case (_: Regex.CharClass.Exclusive, _) =>
-                true
-              case _ =>
-                false
-            }
-            .map(_._2)
-            .toSet,
+          transitionPairs.collect {
+            case (_: Regex.CharClass.Exclusive, ss) =>
+              ss
+          }.toSet,
         )
         s.nonEmpty.option(s)
       }

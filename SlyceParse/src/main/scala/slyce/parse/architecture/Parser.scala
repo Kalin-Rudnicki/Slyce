@@ -14,6 +14,7 @@ object Parser {
         // DEBUG : (Start) ==================================================
         import klib.ColorString.syntax._
         import auto._
+        import klib.CharStringOps._
         import klib.Idt._
         import klib.Logger.GlobalLogger
 
@@ -21,7 +22,10 @@ object Parser {
 
         GlobalLogger.break
         GlobalLogger.debug("=====| Parser |=====")
-        toks.foreach(GlobalLogger.debug(_))
+        toks.foreach { t =>
+          GlobalLogger.break
+          GlobalLogger.debug(t.toString.unesc(""))
+        }
 
         // DEBUG : (End) ==================================================
       }

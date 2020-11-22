@@ -28,6 +28,8 @@ object Generator {
 
     GlobalLogger.sources.stdOut(LL.Debug)
     GlobalLogger.flags.add("Generator")
+    GlobalLogger.flags.add("DataToNfa")
+    GlobalLogger.flags.add("NfaToDfa")
 
     implicit val flags: Set[String] = Set("Generator")
 
