@@ -119,6 +119,9 @@ object Nfa {
     def nonTrivial: Set[Nfa.State] =
       State.nonTrivial(Set(this))
 
+    def canEpsilon: Set[Nfa.State] =
+      State.canEpsilon(Set(this))
+
     def findAll: Set[State] =
       State.findAll(Set(this))
 
@@ -149,13 +152,16 @@ object Nfa {
     }
 
     @tailrec
-    def nonTrivial(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
+    def canEpsilon(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
       if (unseen.isEmpty)
-        seen.filterNot(_.isTrivial)
+        seen
       else {
         val nowSeen = unseen | seen
-        nonTrivial(unseen.flatMap(_.epsilonTransitions) &~ nowSeen, nowSeen)
+        canEpsilon(unseen.flatMap(_.epsilonTransitions) &~ nowSeen, nowSeen)
       }
+
+    def nonTrivial(unseen: Set[Nfa.State]): Set[Nfa.State] =
+      canEpsilon(unseen).filterNot(_.isTrivial)
 
     def findAll(unseen: Set[Nfa.State], seen: Set[Nfa.State] = Set()): Set[Nfa.State] =
       helpers.findAll(unseen, seen) { s =>
