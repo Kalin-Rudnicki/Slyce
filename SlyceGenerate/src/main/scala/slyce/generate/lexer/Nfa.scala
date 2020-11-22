@@ -21,12 +21,26 @@ final case class Nfa(
 object Nfa {
 
   final class State private {
+    {
+      // DEBUG : (Start) ==================================================
+      import klib.ColorString.syntax._
+      import auto._
+      import klib.Idt._
+      import klib.Logger.GlobalLogger
+
+      implicit val flags: Set[String] = Set()
+
+      GlobalLogger.debug(s"Created ${this.toString.split("\\$").last}")
+
+      // DEBUG : (End) ==================================================
+    }
+
     private val _transitions: MList[(CharClass, State)] = MList()
     private val _epsilonTransitions: MList[State] = MList()
     private var _end: Option[Data.Mode.Line] = None
 
-    private def on(regex: Regex): Err \/ State =
-      regex match {
+    private def on(regex: Regex): Err \/ State = {
+      val res = regex match {
         case chars: CharClass =>
           val newState = new State
           _transitions.append((chars, newState))
@@ -103,6 +117,23 @@ object Nfa {
             newState
           }
       }
+
+      {
+        // DEBUG : (Start) ==================================================
+        import klib.ColorString.syntax._
+        import auto._
+        import klib.Idt._
+        import klib.Logger.GlobalLogger
+
+        implicit val flags: Set[String] = Set()
+
+        GlobalLogger.info(s"${this.toString.split("\\$").last} + $regex = ${res.toString.split("\\$").last}")
+
+        // DEBUG : (End) ==================================================
+      }
+
+      res
+    }
 
     def transitions: List[(CharClass, State)] =
       _transitions.toList

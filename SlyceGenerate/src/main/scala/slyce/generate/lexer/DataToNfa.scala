@@ -1,6 +1,9 @@
 package slyce.generate.lexer
 
+import scala.annotation.tailrec
+
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
+import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.common.helpers._
 import scalaz.\/
@@ -53,13 +56,20 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
 
           def stateName(
               state: Nfa.State,
+              showMemAddr: Boolean = true,
               showNonTrivial: Boolean = true,
               showCanEpsilon: Boolean = true,
           ): String = {
             val idx = allStates(state)
+            val memAddr = showMemAddr
+              .option {
+                val tmp = s" [${state.toString.split("\\$").last}]"
+                state.nonTrivial.isEmpty ? tmp.red.toString | tmp
+              }
+              .getOrElse("")
             val nonTrivial = showNonTrivial.option(s" (${mapStates(state, _.nonTrivial)})").getOrElse("")
             val canEpsilon = showCanEpsilon.option(s" {${mapStates(state, _.canEpsilon)}}").getOrElse("")
-            s"#$idx$nonTrivial$canEpsilon"
+            s"#$idx$memAddr$nonTrivial$canEpsilon"
           }
 
           GlobalLogger.debug(
@@ -79,6 +89,7 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                       s"${stateName(s)} =>",
                       Indented(
                         s"isTrivial => ${s.isTrivial}",
+                        s"allCanEpsilonTrivial => ${s.nonTrivial.isEmpty}",
                         "joinedTransitions =>",
                         Indented(
                           s.nonTrivial.toList.map { s2 =>
@@ -87,7 +98,7 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                               Indented(
                                 s2.transitions.map {
                                   case c -> t =>
-                                    s"$c => #${stateName(t)}"
+                                    s"$c => ${stateName(t)}"
                                 },
                               ),
                             )
@@ -97,7 +108,7 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                         Indented(
                           s.nonTrivial.toList.map { s2 =>
                             Group(
-                              s"#${stateName(s2)}:",
+                              s"${stateName(s2)}:",
                               Indented(
                                 s2.`end`.map(_.toString),
                               ),
@@ -126,6 +137,78 @@ object DataToNfa extends arch.DataToNfa[Data, Err, Nfa] {
                 },
               ),
             ),
+          )
+          GlobalLogger.break
+          import scala.collection.mutable.{Map => MMap}
+          import scala.collection.mutable.{Set => MSet}
+
+          def sName(s: Nfa.State, cIsNew: Boolean): String = {
+            val sn = stateName(s)
+            cIsNew ? sn | sn.magenta.toString
+          }
+
+          def recBuild(
+              state: Nfa.State,
+              map: MMap[Nfa.State, MSet[List[Int]]],
+              prevPath: List[Int],
+          ): Option[Idt] = {
+            val mSet = map.getOrElseUpdate(state, MSet())
+            val isNew = mSet.isEmpty
+            mSet.add(prevPath.reverse)
+
+            isNew.option {
+              val currentPath = allStates(state) :: prevPath
+
+              Indented(
+                "{",
+                Indented(
+                  state.epsilonTransitions.map { s =>
+                    val c = recBuild(s, map, currentPath)
+                    Group(
+                      s"_ ${"=>".cyan.toString} ${sName(s, c.nonEmpty)}",
+                      c,
+                    )
+                  },
+                  state.transitions.map {
+                    case (cc, s) =>
+                      val c = recBuild(s, map, currentPath)
+                      Group(
+                        s"$cc ${"=>".blue.toString} ${sName(s, c.nonEmpty)}",
+                        c,
+                      )
+                  },
+                  state.`end`.map(e => s"${"<=".yellow.toString} $e"),
+                ),
+                "}",
+              )
+            }
+          }
+
+          val mMap: MMap[Nfa.State, MSet[List[Int]]] = MMap()
+          val idt = Group(
+            nfa.modes.toList.map {
+              case name -> s =>
+                val c = recBuild(s, mMap, Nil)
+                Group(
+                  s"$name: ${sName(s, c.nonEmpty)}",
+                  c,
+                )
+            },
+          )
+          GlobalLogger.debug(idt.build("|   ".green.toString))
+          GlobalLogger.debug(
+            Group(
+              mMap.toList.map {
+                case k -> v =>
+                  Group(
+                    Break,
+                    s"${stateName(k)}:",
+                    Indented(
+                      v.toList.map(p => p.map(p2 => s"#$p2").mkString(" => ")),
+                    ),
+                  )
+              },
+            ).build("|   ".green.toString),
           )
 
           // DEBUG : (End) ==================================================
