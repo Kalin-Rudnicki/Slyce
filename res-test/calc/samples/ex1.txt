@@ -2,7 +2,7 @@ x = 5
 x
 y = 4
 y
-z = x + y
+z = (x + y) * 1.0
 z
 // comment
 z + 10
