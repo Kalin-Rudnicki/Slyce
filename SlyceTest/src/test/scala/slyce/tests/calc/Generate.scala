@@ -29,7 +29,7 @@ object Generate extends App {
                   2,
                   2.some,
                 ),
-                Regex.Repeat * Exclusive('\n'),
+                Exclusive('\n').anyAmount,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("comment")),
@@ -42,15 +42,17 @@ object Generate extends App {
               regex = Regex.Sequence(
                 Inclusive('/'),
                 Inclusive('*'),
-                Regex.Repeat * Regex.Group(
-                  Regex.Sequence(
-                    Exclusive('*'),
-                  ),
-                  Regex.Sequence(
-                    Inclusive('*'),
-                    Exclusive('/'),
-                  ),
-                ),
+                Regex
+                  .Group(
+                    Regex.Sequence(
+                      Exclusive('*'),
+                    ),
+                    Regex.Sequence(
+                      Inclusive('*'),
+                      Exclusive('/'),
+                    ),
+                  )
+                  .anyAmount,
                 Inclusive('*'),
                 Inclusive('/'),
               ),
@@ -108,8 +110,8 @@ object Generate extends App {
             Data.Mode.Line(
               lineNo = 12,
               regex = Regex.Sequence(
-                Regex.Repeat ? Inclusive('-'),
-                Regex.Repeat + Inclusive.d,
+                Inclusive('-').maybe,
+                Inclusive.d.atLeastOnce,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("int")),
@@ -120,10 +122,10 @@ object Generate extends App {
             Data.Mode.Line(
               lineNo = 13,
               regex = Regex.Sequence(
-                Regex.Repeat ? Inclusive('-'),
-                Regex.Repeat + Inclusive.d,
+                Inclusive('-').maybe,
+                Inclusive.d.atLeastOnce,
                 Inclusive('.'),
-                Regex.Repeat + Inclusive.d,
+                Inclusive.d.atLeastOnce,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("float")),
@@ -135,12 +137,12 @@ object Generate extends App {
               lineNo = 14,
               regex = Regex.Sequence(
                 Inclusive('_') | Inclusive.az,
-                Regex.Repeat * (
+                (
                   Inclusive('_') |
                     Inclusive.az |
                     Inclusive.AZ |
                     Inclusive.d
-                ),
+                ).anyAmount,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal("_var", (0, -1))),
@@ -269,7 +271,7 @@ object Generate extends App {
   Generator.generate(
     lexerData,
     grammarData,
-    "calc",
+    Generator.Settings(subPkg = "calc"),
   )
 
 }

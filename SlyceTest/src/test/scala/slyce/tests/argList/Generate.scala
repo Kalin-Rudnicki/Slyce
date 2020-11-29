@@ -39,12 +39,12 @@ object Generate extends App {
               lineNo = 3,
               regex = Regex.Sequence(
                 Inclusive('_') | Inclusive.az,
-                Regex.Repeat * (
+                (
                   Inclusive('_') |
                     Inclusive.AZ |
                     Inclusive.az |
                     Inclusive.d
-                ),
+                ).anyAmount,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("_var")),
@@ -97,7 +97,7 @@ object Generate extends App {
   Generator.generate(
     lexerData,
     grammarData,
-    "argList",
+    Generator.Settings(subPkg = "argList"),
   )
 
 }

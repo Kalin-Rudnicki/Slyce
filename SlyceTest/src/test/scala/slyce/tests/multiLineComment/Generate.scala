@@ -35,7 +35,7 @@ object Generate extends App {
                   2,
                   2.some,
                 ),
-                Regex.Repeat * Exclusive('\n'),
+                Exclusive('\n').anyAmount,
               ),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("comment")),
@@ -47,15 +47,17 @@ object Generate extends App {
               regex = Regex.Sequence(
                 Inclusive('/'),
                 Inclusive('*'),
-                Regex.Repeat * Regex.Group(
-                  Regex.Sequence(
-                    Exclusive('*'),
-                  ),
-                  Regex.Sequence(
-                    Inclusive('*'),
-                    Exclusive('/'),
-                  ),
-                ),
+                Regex
+                  .Group(
+                    Regex.Sequence(
+                      Exclusive('*'),
+                    ),
+                    Regex.Sequence(
+                      Inclusive('*'),
+                      Exclusive('/'),
+                    ),
+                  )
+                  .anyAmount,
                 Inclusive('*'),
                 Inclusive('/'),
               ),
@@ -107,7 +109,7 @@ object Generate extends App {
   Generator.generate(
     lexerData,
     grammarData,
-    "multiLineComment",
+    Generator.Settings(subPkg = "multiLineComment"),
   )
 
 }

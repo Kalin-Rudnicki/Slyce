@@ -26,6 +26,24 @@ sealed trait Regex {
         reg.canPassThrough
     }
 
+  def repeat(min: Int, max: Option[Int]): Regex =
+    Regex.Repeat(this, min, max)
+
+  def maybe: Regex =
+    repeat(0, 1.some)
+
+  def atLeastN(n: Int): Regex =
+    repeat(n, None)
+
+  def anyAmount: Regex =
+    atLeastN(0)
+
+  def atLeastOnce: Regex =
+    atLeastN(1)
+
+  def exactly(times: Int): Regex =
+    repeat(times, times.some)
+
 }
 
 object Regex {
@@ -87,17 +105,5 @@ object Regex {
   }
 
   final case class Repeat(reg: Regex, min: Int, max: Option[Int]) extends Regex
-  object Repeat {
-
-    def ?(reg: Regex): Repeat =
-      Repeat(reg, 0, 1.some)
-
-    def *(reg: Regex): Repeat =
-      Repeat(reg, 0, None)
-
-    def +(reg: Regex): Repeat =
-      Repeat(reg, 1, None)
-
-  }
 
 }
