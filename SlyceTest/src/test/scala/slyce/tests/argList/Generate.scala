@@ -2,9 +2,10 @@ package slyce.tests.argList
 
 import scalaz.Scalaz.ToOptionIdOps
 
+import slyce.Generator
 import slyce.generate.{lexer => lex}
 import slyce.generate.{grammar => gram}
-import slyce.Generator
+import slyce.generate.architecture.Formatter.Settings
 
 object Generate extends App {
 
@@ -97,7 +98,7 @@ object Generate extends App {
   Generator.generate(
     lexerData,
     grammarData,
-    Generator.Settings(subPkg = "argList"),
+    Generator.testSettings("argList"),
   )
 
 }

@@ -109,7 +109,7 @@ object Generate extends App {
   Generator.generate(
     lexerData,
     grammarData,
-    Generator.Settings(subPkg = "multiLineComment"),
+    Generator.testSettings("multiLineComment"),
   )
 
 }

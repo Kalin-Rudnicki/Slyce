@@ -8,15 +8,29 @@ import scalaz.-\/
 import scalaz.\/-
 
 import slyce.generate.Formatter
+import slyce.generate.architecture.{Formatter => ArchFormatter}
 import slyce.generate.{lexer => lex}
 import slyce.generate.{grammar => gram}
 
 object Generator {
 
   final case class Settings(
-      srcRoot: String = "SlyceTest/src/test/scala",
-      subPkg: String,
+      srcRoot: String,
+      fmt: ArchFormatter.Settings,
   )
+
+  def testSettings(
+      subPkg: String,
+      className: String = "Parser",
+  ): Settings =
+    Settings(
+      srcRoot = "SlyceTest/src/test/scala",
+      fmt = ArchFormatter.Settings(
+        packageName = List("sylce", "test", subPkg),
+        className = className,
+        indent = "  ",
+      ),
+    )
 
   def generate(
       lexerData: lex.Data,
@@ -52,19 +66,11 @@ object Generator {
         errs.foreach(GlobalLogger.error(_))
         System.exit(1)
       case \/-(formatter) =>
-        import slyce.generate.architecture.{Formatter => ArchFormatter}
-
-        val fmtSettings = ArchFormatter.Settings(
-          packageName = List("slyce", "tests", settings.subPkg),
-          className = "Parser",
-          indent = "  ",
-        )
-
-        val file = new File(s"${settings.srcRoot}/${fmtSettings.packageName.mkString("/")}/${fmtSettings.className}.scala")
+        val file = new File(s"${settings.srcRoot}/${settings.fmt.packageName.mkString("/")}/${settings.fmt.className}.scala")
 
         GlobalLogger.important("Success!")
         val writer = new BufferedWriter(new FileWriter(file))
-        val src = formatter(fmtSettings)
+        val src = formatter(settings.fmt)
         GlobalLogger.debug(src, Set("Generator:src"))
         writer.write(src)
         writer.close
