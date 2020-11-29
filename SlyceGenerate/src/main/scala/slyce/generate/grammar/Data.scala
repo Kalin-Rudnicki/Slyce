@@ -4,8 +4,11 @@ import scalaz.IList
 import scalaz.NonEmptyList
 
 import klib.CharStringOps._
-
 import scala.annotation.tailrec
+
+import scalaz.Scalaz.ToEitherOps
+import scalaz.Scalaz.ToOptionIdOps
+import scalaz.\/
 
 case class Data(
     startNT: String,
@@ -62,8 +65,6 @@ object Data {
   sealed trait NT
   object NT {
 
-    type ElementList = List[(Boolean, Element)]
-
     final case class IgnoredList(
         before: List[Element],
         unignored: Element,
@@ -83,15 +84,56 @@ object Data {
       def apply(before: Element*)(unignored: Element)(after: Element*): IgnoredList =
         IgnoredList(before.toList, unignored, after.toList)
 
+      // Boolean signifies whether element is `un-ignored`
+      def fromElementList(elements: List[(Boolean, Element)]): List[String] \/ IgnoredList =
+        elements match {
+          case Nil =>
+            List("No elements to build IgnoredList").left
+          case (_, elem) :: Nil =>
+            IgnoredList()(elem)().right
+          case _ =>
+            @tailrec
+            def loop(
+                queue: List[(Boolean, Element)],
+                stack: List[Element],
+            ): List[String] \/ IgnoredList =
+              queue match {
+                case Nil =>
+                  List("Could not find element to un-ignore").left
+                case head :: tail =>
+                  head match {
+                    case (false, elem) =>
+                      loop(
+                        tail,
+                        elem :: stack,
+                      )
+                    case (true, elem) =>
+                      if (tail.forall(!_._1))
+                        IgnoredList(
+                          before = stack.reverse,
+                          unignored = elem,
+                          after = tail.map(_._2),
+                        ).right
+                      else
+                        List("Tried to un-ignore more than 1 element").left
+                  }
+              }
+
+            loop(
+              elements,
+              Nil,
+            )
+        }
+
     }
 
     sealed trait StandardNT extends NT
     object StandardNT {
 
-      final case class `:`(elements: NonEmptyList[ElementList]) extends StandardNT
+      final case class `:`(elements: NonEmptyList[List[Element]]) extends StandardNT
       object `:` {
 
-        def apply(elements0: ElementList, elementsN: ElementList*): `:` =
+        def apply(elements0: List[Element], elementsN: List[Element]*): `:` =
           `:`(NonEmptyList(elements0, elementsN: _*))
       }
 
@@ -110,11 +152,41 @@ object Data {
           before: IgnoredList,
           after: Option[IgnoredList],
       ) extends ListNT
+      object * {
+
+        def simple(elem: Element): ListNT.* =
+          ListNT.*(
+            before = IgnoredList()(elem)(),
+            after = None,
+          )
+
+        def beforeAfter(elem: Element, beforeAfter: Element*): ListNT.* =
+          ListNT.*(
+            before = IgnoredList()(elem)(),
+            after = IgnoredList(beforeAfter: _*)(elem)().some,
+          )
+
+      }
 
       final case class +(
           before: IgnoredList,
           after: Option[IgnoredList],
       ) extends ListNT
+      object + {
+
+        def simple(elem: Element): ListNT.+ =
+          ListNT.+(
+            before = IgnoredList()(elem)(),
+            after = None,
+          )
+
+        def beforeAfter(elem: Element, beforeAfter: Element*): ListNT.+ =
+          ListNT.+(
+            before = IgnoredList()(elem)(),
+            after = IgnoredList(beforeAfter: _*)(elem)().some,
+          )
+
+      }
 
     }
 

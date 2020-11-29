@@ -19,6 +19,7 @@ object Generator {
       fmt: ArchFormatter.Settings,
   )
 
+  // TODO (KR) : Move into Settings
   def testSettings(
       subPkg: String,
       className: String = "Parser",

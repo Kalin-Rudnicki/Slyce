@@ -1,0 +1,14 @@
+
+@start General
+
+@mode General
+[ \t]+                                                             ;
+[()\.?|\n]                                                         ; @
+"([^\n\t\\]|\\[\\nt"])+"                                           ; literal
+[a-z][A-Za-z_\d]*                                                  ; terminal
+[A-Z][A-Za-z_\d]*                                                  ; nonTerminal
+[:\^]                                                              ; stdOp
+[+*]                                                               ; listOp
+~                                                                  ; assocOp
+[<>]                                                               ; assocDir
+\@start                                                            ; @

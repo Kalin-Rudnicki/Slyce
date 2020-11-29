@@ -5,7 +5,6 @@ import scalaz.Scalaz.ToOptionIdOps
 import slyce.Generator
 import slyce.generate.{lexer => lex}
 import slyce.generate.{grammar => gram}
-import slyce.generate.architecture.Formatter.Settings
 
 object Generate extends App {
 
