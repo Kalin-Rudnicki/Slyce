@@ -11,7 +11,7 @@ import scalaz.\/
 import scalaz.\/-
 
 import slyce.parse.Expression
-import slyce.tests.Runner
+import slyce.Runner
 
 object Run extends App {
   import Data._
@@ -122,11 +122,12 @@ object Run extends App {
                     errs.foreach(GlobalLogger.error(_))
                     None
                   case \/-(num) =>
+                    GlobalLogger.info(s"${_var.text} = ${num.fold(_.toString, _.toString)}")
                     (map + (_var.text -> num)).some
                 }
               case NonTerminal.Line._3(comment) =>
-                GlobalLogger.info("Comment:")
-                GlobalLogger.info(comment.text)
+                GlobalLogger.detailed("Comment:")
+                GlobalLogger.detailed(comment.text)
                 map.some
             }
 

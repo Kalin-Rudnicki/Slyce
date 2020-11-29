@@ -1,4 +1,0 @@
-
-@define letters_l=[a-z]
-@define letters_u=[A-Z]
-@define letters=[[:letters_l:][:letters_u:]]

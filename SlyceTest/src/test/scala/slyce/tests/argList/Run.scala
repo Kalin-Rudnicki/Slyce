@@ -2,7 +2,7 @@ package slyce.tests.argList
 
 import scalaz.Scalaz.ToOptionIdOps
 
-import slyce.tests.Runner
+import slyce.Runner
 
 object Run extends App {
   import Data._

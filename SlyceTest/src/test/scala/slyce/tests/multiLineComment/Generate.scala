@@ -4,7 +4,7 @@ import scalaz.Scalaz.ToOptionIdOps
 
 import slyce.generate.{lexer => lex}
 import slyce.generate.{grammar => gram}
-import slyce.tests.Generator
+import slyce.Generator
 
 object Generate extends App {
 

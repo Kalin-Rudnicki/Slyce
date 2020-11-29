@@ -1,4 +1,4 @@
-package slyce.tests
+package slyce
 
 import java.io.BufferedWriter
 import java.io.File

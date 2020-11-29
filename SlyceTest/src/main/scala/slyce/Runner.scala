@@ -1,4 +1,4 @@
-package slyce.tests
+package slyce
 
 import scala.io.Source
 
