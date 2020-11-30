@@ -325,7 +325,41 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
         )
       }
 
-      val mapped = simpleData.reductionLists.map(formatRL)
+      val sorted = simpleData.reductionLists.sortBy(_.name)(ord = {
+        case (_1, _2) =>
+          import SimpleData.Name
+
+          _1 match {
+            case _1: Name.AnonList =>
+              _2 match {
+                case _2: Name.AnonList =>
+                  _1.str.compareTo(_2.str)
+                case _: Name.Optional =>
+                  1
+                case _: Name.Named =>
+                  -1
+              }
+            case _1: Name.Optional =>
+              _2 match {
+                case _: Name.AnonList =>
+                  -1
+                case _2: Name.Optional =>
+                  _1.str.compareTo(_2.str)
+                case _: Name.Named =>
+                  -1
+              }
+            case _1: Name.Named =>
+              _2 match {
+                case _: Name.AnonList =>
+                  1
+                case _: Name.Optional =>
+                  1
+                case _2: Name.Named =>
+                  _1.str.compareTo(_2.str)
+              }
+          }
+      })
+      val mapped = sorted.map(formatRL)
 
       (
         Group(

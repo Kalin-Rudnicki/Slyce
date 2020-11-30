@@ -28,7 +28,7 @@ object Nfa {
       import klib.Idt._
       import klib.Logger.GlobalLogger
 
-      implicit val flags: Set[String] = Set()
+      implicit val flags: Set[String] = Set("Created State")
 
       GlobalLogger.debug(s"Created ${this.toString.split("\\$").last}")
 
@@ -68,7 +68,7 @@ object Nfa {
                 import klib.Idt._
                 import klib.Logger.GlobalLogger
 
-                implicit val flags: Set[String] = Set()
+                implicit val flags: Set[String] = Set("Regex.Group")
 
                 val merged = State.mergeInto(ss)
 
@@ -147,7 +147,7 @@ object Nfa {
         import klib.Idt._
         import klib.Logger.GlobalLogger
 
-        implicit val flags: Set[String] = Set()
+        implicit val flags: Set[String] = Set("State+Regex=State")
 
         GlobalLogger.info(s"${this.toString.split("\\$").last} + $regex = ${res.toString.split("\\$").last}")
 

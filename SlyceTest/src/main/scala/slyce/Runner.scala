@@ -18,7 +18,8 @@ object Runner {
 
     GlobalLogger.sources.stdOut(LL.Debug)
     GlobalLogger.flags.add("Runner")
-    GlobalLogger.flags.add("Parser")
+    // GlobalLogger.flags.add("Parser")
+    // GlobalLogger.flags.add("StateMachine.loop")
 
     implicit val flags: Set[String] = Set("Runner")
 

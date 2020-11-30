@@ -7,8 +7,11 @@ import scalaz.\/
 import scalaz.\/-
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
+import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 import klib.CharStringOps._
+import klib.ColorString.syntax.auto.toSimpleColorString
 import slyce.common.helpers.TraverseOps
 import slyce.parse.{architecture => arch}
 
@@ -98,21 +101,37 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
         def stackFrameToIdt(sf: StackFrame): klib.Idt = {
           import klib.Idt._
 
-          def elementToString(element: ElementT): String =
-            element match {
+          def elementToString(element: ElementT): String = {
+            val tmp = element match {
               case null =>
                 "null" // TODO (KR) : Remove this
               case -\/(o) =>
-                o.toString.unesc("").mkString
+                o.toString.unesc("")
               case \/-(o) =>
-                s"${o.getClass.getName.split("\\.").last.split("\\$").toList.tail.tail.head} : $o"
+                s"${o.getClass.getName.split("\\.").last.split("\\$").toList.tail.tail.head} : ${o.toString.unesc("")}"
             }
+
+            tmp
+              .replaceAll("terminal", "terminal".red.toString)
+              .replaceAll("nonTerminal", "nonTerminal".red.toString)
+          }
 
           Group(
             // "queue =>",
-            Indented(
-              sf.queue.reverse.map(e => Str(elementToString(e))),
-            ),
+            {
+              val limit: Option[Int] = 5.some
+
+              limit.cata(
+                lim =>
+                  Indented(
+                    (sf.queue.size > lim) ? (Str("...".yellow.toString): Idt) | Group(),
+                    sf.queue.take(lim).reverse.map(e => Str(elementToString(e))),
+                  ),
+                Indented(
+                  sf.queue.reverse.map(e => Str(elementToString(e))),
+                ),
+              )
+            },
             "stack =>",
             Indented(
               sf.stack.map {
@@ -249,6 +268,10 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
             Group(
               s"> (${frames.size}) : $maxTok",
               Indented(
+                "state:",
+                Indented(
+                  frames.headOption.flatMap(_.stack.headOption.map(_.state.id.toString)),
+                ),
                 "frameH:",
                 Indented(
                   frames.headOption.map(stackFrameToIdt).toList,
@@ -322,10 +345,10 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                           import klib.Idt._
                           import klib.Logger.GlobalLogger
 
-                          implicit val flags: Set[String] = Set("yield")
+                          implicit val flags: Set[String] = Set("StateMachine.yield")
 
                           GlobalLogger.break
-                          GlobalLogger.debug("=====| yield |=====")
+                          GlobalLogger.debug("=====| StateMachine.yield |=====")
                           GlobalLogger.debug(
                             Group(
                               s">>> (${framesFromAccept.size + framesFromReturn.size + framesFromSpontaneousGeneration.size})",

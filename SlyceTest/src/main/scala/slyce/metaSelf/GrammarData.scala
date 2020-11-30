@@ -46,7 +46,7 @@ object GrammarData {
                 Regex
                   .Group(
                     Regex.Sequence(
-                      Exclusive('\n', '\t', '\\'),
+                      Exclusive('\n', '\t', '\\', '"'),
                     ),
                     Regex.Sequence(
                       Inclusive('\\'),
@@ -85,30 +85,14 @@ object GrammarData {
             ),
             Data.Mode.Line(
               lineNo = 10,
-              regex = Inclusive(':', '^'),
+              regex = Inclusive(':', '^', '+', '*', '~'),
               yields = Yields(
-                yields = List(Yields.Yield.Terminal.std("stdOp")),
+                yields = List(Yields.Yield.Text.std),
                 toMode = None,
               ),
             ),
             Data.Mode.Line(
               lineNo = 11,
-              regex = Inclusive('+', '*'),
-              yields = Yields(
-                yields = List(Yields.Yield.Terminal.std("listOp")),
-                toMode = None,
-              ),
-            ),
-            Data.Mode.Line(
-              lineNo = 12,
-              regex = Inclusive('~'),
-              yields = Yields(
-                yields = List(Yields.Yield.Terminal.std("assocOp")),
-                toMode = None,
-              ),
-            ),
-            Data.Mode.Line(
-              lineNo = 13,
               regex = Inclusive('<', '>'),
               yields = Yields(
                 yields = List(Yields.Yield.Terminal.std("assocDir")),
@@ -116,7 +100,7 @@ object GrammarData {
               ),
             ),
             Data.Mode.Line(
-              lineNo = 14,
+              lineNo = 12,
               regex = Regex.Sequence(
                 Inclusive('@'),
                 Inclusive('s'),
@@ -164,6 +148,7 @@ object GrammarData {
                 Id("Nt"),
                 someNl,
               ),
+              anyNl,
             ),
           ),
         ),
@@ -191,7 +176,7 @@ object GrammarData {
           name = "StdNtBase",
           nt = StandardNT.`:`(
             List(
-              Id("stdOp"),
+              Id("StdOp"),
               ListNT.+.beforeAfter(
                 Id("StdRl"),
                 someNl,
@@ -210,7 +195,7 @@ object GrammarData {
           name = "ListNtBase",
           nt = StandardNT.`:`(
             List(
-              Id("listOp"),
+              Id("ListOp"),
               Id("ListBase"),
             ),
           ),
@@ -221,7 +206,7 @@ object GrammarData {
           nt = StandardNT.`:`(
             List(
               Id("ListBase"),
-              Id("listOp"),
+              Id("ListOp"),
             ),
           ),
         ),
@@ -251,7 +236,7 @@ object GrammarData {
           name = "AssocNtBase",
           nt = StandardNT.`:`(
             List(
-              Id("assocOp"),
+              Id.raw("~"),
               ListNT.+.beforeAfter(
                 Id("AssocElement"),
                 someNl,
@@ -290,6 +275,22 @@ object GrammarData {
               Id("assocDir"),
               Id("Element"),
             ),
+          ),
+        ),
+        // StdOp
+        NT(
+          name = "StdOp",
+          nt = StandardNT.^(
+            IgnoredList()(Id.raw(":"))(),
+            IgnoredList()(Id.raw("^"))(),
+          ),
+        ),
+        // ListOp
+        NT(
+          name = "ListOp",
+          nt = StandardNT.^(
+            IgnoredList()(Id.raw("+"))(),
+            IgnoredList()(Id.raw("*"))(),
           ),
         ),
       ),

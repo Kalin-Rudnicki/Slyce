@@ -225,9 +225,9 @@ object Generate extends App {
           nt = StandardNT.`:`(
             // 1
             List(
-              true -> Id("_var"),
-              true -> Id.raw("="),
-              true -> Id("Expr"),
+              Id("_var"),
+              Id.raw("="),
+              Id("Expr"),
             ),
           ),
         ),

@@ -1,22 +1,27 @@
 
 @start Grammar
 
-Grammar        : "\n"* "@start" nonTerminal "\n"+ (Nt . "\n"+ ^Nt)*
+Grammar        : "\n"* "@start" nonTerminal "\n"+ (Nt . "\n"+ ^Nt)* "\n"*
 Nt             : nonTerminal NtBase
 NtBase         ^ StdNtBase
                | ListNtBase
                | AssocNtBase
-StdNtBase      : stdOp (StdRl . "\n"+ "|" ^StdRl)+
+StdNtBase      : StdOp (StdRl . "\n"+ "|" ^StdRl)+
 StdRl          * ElementWExtras
-ListNtBase     : listOp ListBase
-AnonList       : ListBase listOp
+ListNtBase     : ListOp ListBase
+AnonList       : ListBase ListOp
 ListBase       : Element
                | "(" ElementWExtras+ ")"
                | "(" ElementWExtras+ "." ElementWExtras+ ")"
-AssocNtBase    : assocOp (AssocElement . "\n"+ "|" ^AssocElement)+ StdNtBase
+AssocNtBase    : "~" (AssocElement . "\n"+ "|" ^AssocElement)+ StdNtBase
 Element        ^ literal
                | terminal
                | nonTerminal
                | AnonList
 ElementWExtras : "^"? Element "?"?
 AssocElement   : assocDir Element
+
+StdOp          ^ ":"
+               | "^"
+ListOp         ^ "+"
+               | "*"

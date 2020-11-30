@@ -46,6 +46,7 @@ object Generator {
 
     GlobalLogger.sources.stdOut(LL.Debug)
     GlobalLogger.flags.add("Generator")
+    GlobalLogger.flags.add("AnonRls")
     // GlobalLogger.flags.add("DataToNfa")
     // GlobalLogger.flags.add("NfaToDfa")
 

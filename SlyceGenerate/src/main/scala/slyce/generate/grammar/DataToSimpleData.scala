@@ -207,7 +207,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       ): List[SimpleData.ReductionList] =
         nt match {
           case NT.StandardNT.`:`(elements) =>
-            reductionList(name, elements.map(_.map(_._2)), exprSimp)
+            reductionList(name, elements, exprSimp)
           case NT.StandardNT.^(elements) =>
             reductionList(name, elements.map(_.toList), exprSimp)
         }
@@ -333,7 +333,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       import klib.Idt._
       import klib.Logger.GlobalLogger
 
-      implicit val flags: Set[String] = Set()
+      implicit val flags: Set[String] = Set("Even More")
 
       GlobalLogger.break
       GlobalLogger.debug("=====| Even More... |=====")
@@ -385,7 +385,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
     val (
       anonRls: List[SimpleData.ReductionList],
       nameReMap: Map[SimpleData.Name.AnonList, SimpleData.Name.AnonList],
-      toReduce: List[Int],
+      toReduceNonDistinct: List[Int],
     ) =
       anon
         .groupBy(_._3)
@@ -410,10 +410,8 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                   import klib.Idt._
                   import klib.Logger.GlobalLogger
 
-                  implicit val flags: Set[String] = Set()
+                  implicit val flags: Set[String] = Set("More stuff")
 
-                  GlobalLogger.break
-                  GlobalLogger.debug("=====| More stuff |=====")
                   GlobalLogger.debug(tail)
 
                   // DEBUG : (End) ==================================================
@@ -426,6 +424,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
                 )
             }
         }
+    val toReduce: List[Int] = toReduceNonDistinct.distinct
 
     {
       // DEBUG : (Start) ==================================================
@@ -434,12 +433,12 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
       import klib.Idt._
       import klib.Logger.GlobalLogger
 
-      implicit val flags: Set[String] = Set()
+      implicit val flags: Set[String] = Set("AnonRls")
 
       GlobalLogger.break
       GlobalLogger.debug("=====| AnonRls |=====")
-      GlobalLogger.debug(anonRls.mkString("\n"))
-      GlobalLogger.debug(toReduce.mkString("\n"))
+      GlobalLogger.debug(anonRls.zipWithIndex.map { case (_1, _2) => s"${_2} -> ${_1}" }.mkString("\n"))
+      GlobalLogger.debug(toReduce.zipWithIndex.map { case (_1, _2) => s"${_2} -> ${_1}" }.mkString("\n"))
 
       // DEBUG : (End) ==================================================
     }
@@ -455,7 +454,7 @@ object DataToSimpleData extends arch.DataToSimpleData[Data, Err, SimpleData] {
           import klib.Idt._
           import klib.Logger.GlobalLogger
 
-          implicit val flags: Set[String] = Set()
+          implicit val flags: Set[String] = Set("So much debugging")
 
           GlobalLogger.break
           GlobalLogger.debug("=====| So much debugging... |=====")
