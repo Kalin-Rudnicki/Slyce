@@ -1,0 +1,22 @@
+
+@start General
+
+@mode General
+// -> CharClass
+// -> Quant
+// -> AfterRegex
+
+@mode CharClass
+// -> General
+
+@mode Quant
+// -> General
+
+@mode AfterRegex
+// -> AfterSemi
+
+@mode AfterSemi
+// -> General
+// -> Range
+
+@mode Range
