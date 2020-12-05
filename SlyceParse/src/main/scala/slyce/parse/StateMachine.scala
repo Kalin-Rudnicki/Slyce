@@ -27,7 +27,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
   type PF[I, O] = {
     type InputT = I
     type OutputT = O
-    type T = PartialFunction[I, O]
+    type T = I => Option[O]
   }
 
   type ElementT = Tok \/ Nt
@@ -86,11 +86,17 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
       // Errors
 
+      def frameworkError_(msgs: String*): List[String] =
+        msgs.toList.map(m => s"(Framework Error) $m")
+
       def frameworkError(msgs: String*): List[String] \/ Nothing =
-        msgs.toList.map(m => s"(Framework Error) $m").left
+        frameworkError_(msgs: _*).left
+
+      def userError_(msgs: String*): List[String] =
+        msgs.toList.map(m => s"(User Error) $m")
 
       def userError(msgs: String*): List[String] \/ Nothing =
-        msgs.toList.map(m => s"(User Error) $m").left
+        userError_(msgs: _*).left
 
       @tailrec
       def loop(
@@ -151,10 +157,9 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
             frameStackT: StackT,
         ): List[String] \/ List[StackFrame] = {
           val StackFrame.StackElement(_, _, arg) = frameStackH
-          f match {
-            case Some(f) if f.isDefinedAt(arg) =>
-              def createStackFrame(
-                  res: AcceptF#OutputT,
+          f.flatMap(_(arg)) match {
+            case Some(toState) =>
+              def newStackFrame(
                   frameQueueH: ElementT,
                   frameQueueT: QueueT,
               ): StackFrame =
@@ -162,7 +167,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                   queue = frameQueueT,
                   stack =
                     StackFrame.StackElement(
-                      state = res,
+                      state = toState,
                       canReturn = true,
                       element = frameQueueH,
                     ) :: frameStackH :: frameStackT,
@@ -173,22 +178,20 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                   // TODO (KR) : If this actually ends up working... FIX IT!!!
                   // frameworkError("No elements in queue to pop")
                   (
-                    createStackFrame(
-                      f(arg),
+                    newStackFrame(
                       null, // TODO (KR) : Flagrant foul
                       Nil,
                     ) :: Nil
                   ).right
                 case fQH :: fQT =>
                   (
-                    createStackFrame(
-                      f(arg),
+                    newStackFrame(
                       fQH,
                       fQT,
                     ) :: Nil
                   ).right
               }
-            case _ =>
+            case None =>
               Nil.right
           }
         }
@@ -215,12 +218,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                 )
             }
 
-          fs.map {
-            case f if f.isDefinedAt(frameStackT) =>
-              createStackFrame(f(frameStackT)).right
-            case _ =>
-              frameworkError("Failed to call `returnF`")
-          }.traverseErrs
+          fs.map(_(frameStackT).map(createStackFrame) \/> frameworkError_("Failed to call `returnF`")).traverseErrs
         }
 
         def spontaneouslyGenerate(
@@ -246,10 +244,7 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
             f: FinalReturnF#T,
             arg: FinalReturnF#InputT,
         ): List[String] \/ RawTree =
-          if (f.isDefinedAt(arg))
-            f(arg).right
-          else
-            frameworkError("Failed to call `finalReturnF`")
+          f(arg) \/> frameworkError_("Failed to call `finalReturnF`")
 
         // Loop
 

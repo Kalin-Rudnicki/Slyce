@@ -16,6 +16,7 @@ import klib.CharStringOps._
 import slyce.generate.{architecture => arch}
 import slyce.generate.{grammar => gram}
 import gram.SimpleData
+import gram.SimpleData.Identifier
 import slyce.generate.{lexer => lex}
 
 object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMachine, List[String]] {
@@ -78,7 +79,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
               s"object ${Identifier.RawName} {",
               Break,
               Indented(
-                "def apply(str: String, span: Dfa.Token.Span): Token =",
+                "def apply(str: String, span: Dfa.Token.Span): Option[Token] =",
                 Indented(
                   "str match {",
                   Indented(
@@ -86,12 +87,12 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                       val n = rn.text
                       Group(
                         f"case ${n.unesc} =>",
-                        Indented(s"${n.unesc("`")}.apply(span)"),
+                        Indented(s"${n.unesc("`")}.apply(span).some"),
                       )
                     },
                     Group(
                       "case _ =>",
-                      Indented("???"),
+                      Indented("None"),
                     ),
                   ),
                   "}",
@@ -436,7 +437,7 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                         Group(
                           "Dfa.State.Yields.Yield(",
                           Indented(
-                            s"tokF = Token.${y.name}.apply,",
+                            s"tokF = Token.${y.name}.apply${(y.name == Identifier.RawName) ? "" | "(_, _).some"},",
                             s"spanRange = ${y.spanRange},",
                           ),
                           "),",
@@ -563,14 +564,15 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                                   val to = rlMap(rl2)
                                   val pattern = patternName(id, None)
 
-                                  Str(s"case $pattern => s${to.id}")
+                                  Str(s"case $pattern => s${to.id}.some")
                               },
+                              "case _ => None",
                             ),
                             "},",
                           ),
                         ),
                         returns.isEmpty.fold(
-                          Str("returnFs = Nil,"),
+                          Str("returnFs = Nil,"), // TODO (KR) : ReturnF
                           Group(
                             "returnFs = List(",
                             Indented(
@@ -613,7 +615,11 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                                           s"NonTerminal.${name.str}._$i(${1.to(ids.length).map(s => s"_$s").mkString(", ")}),",
                                           "stackT,",
                                         ),
-                                        ")",
+                                        ").some",
+                                      ),
+                                      "case _ =>",
+                                      Indented(
+                                        "None",
                                       ),
                                     ),
                                     "},",
@@ -649,7 +655,11 @@ object Formatter extends arch.Formatter[lex.Dfa, gram.SimpleData, gram.StateMach
                               Indented(
                                 s"case $wholePattern =>",
                                 Indented(
-                                  "rawTree",
+                                  "rawTree.some",
+                                ),
+                                "case _ =>",
+                                Indented(
+                                  "None",
                                 ),
                               ),
                               "},",

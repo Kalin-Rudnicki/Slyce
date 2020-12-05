@@ -9,6 +9,7 @@ import scalaz.-\/
 import scalaz.Scalaz.ToBooleanOpsFromBoolean
 import scalaz.Scalaz.ToEitherOps
 import scalaz.Scalaz.ToOptionIdOps
+import scalaz.Scalaz.ToOptionOpsFromOption
 
 import klib.CharStringOps._
 import slyce.common.helpers._
@@ -62,9 +63,9 @@ final case class Dfa[+Tok <: Dfa.Token](
 
           // NOTE : Removed the ability to be able to have span, and then pass text within span.
           //      : Seemed overkill. Possibly bring this back in the future.
-          subStr(startPos, str, y.spanRange).map {
+          subStr(startPos, str, y.spanRange).flatMap {
             case (p1, p2, r) =>
-              y.tokF(r, Dfa.Token.Span(p1, p2))
+              y.tokF(r, Dfa.Token.Span(p1, p2)) \/> List(s"Unable to create token with ${str.unesc} @ ${p1.pos}")
           }
         }
 
@@ -239,7 +240,7 @@ object Dfa {
     object Yields {
 
       final case class Yield[+Tok](
-          tokF: (String, Token.Span) => Tok,
+          tokF: (String, Token.Span) => Option[Tok],
           spanRange: (Int, Int),
       )
 
