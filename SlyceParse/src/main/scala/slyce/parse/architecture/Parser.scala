@@ -1,6 +1,10 @@
 package slyce.parse.architecture
 
+import scalaz.-\/
+import scalaz.\/-
+
 import slyce.common.architecture.Stage
+import klib.Timer
 
 trait Parser[Src, Errs, RawTree] extends Stage[Src, Errs, RawTree]
 object Parser {
@@ -9,27 +13,6 @@ object Parser {
       lexer: Lexer[Src, Errs, Tok],
       grammar: Grammar[Tok, Errs, RawTree],
   ): Parser[Src, Errs, RawTree] =
-    (lexer.onO { toks =>
-      {
-        // DEBUG : (Start) ==================================================
-        import klib.ColorString.syntax._
-        import auto._
-        import klib.CharStringOps._
-        import klib.Idt._
-        import klib.Logger.GlobalLogger
-
-        implicit val flags: Set[String] = Set("Parser")
-
-        GlobalLogger.break
-        GlobalLogger.debug("=====| Parser |=====")
-        toks.foreach { t =>
-          GlobalLogger.break
-          GlobalLogger.debug(t.toString.unesc(""))
-        }
-
-        // DEBUG : (End) ==================================================
-      }
-
-    } >+> grammar)(_)
+    (lexer >+> grammar)(_)
 
 }

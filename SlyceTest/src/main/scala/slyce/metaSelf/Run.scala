@@ -1,8 +1,12 @@
 package slyce.metaSelf
 
 import slyce.Runner
+import klib.Timer
 
 object Run extends App {
+
+  val timer = new Timer
+  timer.push
 
   Runner.run(GrammarParser, "SlyceGenerate/src/main/slyce/grammar.sgf") { rawTree =>
     import slyce.metaSelf.Data._

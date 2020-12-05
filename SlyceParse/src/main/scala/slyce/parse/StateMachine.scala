@@ -248,63 +248,8 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
 
         // Loop
 
-        {
-          // DEBUG : (Start) ==================================================
-          import klib.ColorString.syntax._
-          import auto._
-          import klib.Idt._
-          import klib.Logger.GlobalLogger
-
-          implicit val flags: Set[String] = Set("StateMachine.loop")
-
-          GlobalLogger.break
-          GlobalLogger.debug("=====| StateMachine.loop |=====")
-          GlobalLogger.debug(
-            Group(
-              s"> (${frames.size}) : $maxTok",
-              Indented(
-                "state:",
-                Indented(
-                  frames.headOption.flatMap(_.stack.headOption.map(_.state.id.toString)),
-                ),
-                "frameH:",
-                Indented(
-                  frames.headOption.map(stackFrameToIdt).toList,
-                ),
-                /*
-                frames.zipWithIndex.map {
-                  case (sf, idx) =>
-                    Group(
-                      s"[$idx]:",
-                      Indented(stackFrameToIdt(sf)),
-                    )
-                },
-                 */
-              ),
-            ),
-          )
-
-          // DEBUG : (End) ==================================================
-        }
-
         frames match {
           case Nil =>
-            {
-              // DEBUG : (Start) ==================================================
-              import klib.ColorString.syntax._
-              import auto._
-              import klib.Idt._
-              import klib.Logger.GlobalLogger
-
-              implicit val flags: Set[String] = Set("frames.Nil")
-
-              GlobalLogger.break
-              GlobalLogger.debug("=====| frames.Nil |=====")
-              input.map(_.toString.unesc("")).foreach(GlobalLogger.debug(_))
-
-              // DEBUG : (End) ==================================================
-            }
-
             userError(s"Unable to build parse-tree. MaxTok: $maxTok")
           case StackFrame(queue, stack) :: framesT =>
             stack match {
@@ -333,58 +278,6 @@ final class Builder[Tok, Nt, RawTree <: Nt] private {
                           Nil,
                         )
                       } yield {
-                        {
-                          // DEBUG : (Start) ==================================================
-                          import klib.ColorString.syntax._
-                          import auto._
-                          import klib.Idt._
-                          import klib.Logger.GlobalLogger
-
-                          implicit val flags: Set[String] = Set("StateMachine.yield")
-
-                          GlobalLogger.break
-                          GlobalLogger.debug("=====| StateMachine.yield |=====")
-                          GlobalLogger.debug(
-                            Group(
-                              s">>> (${framesFromAccept.size + framesFromReturn.size + framesFromSpontaneousGeneration.size})",
-                              Indented(
-                                s"framesFromAccept (${framesFromAccept.size}) =>",
-                                Indented(
-                                  framesFromAccept.zipWithIndex.map {
-                                    case (sf, idx) =>
-                                      Group(
-                                        s"[$idx]:",
-                                        Indented(stackFrameToIdt(sf)),
-                                      )
-                                  },
-                                ),
-                                s"framesFromReturn (${framesFromReturn.size}) =>",
-                                Indented(
-                                  framesFromReturn.zipWithIndex.map {
-                                    case (sf, idx) =>
-                                      Group(
-                                        s"[$idx]:",
-                                        Indented(stackFrameToIdt(sf)),
-                                      )
-                                  },
-                                ),
-                                s"framesFromSpontaneousGeneration (${framesFromSpontaneousGeneration.size}) =>",
-                                Indented(
-                                  framesFromSpontaneousGeneration.zipWithIndex.map {
-                                    case (sf, idx) =>
-                                      Group(
-                                        s"[$idx]:",
-                                        Indented(stackFrameToIdt(sf)),
-                                      )
-                                  },
-                                ),
-                              ),
-                            ),
-                          )
-
-                          // DEBUG : (End) ==================================================
-                        }
-
                         List(
                           framesFromAccept,
                           framesFromReturn,
