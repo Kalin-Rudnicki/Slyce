@@ -33,8 +33,8 @@ object Data {
     object __Start {
 
       final case class _1(
-        _1: NonTerminal.Comments,
-        _2: Token.EOF.type,
+          _1: NonTerminal.Comments,
+          _2: Token.EOF.type,
       ) extends __Start
 
     }
@@ -43,11 +43,11 @@ object Data {
     object Comment {
 
       final case class _1(
-        _1: Token.comment,
+          _1: Token.comment,
       ) extends Comment
 
       final case class _2(
-        _1: Token.multiLineComment,
+          _1: Token.multiLineComment,
       ) extends Comment
 
     }
@@ -64,15 +64,15 @@ object Data {
               seen.reverse
           }
 
-          loop(this, Nil)
+        loop(this, Nil)
       }
 
     }
     object Comments {
 
       final case class _1(
-        _1: NonTerminal.Comment,
-        _2: NonTerminal.Comments,
+          _1: NonTerminal.Comment,
+          _2: NonTerminal.Comments,
       ) extends Comments
 
       case object _2 extends Comments
@@ -86,209 +86,8 @@ object Data {
 object Parser extends arch.Parser[String, List[String], Data.NonTerminal.Comments] {
   import Data._
 
-  private val lexer: Dfa[Token] = {
-    lazy val s0: Dfa.State[Token] =
-      Dfa.State(
-        id = 0,
-        transitions = Map(
-          0x9.toChar -> Some(Lazy(s6)), // '\t'
-          0xA.toChar -> Some(Lazy(s6)), // '\n'
-          0x20.toChar -> Some(Lazy(s6)), // ' '
-          0x2F.toChar -> Some(Lazy(s5)), // '/'
-        ),
-        elseTransition = None,
-        yields = None,
-      )
-    lazy val s1: Dfa.State[Token] =
-      Dfa.State(
-        id = 1,
-        transitions = Map(
-          0xA.toChar -> None, // '\n'
-        ),
-        elseTransition = Some(Lazy(s1)),
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.comment.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
-    lazy val s2: Dfa.State[Token] =
-      Dfa.State(
-        id = 2,
-        transitions = Map(
-          0x2A.toChar -> Some(Lazy(s3)), // '*'
-        ),
-        elseTransition = Some(Lazy(s2)),
-        yields = None,
-      )
-    lazy val s3: Dfa.State[Token] =
-      Dfa.State(
-        id = 3,
-        transitions = Map(
-          0x2F.toChar -> Some(Lazy(s4)), // '/'
-        ),
-        elseTransition = Some(Lazy(s2)),
-        yields = None,
-      )
-    lazy val s4: Dfa.State[Token] =
-      Dfa.State(
-        id = 4,
-        transitions = Map.empty,
-        elseTransition = None,
-        yields = Some(
-          Dfa.State.Yields(s0)(
-            Dfa.State.Yields.Yield(
-              tokF = Token.multiLineComment.apply,
-              spanRange = (0,-1),
-            ),
-          ),
-        ),
-      )
-    lazy val s5: Dfa.State[Token] =
-      Dfa.State(
-        id = 5,
-        transitions = Map(
-          0x2A.toChar -> Some(Lazy(s2)), // '*'
-          0x2F.toChar -> Some(Lazy(s1)), // '/'
-        ),
-        elseTransition = None,
-        yields = None,
-      )
-    lazy val s6: Dfa.State[Token] =
-      Dfa.State(
-        id = 6,
-        transitions = Map.empty,
-        elseTransition = None,
-        yields = Some(Dfa.State.Yields(s0)()),
-      )
-
-    Dfa(s0, Token.EOF)
-  }
-
-  private val grammar: Builder[Token, NonTerminal, NonTerminal.Comments]#StateMachine =
-    Builder.builder[Token, NonTerminal, NonTerminal.Comments].build { builder =>
-      val elem: Matcher[builder.StackFrame.StackElement, builder.ElementT] = { element =>
-        builder.StackFrame.StackElement.unapply(element).map(_._3)
-      }
-      val stateElem: Matcher[builder.StackFrame.StackElement, (builder.State, builder.ElementT)] = { element =>
-        builder.StackFrame.StackElement.unapply(element).map { case (_1, _, _3) => (_1, _3) }
-      }
-
-      lazy val s0: builder.State =
-        builder.State(
-          id = 0,
-          acceptF = Some {
-            case -\/(_: Token.comment) => s1
-            case \/-(_: NonTerminal.Comment) => s2
-            case \/-(_: NonTerminal.Comments) => s5
-            case -\/(_: Token.multiLineComment) => s3
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = List(
-            NonTerminal.Comments._2,
-          ),
-          finalReturnF = None,
-        )
-      lazy val s1: builder.State =
-        builder.State(
-          id = 1,
-          acceptF = None,
-          returnFs = List(
-            {
-              case stateElem(state, -\/(_1: Token.comment)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.Comment._1(_1),
-                  stackT,
-                )
-            },
-          ),
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s2: builder.State =
-        builder.State(
-          id = 2,
-          acceptF = Some {
-            case -\/(_: Token.comment) => s1
-            case \/-(_: NonTerminal.Comment) => s2
-            case \/-(_: NonTerminal.Comments) => s4
-            case -\/(_: Token.multiLineComment) => s3
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = List(
-            NonTerminal.Comments._2,
-          ),
-          finalReturnF = None,
-        )
-      lazy val s3: builder.State =
-        builder.State(
-          id = 3,
-          acceptF = None,
-          returnFs = List(
-            {
-              case stateElem(state, -\/(_1: Token.multiLineComment)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.Comment._2(_1),
-                  stackT,
-                )
-            },
-          ),
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s4: builder.State =
-        builder.State(
-          id = 4,
-          acceptF = None,
-          returnFs = List(
-            {
-              case elem(\/-(_2: NonTerminal.Comments)) :: stateElem(state, \/-(_1: NonTerminal.Comment)) :: stackT =>
-                (
-                  state,
-                  NonTerminal.Comments._1(_1, _2),
-                  stackT,
-                )
-            },
-          ),
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s5: builder.State =
-        builder.State(
-          id = 5,
-          acceptF = Some {
-            case -\/(Token.EOF) => s6
-          },
-          returnFs = Nil,
-          spontaneouslyGenerates = Nil,
-          finalReturnF = None,
-        )
-      lazy val s6: builder.State =
-        builder.State(
-          id = 6,
-          acceptF = None,
-          returnFs = Nil,
-          spontaneouslyGenerates = Nil,
-          finalReturnF = Some {
-            case elem(-\/(Token.EOF)) :: elem(\/-(rawTree: NonTerminal.Comments)) :: Nil =>
-              rawTree
-          },
-        )
-
-      s0
-    } {
-      case (t1 @ HasSpanToken(s1), t2 @ HasSpanToken(s2)) =>
-        (s2.start.abs > s1.start.abs).fold(t2, t1)
-      case (eof @ Token.EOF, _) =>
-        eof
-      case (_, eof) =>
-        eof
-    }
+  private val lexer: Dfa[Token] = ???
+  private val grammar: Builder[Token, NonTerminal, NonTerminal.Comments]#StateMachine = ???
 
   override def apply(input: String): List[String] \/ NonTerminal.Comments =
     arch.Parser(lexer, grammar)(input)
