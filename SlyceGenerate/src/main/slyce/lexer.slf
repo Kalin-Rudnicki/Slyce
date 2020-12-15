@@ -2,9 +2,10 @@
 @start General
 
 @mode General
-// -> CharClass
-// -> Quant
-// -> AfterRegex
+\[                                                                        ; @ -> CharClass
+\{                                                                        ; @ -> Quant
+[ \t]+                                                                    ; sep -> AfterRegex
+
 
 @mode CharClass
 // -> General
