@@ -5,19 +5,31 @@
 \[                                                                        ; @ -> CharClass
 \{                                                                        ; @ -> Quant
 [ \t]+                                                                    ; sep -> AfterRegex
+\n                                                                        ;
+\@(start|mode)[ ]                                                         ; @[,-2] -> Mode
+[()|]                                                                     ; @
+\\[\.tn()|[\]{}]                                                          ; eChar[1,]
 
+
+@mode Mode
+[A-Z][A-Za-z_\d]+                                                         ; mode
+[ \t]+                                                                    ;
+\n                                                                        ; -> General
 
 @mode CharClass
-// -> General
+\]                                                                        ;
+^|-                                                                       ; @
+\.                                                                        ; chars
+\\d                                                                       ; chars
+[^\n\t]                                                                   ;
 
 @mode Quant
-// -> General
+\}                                                                        ; @ -> General
+-?\d+                                                                     ; int
+,                                                                         ; @
+
+@mode Range
 
 @mode AfterRegex
 // -> AfterSemi
 
-@mode AfterSemi
-// -> General
-// -> Range
-
-@mode Range
